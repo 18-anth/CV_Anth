@@ -187,6 +187,8 @@ class _CertificationState extends State<Certification>
               ),
             ),
 
+            const SizedBox(height: 40),
+
             // Segunda sección: Lista de certificaciones
             Container(
               decoration: BoxDecoration(
@@ -231,8 +233,6 @@ class _CertificationState extends State<Certification>
                     bottom: 50,
                     right: 40,
                     child: Container(
-                      width: 250,
-                      height: 250,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
@@ -263,183 +263,201 @@ class _CertificationState extends State<Certification>
                           ),
                         )
                       else
-                        GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
+                        Padding(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 20,
-                            vertical: 20,
+                            vertical: 0,
                           ),
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: isMobile ? 1 : (3),
-                                childAspectRatio: 1.6 / 1,
-                                crossAxisSpacing: 24,
-                                mainAxisSpacing: 24,
-                              ),
-                          itemCount: certifications.length,
-                          itemBuilder: (context, index) {
-                            final displayIndex = order[index];
-                            final cert = certifications[displayIndex];
-                            final isDragged = draggedIndex == index;
+                          child: Wrap(
+                            spacing: 24,
+                            runSpacing: 24,
+                            alignment: WrapAlignment.center,
+                            children: List.generate(certifications.length, (
+                              index,
+                            ) {
+                              final displayIndex = order[index];
+                              final cert = certifications[displayIndex];
+                              final isDragged = draggedIndex == index;
 
-                            return FadeInUp(
-                              delay: Duration(milliseconds: index * 100),
-                              duration: const Duration(milliseconds: 800),
-                              child: GestureDetector(
-                                onVerticalDragUpdate: (details) =>
-                                    _handleDragUpdate(index, details),
-                                onVerticalDragEnd: (_) => _handleDragEnd(index),
-                                child: MouseRegion(
-                                  onEnter: (_) => _dragController.forward(),
-                                  onExit: (_) => _dragController.reverse(),
-                                  child: AnimatedBuilder(
-                                    animation: _dragController,
-                                    builder: (context, child) {
-                                      double scale =
-                                          1.0 + (_dragController.value * 0.05);
-                                      if (isDragged) {
-                                        scale = 1.0 + (dragOffset.abs() / 500);
-                                      }
+                              final itemWidth = isMobile
+                                  ? double.infinity
+                                  : isTablet
+                                  ? (MediaQuery.of(context).size.width - 68) / 2
+                                  : (MediaQuery.of(context).size.width - 68) /
+                                        3;
 
-                                      return Transform.scale(
-                                        scale: scale,
-                                        child: GestureDetector(
-                                          onTap: () {
-                                            context.go(
-                                              '/certification/${cert.id}',
-                                            );
-                                          },
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                              gradient: LinearGradient(
-                                                begin: Alignment.topLeft,
-                                                end: Alignment.bottomRight,
-                                                colors: [
-                                                  Colors.white.withOpacity(
-                                                    0.05,
-                                                  ),
-                                                  Colors.white.withOpacity(
-                                                    0.02,
-                                                  ),
-                                                ],
-                                              ),
-                                              border: Border.all(
-                                                color: Colors.white.withOpacity(
-                                                  0.1,
-                                                ),
-                                                width: 1,
-                                              ),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.black
-                                                      .withOpacity(0.37),
-                                                  blurRadius: 32,
-                                                  spreadRadius: 8,
-                                                ),
-                                              ],
-                                            ),
-                                            child: Stack(
-                                              children: [
-                                                // Backdrop filter effect con Container
-                                                Positioned.fill(
-                                                  child: ClipRRect(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          20,
-                                                        ),
-                                                    child: BackdropFilter(
-                                                      filter:
-                                                          ui.ImageFilter.blur(
-                                                            sigmaX: 10,
-                                                            sigmaY: 10,
-                                                          ),
-                                                      child: Container(
-                                                        color:
-                                                            Colors.transparent,
+                              return SizedBox(
+                                width: itemWidth,
+                                child: FadeInUp(
+                                  delay: Duration(milliseconds: index * 100),
+                                  duration: const Duration(milliseconds: 800),
+                                  child: GestureDetector(
+                                    onVerticalDragUpdate: (details) =>
+                                        _handleDragUpdate(index, details),
+                                    onVerticalDragEnd: (_) =>
+                                        _handleDragEnd(index),
+                                    child: MouseRegion(
+                                      onEnter: (_) => _dragController.forward(),
+                                      onExit: (_) => _dragController.reverse(),
+                                      child: AnimatedBuilder(
+                                        animation: _dragController,
+                                        builder: (context, child) {
+                                          double scale =
+                                              1.0 +
+                                              (_dragController.value * 0.05);
+                                          if (isDragged) {
+                                            scale =
+                                                1.0 + (dragOffset.abs() / 500);
+                                          }
+
+                                          return Transform.scale(
+                                            scale: scale,
+                                            child: GestureDetector(
+                                              onTap: () {
+                                                context.go(
+                                                  '/certification/${cert.id}',
+                                                );
+                                              },
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(20),
+                                                  gradient: LinearGradient(
+                                                    begin: Alignment.topLeft,
+                                                    end: Alignment.bottomRight,
+                                                    colors: [
+                                                      Colors.white.withOpacity(
+                                                        0.05,
                                                       ),
-                                                    ),
-                                                  ),
-                                                ),
-                                                // Contenido
-                                                Padding(
-                                                  padding: const EdgeInsets.all(
-                                                    24,
-                                                  ),
-                                                  child: Column(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment.start,
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Text(
-                                                        cert.name,
-                                                        style: TextStyle(
-                                                          color: Colors.white,
-                                                          fontSize: 18,
-                                                          fontWeight:
-                                                              FontWeight.w400,
-                                                          letterSpacing: 2,
-                                                          shadows: [
-                                                            Shadow(
-                                                              color: Colors
-                                                                  .black
-                                                                  .withOpacity(
-                                                                    0.2,
-                                                                  ),
-                                                              blurRadius: 4,
-                                                              offset: Offset(
-                                                                2,
-                                                                2,
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                      const SizedBox(
-                                                        height: 16,
-                                                      ),
-                                                      Text(
-                                                        'Ver certificado',
-                                                        style: TextStyle(
-                                                          color: Colors.white70,
-                                                          fontSize: 12,
-                                                          fontFamily:
-                                                              'Courier New',
-                                                          letterSpacing: 4,
-                                                          shadows: [
-                                                            Shadow(
-                                                              color: Colors
-                                                                  .black
-                                                                  .withOpacity(
-                                                                    0.3,
-                                                                  ),
-                                                              blurRadius: 4,
-                                                              offset: Offset(
-                                                                2,
-                                                                2,
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
+                                                      Colors.white.withOpacity(
+                                                        0.02,
                                                       ),
                                                     ],
                                                   ),
+                                                  border: Border.all(
+                                                    color: Colors.white
+                                                        .withOpacity(0.1),
+                                                    width: 1,
+                                                  ),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: Colors.black
+                                                          .withOpacity(0.37),
+                                                      blurRadius: 32,
+                                                      spreadRadius: 8,
+                                                    ),
+                                                  ],
                                                 ),
-                                              ],
+                                                child: Stack(
+                                                  children: [
+                                                    // Backdrop filter effect con Container
+                                                    Positioned.fill(
+                                                      child: ClipRRect(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              20,
+                                                            ),
+                                                        child: BackdropFilter(
+                                                          filter:
+                                                              ui.ImageFilter.blur(
+                                                                sigmaX: 10,
+                                                                sigmaY: 10,
+                                                              ),
+                                                          child: Container(
+                                                            color: Colors
+                                                                .transparent,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    // Contenido
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                            24,
+                                                          ),
+                                                      child: Column(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .start,
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        mainAxisSize:
+                                                            MainAxisSize.min,
+                                                        children: [
+                                                          Text(
+                                                            cert.name,
+                                                            style: TextStyle(
+                                                              color:
+                                                                  Colors.white,
+                                                              fontSize: 18,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w400,
+                                                              letterSpacing: 2,
+                                                              shadows: [
+                                                                Shadow(
+                                                                  color: Colors
+                                                                      .black
+                                                                      .withOpacity(
+                                                                        0.2,
+                                                                      ),
+                                                                  blurRadius: 4,
+                                                                  offset:
+                                                                      Offset(
+                                                                        2,
+                                                                        2,
+                                                                      ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                          const SizedBox(
+                                                            height: 16,
+                                                          ),
+                                                          Text(
+                                                            'Ver certificado',
+                                                            style: TextStyle(
+                                                              color: Colors
+                                                                  .white70,
+                                                              fontSize: 12,
+                                                              fontFamily:
+                                                                  'Courier New',
+                                                              letterSpacing: 4,
+                                                              shadows: [
+                                                                Shadow(
+                                                                  color: Colors
+                                                                      .black
+                                                                      .withOpacity(
+                                                                        0.3,
+                                                                      ),
+                                                                  blurRadius: 4,
+                                                                  offset:
+                                                                      Offset(
+                                                                        2,
+                                                                        2,
+                                                                      ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
                                             ),
-                                          ),
-                                        ),
-                                      );
-                                    },
+                                          );
+                                        },
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            );
-                          },
+                              );
+                            }),
+                          ),
                         ),
                       SizedBox(height: 40),
                     ],

@@ -298,8 +298,8 @@ class _MainLayoutState extends State<MainLayout> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
-        backgroundColor: AppColors.blackOption,
-        selectedItemColor: AppColors.light,
+        backgroundColor: AppColors.light,
+        selectedItemColor: AppColors.blackOption,
         unselectedItemColor: Colors.grey[300],
         elevation: 8,
         items: [

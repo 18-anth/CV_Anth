@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:go_router/go_router.dart';
-import 'iphone_webview.dart';
+import '../../Components/iphone_webview.dart';
 
 
 class ProjectDetail extends StatefulWidget {

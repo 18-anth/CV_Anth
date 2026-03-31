@@ -1,14 +1,14 @@
+import 'package:cv_anth/utils/Colors.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:go_router/go_router.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CertificationDetail extends StatefulWidget {
   final String certificationId;
 
-  const CertificationDetail({
-    super.key,
-    required this.certificationId,
-  });
+  const CertificationDetail({super.key, required this.certificationId});
 
   @override
   State<CertificationDetail> createState() => _CertificationDetailState();
@@ -30,29 +30,101 @@ class _CertificationDetailState extends State<CertificationDetail> {
       final database = FirebaseDatabase.instance;
       final certRef = database.ref('Certifications/${widget.certificationId}');
 
-      certRef.get().then((snapshot) {
-        if (snapshot.exists) {
-          setState(() {
-            certification = snapshot.value as Map<dynamic, dynamic>;
-            isLoading = false;
+      certRef
+          .get()
+          .then((snapshot) {
+            if (snapshot.exists) {
+              setState(() {
+                certification = snapshot.value as Map<dynamic, dynamic>;
+                isLoading = false;
+              });
+            } else {
+              setState(() {
+                errorMessage = 'Certificación no encontrada';
+                isLoading = false;
+              });
+            }
+          })
+          .catchError((error) {
+            setState(() {
+              errorMessage = 'Error al cargar: $error';
+              isLoading = false;
+            });
           });
-        } else {
-          setState(() {
-            errorMessage = 'Certificación no encontrada';
-            isLoading = false;
-          });
-        }
-      }).catchError((error) {
-        setState(() {
-          errorMessage = 'Error al cargar: $error';
-          isLoading = false;
-        });
-      });
     } catch (e) {
       setState(() {
         errorMessage = 'Error: $e';
         isLoading = false;
       });
+    }
+  }
+
+  Widget _buildPdfOrImageViewer(String url) {
+    final isPdf = url.toLowerCase().endsWith('.pdf');
+
+    if (isPdf) {
+      // Para PDFs, usar WebView directamente (como <embed> en React)
+      return SizedBox(
+        height: 800,
+        child: WebViewWidget(
+          controller: WebViewController()
+            ..setJavaScriptMode(JavaScriptMode.unrestricted)
+            ..loadRequest(Uri.parse(url)),
+        ),
+      );
+    } else {
+      // Es una imagen
+      return Image.network(
+        url,
+        fit: BoxFit.cover,
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return Container(
+            color: AppColors.darkgrey.withOpacity(0.2),
+            height: 400,
+            child: Center(
+              child: CircularProgressIndicator(
+                value: loadingProgress.expectedTotalBytes != null
+                    ? loadingProgress.cumulativeBytesLoaded /
+                          loadingProgress.expectedTotalBytes!
+                    : null,
+              ),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            color: AppColors.darkgrey.withOpacity(0.2),
+            height: 400,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, size: 48),
+                  const SizedBox(height: 16),
+                  const Text('No se pudo cargar la imagen'),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      if (await canLaunchUrl(Uri.parse(url))) {
+                        await launchUrl(Uri.parse(url));
+                      }
+                    },
+                    icon: const Icon(Icons.open_in_new, color: AppColors.light),
+                    label: const Text(
+                      'Abrir en navegador',
+                      style: TextStyle(color: AppColors.light),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF050A30),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      );
     }
   }
 
@@ -71,9 +143,7 @@ class _CertificationDetailState extends State<CertificationDetail> {
             onPressed: () => context.go('/certification'),
           ),
         ),
-        body: const Center(
-          child: CircularProgressIndicator(),
-        ),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -112,9 +182,7 @@ class _CertificationDetailState extends State<CertificationDetail> {
             onPressed: () => context.go('/certification'),
           ),
         ),
-        body: const Center(
-          child: Text('No hay datos disponibles'),
-        ),
+        body: const Center(child: Text('No hay datos disponibles')),
       );
     }
 
@@ -166,10 +234,13 @@ class _CertificationDetailState extends State<CertificationDetail> {
               ),
             ),
 
-            // PDF Viewer
+            // PDF/Imagen Viewer
             if (pdfUrl.isNotEmpty)
               Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                margin: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 20,
+                ),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: [
@@ -182,44 +253,15 @@ class _CertificationDetailState extends State<CertificationDetail> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    pdfUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: Colors.grey[300],
-                        height: 400,
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.error_outline, size: 48),
-                              const SizedBox(height: 16),
-                              const Text('No se pudo cargar la imagen'),
-                              const SizedBox(height: 16),
-                              if (pdfUrl.isNotEmpty)
-                                ElevatedButton.icon(
-                                  onPressed: () {
-                                    // Aquí puedes agregar lógica para abrir el PDF en una app externa
-                                    // o en un visor de PDF si lo deseas
-                                  },
-                                  icon: const Icon(Icons.open_in_new),
-                                  label: const Text('Abrir PDF'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF050A30),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+                  child: _buildPdfOrImageViewer(pdfUrl),
                 ),
               )
             else
               Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                margin: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 20,
+                ),
                 padding: const EdgeInsets.all(40),
                 decoration: BoxDecoration(
                   color: Colors.grey[200],
