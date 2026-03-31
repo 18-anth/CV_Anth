@@ -75,7 +75,9 @@ flutter:
     - assets/img/image.png
     - assets/img/logo.jpeg
     - assets/img/yotraje.png
+    - assets/svg/Robot.glb
     - assets/svg/genetic.svg
+    - assets/svg/availability.svg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

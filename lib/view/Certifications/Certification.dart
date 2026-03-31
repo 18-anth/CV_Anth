@@ -29,7 +29,7 @@ class CertificationModel {
 }
 
 class Certification extends StatefulWidget {
-  const Certification({Key? key}) : super(key: key);
+  const Certification({super.key});
 
   @override
   State<Certification> createState() => _CertificationState();
@@ -64,21 +64,24 @@ class _CertificationState extends State<Certification>
       final database = FirebaseDatabase.instance;
       final certRef = database.ref('Certifications');
 
-      certRef.onValue.listen((DatabaseEvent event) {
-        final data = event.snapshot.value as Map<dynamic, dynamic>?;
-        if (data != null) {
-          final certList = <CertificationModel>[];
-          data.forEach((key, value) {
-            certList.add(CertificationModel.fromMap(key, value));
-          });
-          setState(() {
-            certifications = certList;
-            order = List.generate(certifications.length, (i) => i);
-          });
-        }
-      }, onError: (error) {
-        print('Error loading certifications: $error');
-      });
+      certRef.onValue.listen(
+        (DatabaseEvent event) {
+          final data = event.snapshot.value as Map<dynamic, dynamic>?;
+          if (data != null) {
+            final certList = <CertificationModel>[];
+            data.forEach((key, value) {
+              certList.add(CertificationModel.fromMap(key, value));
+            });
+            setState(() {
+              certifications = certList;
+              order = List.generate(certifications.length, (i) => i);
+            });
+          }
+        },
+        onError: (error) {
+          print('Error loading certifications: $error');
+        },
+      );
     } catch (e) {
       print('Firebase initialization error: $e');
     }
@@ -103,7 +106,10 @@ class _CertificationState extends State<Certification>
 
   @override
   Widget build(BuildContext context) {
-    bool isMobile = MediaQuery.of(context).size.width < 600;
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    final isTablet =
+        MediaQuery.of(context).size.width >= 600 &&
+        MediaQuery.of(context).size.width < 1024;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -134,41 +140,52 @@ class _CertificationState extends State<Certification>
                   ),
                 ],
               ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Texto "COURSES"
-                  FadeInUp(
-                    duration: const Duration(milliseconds: 1000),
-                    child: Text(
-                      'COURSES',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Color(0xFFF4F4F4),
-                        fontSize: isMobile ? 36 : 96,
-                        fontWeight: FontWeight.bold,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black.withOpacity(0.5),
-                            blurRadius: 4,
-                            offset: Offset(2, 2),
-                          ),
-                        ],
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Modelo 3D Libro
+                    Positioned(
+                      child: SizedBox(
+                        width: isMobile
+                            ? MediaQuery.of(context).size.width * 0.8
+                            : isTablet
+                            ? MediaQuery.of(context).size.width * 0.6
+                            : MediaQuery.of(context).size.width * 0.4,
+                        height: 300,
+                        child: const BookModel(),
                       ),
                     ),
-                  ),
-                  // Modelo 3D Libro
-                  Positioned(
-                    top: MediaQuery.of(context).size.height * 0.35,
-                    child: SizedBox(
-                      width: isMobile
-                          ? MediaQuery.of(context).size.width * 0.8
-                          : MediaQuery.of(context).size.width * 0.4,
-                      height: 300,
-                      child: const BookModel(),
+                    // Texto "COURSES"
+                    Center(
+                      child: FadeInUp(
+                        duration: const Duration(milliseconds: 1000),
+                        from: 20,
+                        child: Text(
+                          'COURSES',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Color(0xFFF4F4F4),
+                            fontSize: isMobile
+                                ? 48
+                                : isTablet
+                                ? 80
+                                : 120,
+                            fontWeight: FontWeight.bold,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withOpacity(0.5),
+                                blurRadius: 4,
+                                offset: Offset(2, 2),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
 
@@ -178,10 +195,7 @@ class _CertificationState extends State<Certification>
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF0d0d0d),
-                    Color(0xFF1a1a2e),
-                  ],
+                  colors: [Color(0xFF0d0d0d), Color(0xFF1a1a2e)],
                 ),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(32),
@@ -260,11 +274,11 @@ class _CertificationState extends State<Certification>
                           ),
                           gridDelegate:
                               SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: isMobile ? 1 : (3),
-                            childAspectRatio: 1.6 / 1,
-                            crossAxisSpacing: 24,
-                            mainAxisSpacing: 24,
-                          ),
+                                crossAxisCount: isMobile ? 1 : (3),
+                                childAspectRatio: 1.6 / 1,
+                                crossAxisSpacing: 24,
+                                mainAxisSpacing: 24,
+                              ),
                           itemCount: certifications.length,
                           itemBuilder: (context, index) {
                             final displayIndex = order[index];
@@ -284,11 +298,10 @@ class _CertificationState extends State<Certification>
                                   child: AnimatedBuilder(
                                     animation: _dragController,
                                     builder: (context, child) {
-                                      double scale = 1.0 +
-                                          (_dragController.value * 0.05);
+                                      double scale =
+                                          1.0 + (_dragController.value * 0.05);
                                       if (isDragged) {
-                                        scale =
-                                            1.0 + (dragOffset.abs() / 500);
+                                        scale = 1.0 + (dragOffset.abs() / 500);
                                       }
 
                                       return Transform.scale(
@@ -307,13 +320,18 @@ class _CertificationState extends State<Certification>
                                                 begin: Alignment.topLeft,
                                                 end: Alignment.bottomRight,
                                                 colors: [
-                                                  Colors.white.withOpacity(0.05),
-                                                  Colors.white.withOpacity(0.02),
+                                                  Colors.white.withOpacity(
+                                                    0.05,
+                                                  ),
+                                                  Colors.white.withOpacity(
+                                                    0.02,
+                                                  ),
                                                 ],
                                               ),
                                               border: Border.all(
-                                                color: Colors.white
-                                                    .withOpacity(0.1),
+                                                color: Colors.white.withOpacity(
+                                                  0.1,
+                                                ),
                                                 width: 1,
                                               ),
                                               boxShadow: [
@@ -332,29 +350,29 @@ class _CertificationState extends State<Certification>
                                                   child: ClipRRect(
                                                     borderRadius:
                                                         BorderRadius.circular(
-                                                            20),
+                                                          20,
+                                                        ),
                                                     child: BackdropFilter(
                                                       filter:
                                                           ui.ImageFilter.blur(
-                                                        sigmaX: 10,
-                                                        sigmaY: 10,
-                                                      ),
+                                                            sigmaX: 10,
+                                                            sigmaY: 10,
+                                                          ),
                                                       child: Container(
-                                                        color: Colors
-                                                            .transparent,
+                                                        color:
+                                                            Colors.transparent,
                                                       ),
                                                     ),
                                                   ),
                                                 ),
                                                 // Contenido
                                                 Padding(
-                                                  padding:
-                                                      const EdgeInsets.all(
-                                                          24),
+                                                  padding: const EdgeInsets.all(
+                                                    24,
+                                                  ),
                                                   child: Column(
                                                     mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .start,
+                                                        MainAxisAlignment.start,
                                                     crossAxisAlignment:
                                                         CrossAxisAlignment
                                                             .start,
@@ -362,8 +380,7 @@ class _CertificationState extends State<Certification>
                                                       Text(
                                                         cert.name,
                                                         style: TextStyle(
-                                                          color:
-                                                              Colors.white,
+                                                          color: Colors.white,
                                                           fontSize: 18,
                                                           fontWeight:
                                                               FontWeight.w400,
@@ -373,21 +390,24 @@ class _CertificationState extends State<Certification>
                                                               color: Colors
                                                                   .black
                                                                   .withOpacity(
-                                                                      0.2),
+                                                                    0.2,
+                                                                  ),
                                                               blurRadius: 4,
-                                                              offset:
-                                                                  Offset(2, 2),
+                                                              offset: Offset(
+                                                                2,
+                                                                2,
+                                                              ),
                                                             ),
                                                           ],
                                                         ),
                                                       ),
                                                       const SizedBox(
-                                                          height: 16),
+                                                        height: 16,
+                                                      ),
                                                       Text(
                                                         'Ver certificado',
                                                         style: TextStyle(
-                                                          color:
-                                                              Colors.white70,
+                                                          color: Colors.white70,
                                                           fontSize: 12,
                                                           fontFamily:
                                                               'Courier New',
@@ -397,10 +417,13 @@ class _CertificationState extends State<Certification>
                                                               color: Colors
                                                                   .black
                                                                   .withOpacity(
-                                                                      0.3),
+                                                                    0.3,
+                                                                  ),
                                                               blurRadius: 4,
-                                                              offset:
-                                                                  Offset(2, 2),
+                                                              offset: Offset(
+                                                                2,
+                                                                2,
+                                                              ),
                                                             ),
                                                           ],
                                                         ),

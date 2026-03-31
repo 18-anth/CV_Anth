@@ -21,7 +21,7 @@ class ProjectCard {
   factory ProjectCard.fromMap(String id, Map<dynamic, dynamic> data) {
     int timestamp = 0;
     final rawTimestamp = data['timestamp'];
-    
+
     if (rawTimestamp is int) {
       timestamp = rawTimestamp;
     } else if (rawTimestamp is String) {
@@ -33,7 +33,7 @@ class ProjectCard {
         timestamp = 0;
       }
     }
-    
+
     return ProjectCard(
       id: id,
       name: data['name'] ?? 'Sin nombre',

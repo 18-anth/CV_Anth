@@ -18,13 +18,15 @@ class _AboutMeState extends State<AboutMe> {
     "Sociable",
     "Creative",
     "Leadership",
-    "Teamwork"
+    "Teamwork",
   ];
 
   @override
   Widget build(BuildContext context) {
-    bool isMobile = MediaQuery.of(context).size.width < 600;
-
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    final isTablet =
+        MediaQuery.of(context).size.width >= 600 &&
+        MediaQuery.of(context).size.width < 1024;
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
@@ -54,41 +56,52 @@ class _AboutMeState extends State<AboutMe> {
                   ),
                 ],
               ),
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Texto "ABOUT ME"
-                  FadeInUp(
-                    duration: const Duration(milliseconds: 1000),
-                    child: Text(
-                      'ABOUT ME',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Color(0xFFF4F4F4),
-                        fontSize: isMobile ? 36 : 96,
-                        fontWeight: FontWeight.bold,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black.withOpacity(0.5),
-                            blurRadius: 4,
-                            offset: Offset(2, 2),
-                          ),
-                        ],
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Modelo 3D Avatar Abstracto
+                    Positioned(
+                      child: SizedBox(
+                        width: isMobile
+                            ? MediaQuery.of(context).size.width * 0.8
+                            : isTablet
+                            ? MediaQuery.of(context).size.width * 0.6
+                            : MediaQuery.of(context).size.width * 0.4,
+                        height: 300,
+                        child: const AvatarAbstractoModel(),
                       ),
                     ),
-                  ),
-                  // Modelo 3D Avatar Abstracto
-                  Positioned(
-                    top: MediaQuery.of(context).size.height * 0.35,
-                    child: SizedBox(
-                      width: isMobile
-                          ? MediaQuery.of(context).size.width * 0.8
-                          : MediaQuery.of(context).size.width * 0.4,
-                      height: 300,
-                      child: const AvatarAbstractoModel(),
+                    // Texto "ABOUT ME"
+                    Center(
+                      child: FadeInUp(
+                        duration: const Duration(milliseconds: 1000),
+                        from: 20,
+                        child: Text(
+                          'ABOUT ME',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Color(0xFFF4F4F4),
+                            fontSize: isMobile
+                              ? 48
+                              : isTablet
+                              ? 80
+                              : 120,
+                            fontWeight: FontWeight.bold,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withOpacity(0.5),
+                                blurRadius: 4,
+                                offset: Offset(2, 2),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
 
@@ -111,14 +124,10 @@ class _AboutMeState extends State<AboutMe> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               // Who am I Card
-                              Expanded(
-                                child: _buildWhoAmICard(),
-                              ),
+                              Expanded(child: _buildWhoAmICard()),
                               const SizedBox(width: 24),
                               // Hobbies Card
-                              Expanded(
-                                child: _buildHobbiesCard(),
-                              ),
+                              Expanded(child: _buildHobbiesCard()),
                             ],
                           ),
                           const SizedBox(height: 24),
@@ -163,16 +172,16 @@ class _AboutMeState extends State<AboutMe> {
             Text(
               'Who am I?',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Color(0xFF464646),
-                    fontWeight: FontWeight.bold,
-                  ),
+                color: Color(0xFF464646),
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 16),
             Text(
               "I'm passionate about technology. I love programming so much that it sometimes feels like an obsession. I enjoy solving problems, creating innovative solutions, and collaborating on projects that challenge my skills.",
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
             ),
           ],
         ),
@@ -191,9 +200,9 @@ class _AboutMeState extends State<AboutMe> {
             Text(
               'Hobbies',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Color(0xFF464646),
-                    fontWeight: FontWeight.bold,
-                  ),
+                color: Color(0xFF464646),
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 16),
             Wrap(
@@ -235,9 +244,9 @@ class _AboutMeState extends State<AboutMe> {
             Text(
               'Skills',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Color(0xFF464646),
-                    fontWeight: FontWeight.bold,
-                  ),
+                color: Color(0xFF464646),
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 16),
             Wrap(
@@ -248,10 +257,7 @@ class _AboutMeState extends State<AboutMe> {
                   .map(
                     (skill) => Chip(
                       label: Text(skill),
-                      side: BorderSide(
-                        color: Color(0xFF9c27b0),
-                        width: 1,
-                      ),
+                      side: BorderSide(color: Color(0xFF9c27b0), width: 1),
                       labelStyle: TextStyle(
                         color: Color(0xFF464646),
                         fontWeight: FontWeight.w500,
@@ -278,9 +284,9 @@ class _AboutMeState extends State<AboutMe> {
             Text(
               'Academic Background',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Color(0xFF464646),
-                    fontWeight: FontWeight.bold,
-                  ),
+                color: Color(0xFF464646),
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: 24),
             // Education Timeline
@@ -293,7 +299,8 @@ class _AboutMeState extends State<AboutMe> {
             _buildTimelineConnector(),
             _buildTimelineItem(
               title: 'University of Guayaquil',
-              subtitle: 'B.S. in Information Systems Engineering – 8th Semester (2019 - 2025)',
+              subtitle:
+                  'B.S. in Information Systems Engineering – 8th Semester (2019 - 2025)',
               isLast: true,
               color: Colors.blue,
             ),
@@ -318,10 +325,7 @@ class _AboutMeState extends State<AboutMe> {
             Container(
               width: 16,
               height: 16,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: color,
-              ),
+              decoration: BoxDecoration(shape: BoxShape.circle, color: color),
             ),
           ],
         ),
@@ -333,16 +337,16 @@ class _AboutMeState extends State<AboutMe> {
               Text(
                 title,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
                 subtitle,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
               ),
             ],
           ),
@@ -359,11 +363,7 @@ class _AboutMeState extends State<AboutMe> {
           SizedBox(
             width: 8,
             child: Center(
-              child: Container(
-                width: 2,
-                height: 24,
-                color: Colors.grey[400],
-              ),
+              child: Container(width: 2, height: 24, color: Colors.grey[400]),
             ),
           ),
         ],

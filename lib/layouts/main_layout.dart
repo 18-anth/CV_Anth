@@ -1,3 +1,4 @@
+import 'package:cv_anth/utils/Colors.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cv_anth/main.dart' show authController;
@@ -7,11 +8,7 @@ class MainLayout extends StatefulWidget {
   final Widget child;
   final String? currentRoute;
 
-  const MainLayout({
-    Key? key,
-    required this.child,
-    this.currentRoute,
-  }) : super(key: key);
+  const MainLayout({super.key, required this.child, this.currentRoute});
 
   @override
   State<MainLayout> createState() => _MainLayoutState();
@@ -78,6 +75,23 @@ class _MainLayoutState extends State<MainLayout> {
     setState(() {});
   }
 
+  String _getAppBarTitle() {
+    switch (widget.currentRoute) {
+      case '/':
+        return 'Home ';
+      case '/project':
+        return 'Projects ';
+      case '/certification':
+        return 'Certifications ';
+      case '/aboutme':
+        return 'About Me ';
+      case '/contact':
+        return 'Contact ';
+      default:
+        return 'CV { Anth }';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Actualizar índice según la ruta actual
@@ -94,11 +108,11 @@ class _MainLayoutState extends State<MainLayout> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('CV Anthony'),
-        backgroundColor: Color(0xFF0d0d0d),
+        title: Text(_getAppBarTitle()),
+        backgroundColor: AppColors.light,
         elevation: 0,
         centerTitle: true,
-        foregroundColor: Colors.white,
+        foregroundColor: AppColors.blackOption,
         actions: [
           // Botón de Login/Logout condicionado por autenticación
           Padding(
@@ -118,7 +132,9 @@ class _MainLayoutState extends State<MainLayout> {
                     ),
                     SizedBox(width: 8),
                     Text(
-                      authController.isAuthenticated ? 'Salir' : 'Iniciar Sesión',
+                      authController.isAuthenticated
+                          ? 'Salir'
+                          : 'Iniciar Sesión',
                     ),
                   ],
                 ),
@@ -136,41 +152,59 @@ class _MainLayoutState extends State<MainLayout> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF0d0d0d),
-                    Color(0xFF1a1a2e),
-                  ],
+                  colors: [AppColors.blackOption, AppColors.blackOption],
                 ),
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   CircleAvatar(
-                    radius: 40,
-                    backgroundColor: Colors.white,
+                    radius: 35,
+                    backgroundColor: AppColors.light,
                     child: Icon(
                       Icons.person,
-                      size: 40,
-                      color: Color(0xFF0d0d0d),
+                      size: 36,
+                      color: AppColors.blackOption,
                     ),
                   ),
-                  SizedBox(height: 12),
+                  SizedBox(height: 8),
                   Text(
-                    'ANTHONY CORDOVA',
+                    authController.isAuthenticated
+                        ? (authController.userEmail
+                                  ?.split('@')
+                                  .first
+                                  .toUpperCase() ??
+                              'ADMIN')
+                        : 'PORTFOLIO',
                     style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
+                      color: AppColors.light,
+                      fontSize: 15,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1,
                     ),
                   ),
-                  SizedBox(height: 4),
-                  if (authController.userEmail != null)
-                    Text(
-                      authController.userEmail!,
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
+                  if (authController.isAuthenticated &&
+                      authController.userEmail != null)
+                    Padding(
+                      padding: EdgeInsets.only(top: 3),
+                      child: Text(
+                        authController.userEmail!,
+                        style: TextStyle(
+                          color: AppColors.light.withOpacity(0.7),
+                          fontSize: 11,
+                        ),
+                      ),
+                    )
+                  else if (!authController.isAuthenticated)
+                    Padding(
+                      padding: EdgeInsets.only(top: 3),
+                      child: Text(
+                        'Login para más',
+                        style: TextStyle(
+                          color: AppColors.light.withOpacity(0.7),
+                          fontSize: 10,
+                          fontStyle: FontStyle.italic,
+                        ),
                       ),
                     ),
                 ],
@@ -212,7 +246,7 @@ class _MainLayoutState extends State<MainLayout> {
               },
               isSelected: _selectedIndex == 3,
             ),
-            Divider(color: Colors.grey[300]),
+
             _DrawerItem(
               icon: Icons.info,
               title: 'About Me',
@@ -223,6 +257,7 @@ class _MainLayoutState extends State<MainLayout> {
             ),
             // Solo mostrar opciones de upload si está autenticado
             if (authController.isAuthenticated) ...[
+              Divider(color: Colors.grey[300]),
               _DrawerItem(
                 icon: Icons.upload,
                 title: 'Upload Project',
@@ -263,27 +298,15 @@ class _MainLayoutState extends State<MainLayout> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
-        backgroundColor: Color(0xFF0d0d0d),
-        selectedItemColor: Color(0xFF9c27b0),
+        backgroundColor: AppColors.blackOption,
+        selectedItemColor: AppColors.blackOption,
         unselectedItemColor: Colors.grey[400],
         elevation: 8,
         items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.work),
-            label: 'Projects',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.school),
-            label: 'Courses',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.mail),
-            label: 'Contact',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.work), label: 'Projects'),
+          BottomNavigationBarItem(icon: Icon(Icons.school), label: 'Courses'),
+          BottomNavigationBarItem(icon: Icon(Icons.mail), label: 'Contact'),
         ],
       ),
     );
@@ -308,18 +331,18 @@ class _DrawerItem extends StatelessWidget {
     return ListTile(
       leading: Icon(
         icon,
-        color: isSelected ? Color(0xFF9c27b0) : Colors.grey[600],
+        color: isSelected ? AppColors.blackOption : Colors.grey[600],
       ),
       title: Text(
         title,
         style: TextStyle(
-          color: isSelected ? Color(0xFF9c27b0) : Colors.black87,
+          color: isSelected ? AppColors.blackOption : Colors.black87,
           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
         ),
       ),
       selected: isSelected,
       onTap: onTap,
-      tileColor: isSelected ? Color(0xFF9c27b0).withOpacity(0.1) : null,
+      tileColor: isSelected ? AppColors.blackOption.withOpacity(0.1) : null,
     );
   }
 }

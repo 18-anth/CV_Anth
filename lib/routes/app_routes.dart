@@ -1,9 +1,12 @@
+import 'package:cv_anth/utils/Colors.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cv_anth/view/Home/Homescreen.dart';
 import 'package:cv_anth/view/Contact/Contact.dart';
 import 'package:cv_anth/view/Project/Project.dart';
+import 'package:cv_anth/view/Project/ProjectDetail.dart';
 import 'package:cv_anth/view/Certifications/Certification.dart';
+import 'package:cv_anth/view/Certifications/CertificationDetail.dart';
 import 'package:cv_anth/view/About/AboutMe.dart';
 import 'package:cv_anth/view/Auth/LoginScreen.dart';
 import 'package:cv_anth/layouts/main_layout.dart';
@@ -137,42 +140,17 @@ final GoRouter appRouter = GoRouter(
       name: 'projectDetail',
       builder: (context, state) {
         final String projectId = state.pathParameters['id']!;
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Project Detail'),
-            backgroundColor: Color(0xFF0d0d0d),
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () => context.go('/project'),
-            ),
-          ),
-          body: Center(child: Text('Project Detail Page - ID: $projectId')),
-          backgroundColor: Colors.white,
-        );
+        return ProjectDetail(projectId: projectId);
       },
     ),
 
     // Certification Detail Route
     GoRoute(
-      path: '/certification/{id}',
+      path: '/certification/:id',
       name: 'certificationDetail',
       builder: (context, state) {
         final String certId = state.pathParameters['id']!;
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Certification Detail'),
-            backgroundColor: Color(0xFF0d0d0d),
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () => context.go('/certification'),
-            ),
-          ),
-          body: Center(
-              child: Text('Certification Detail Page - ID: $certId')),
-          backgroundColor: Colors.white,
-        );
+        return CertificationDetail(certificationId: certId);
       },
     ),
 
@@ -183,8 +161,9 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) {
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Upload Certification'),
-            backgroundColor: Color(0xFF0d0d0d),
+            title: const Text('Upload Certification | CV { Anth }'),
+            backgroundColor: AppColors.light,
+            foregroundColor: AppColors.light,
             elevation: 0,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back),
@@ -192,7 +171,7 @@ final GoRouter appRouter = GoRouter(
             ),
           ),
           body: const Center(child: Text('Upload Certification Page')),
-          backgroundColor: Colors.white,
+          backgroundColor: AppColors.light,
         );
       },
     ),
@@ -204,8 +183,9 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) {
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Upload Project'),
-            backgroundColor: Color(0xFF0d0d0d),
+            title: const Text('Upload Project | CV { Anth }'),
+            backgroundColor: AppColors.light,
+            foregroundColor: AppColors.light,
             elevation: 0,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back),
@@ -213,10 +193,9 @@ final GoRouter appRouter = GoRouter(
             ),
           ),
           body: const Center(child: Text('Upload Project Page')),
-          backgroundColor: Colors.white,
+          backgroundColor: AppColors.light,
         );
       },
     ),
   ],
 );
-
