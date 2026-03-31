@@ -1,9 +1,10 @@
+import 'package:cv_anth/utils/Colors.dart';
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import '../../models/ContactModel.dart';
 
 class ContactPage extends StatefulWidget {
-  const ContactPage({Key? key}) : super(key: key);
+  const ContactPage({super.key});
 
   @override
   State<ContactPage> createState() => _ContactPageState();
@@ -78,10 +79,7 @@ class _ContactPageState extends State<ContactPage>
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  Colors.black.withOpacity(0.2),
-                  const Color.fromRGBO(1, 1, 3, 0.1),
-                ],
+                colors: [AppColors.light, AppColors.light],
               ),
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(32),
@@ -297,7 +295,7 @@ class _ContactPageState extends State<ContactPage>
 
                     // Footer
                     Text(
-                      '©2024 ANTHONY CORDOVA - Todos los Derechos Reservados',
+                      '©2026 ANTHONY CORDOVA - Todos los Derechos Reservados',
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Color(0xFF050A30), fontSize: 14),
                     ),

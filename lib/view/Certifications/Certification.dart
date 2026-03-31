@@ -1,3 +1,4 @@
+import 'package:cv_anth/utils/Colors.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 import 'package:firebase_database/firebase_database.dart';
@@ -118,25 +119,22 @@ class _CertificationState extends State<Certification>
           children: [
             // Primera sección: Título y modelo
             Container(
-              height: MediaQuery.of(context).size.height,
+              margin: const EdgeInsets.only(top: 0),
               decoration: BoxDecoration(
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(32),
-                  bottomRight: Radius.circular(32),
-                ),
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    Colors.black.withOpacity(0.2),
-                    Color(0xFF010103).withOpacity(0.1),
-                  ],
+                  colors: [AppColors.light, AppColors.light],
+                ),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(32),
+                  bottomRight: Radius.circular(32),
                 ),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.5),
                     blurRadius: 20,
-                    spreadRadius: 4,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),

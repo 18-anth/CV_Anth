@@ -1,8 +1,9 @@
+import 'package:cv_anth/utils/Colors.dart';
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:cv_anth/widgets/particle_background.dart';
 import 'package:cv_anth/models/RobotModel.dart';
-import 'package:cv_anth/widgets/home_tech_stack.dart';
+import 'package:cv_anth/view/Home/home_tech.dart';
 import 'package:cv_anth/utils/asset_paths.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -82,8 +83,8 @@ class _HomeScreenState extends State<HomeScreen>
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          Colors.black.withOpacity(0.2),
-                          Colors.black.withOpacity(0.1),
+                          AppColors.light,
+                          AppColors.light,
                         ],
                       ),
                       borderRadius: const BorderRadius.only(
@@ -125,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen>
                                 borderRadius: BorderRadius.circular(32),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.deepPurple.withOpacity(0.3),
+                                    color: AppColors.blackOption.withOpacity(0.3),
                                     blurRadius: 20,
                                     spreadRadius: 5,
                                   ),
@@ -286,7 +287,7 @@ class _HomeScreenState extends State<HomeScreen>
           // Tech Stack Section
           FadeInUp(
             duration: const Duration(milliseconds: 1000),
-            child: const HomeTechStack(),
+            child: const HomeTech(),
           ),
 
           // Additional spacing at the bottom

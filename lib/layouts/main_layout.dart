@@ -112,7 +112,7 @@ class _MainLayoutState extends State<MainLayout> {
         backgroundColor: AppColors.light,
         elevation: 0,
         centerTitle: true,
-        foregroundColor: AppColors.blackOption,
+        foregroundColor: AppColors.darkgrey,
         actions: [
           // Botón de Login/Logout condicionado por autenticación
           Padding(
@@ -152,7 +152,7 @@ class _MainLayoutState extends State<MainLayout> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [AppColors.blackOption, AppColors.blackOption],
+                  colors: [AppColors.darkgrey, AppColors.darkgrey],
                 ),
               ),
               child: Column(
@@ -164,7 +164,7 @@ class _MainLayoutState extends State<MainLayout> {
                     child: Icon(
                       Icons.person,
                       size: 36,
-                      color: AppColors.blackOption,
+                      color: AppColors.light,
                     ),
                   ),
                   SizedBox(height: 8),
@@ -299,8 +299,8 @@ class _MainLayoutState extends State<MainLayout> {
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
         backgroundColor: AppColors.blackOption,
-        selectedItemColor: AppColors.blackOption,
-        unselectedItemColor: Colors.grey[400],
+        selectedItemColor: AppColors.light,
+        unselectedItemColor: Colors.grey[300],
         elevation: 8,
         items: [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),

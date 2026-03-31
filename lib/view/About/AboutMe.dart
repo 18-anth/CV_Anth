@@ -1,3 +1,4 @@
+import 'package:cv_anth/utils/Colors.dart';
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import '../../models/AvatarAbstractoModel.dart';
@@ -34,25 +35,22 @@ class _AboutMeState extends State<AboutMe> {
           children: [
             // Primera sección: Título y modelo
             Container(
-              height: MediaQuery.of(context).size.height,
+              margin: const EdgeInsets.only(top: 0),
               decoration: BoxDecoration(
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(32),
-                  bottomRight: Radius.circular(32),
-                ),
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    Colors.black.withOpacity(0.2),
-                    Color(0xFF010103).withOpacity(0.1),
-                  ],
+                  colors: [AppColors.light, AppColors.light],
+                ),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(32),
+                  bottomRight: Radius.circular(32),
                 ),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.5),
                     blurRadius: 20,
-                    spreadRadius: 4,
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
@@ -84,10 +82,10 @@ class _AboutMeState extends State<AboutMe> {
                           style: TextStyle(
                             color: Color(0xFFF4F4F4),
                             fontSize: isMobile
-                              ? 48
-                              : isTablet
-                              ? 80
-                              : 120,
+                                ? 48
+                                : isTablet
+                                ? 80
+                                : 120,
                             fontWeight: FontWeight.bold,
                             shadows: [
                               Shadow(

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'iphone_webview.dart';
+
 
 class ProjectDetail extends StatefulWidget {
   final String projectId;
@@ -55,23 +56,6 @@ class _ProjectDetailState extends State<ProjectDetail> {
         errorMessage = 'Error: $e';
         isLoading = false;
       });
-    }
-  }
-
-  Future<void> _openLink(String url) async {
-    try {
-      final Uri uri = Uri.parse(url);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No se pudo abrir el enlace')),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error al abrir el enlace: $e')));
     }
   }
 
@@ -240,54 +224,7 @@ class _ProjectDetailState extends State<ProjectDetail> {
                           constraints: BoxConstraints(
                             maxHeight: isMobile ? 600 : 800,
                           ),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: Colors.grey[300]!,
-                              width: 1,
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 8,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                            color: Colors.grey[100],
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.open_in_new,
-                                size: 48,
-                                color: Colors.grey[400],
-                              ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'Abre el proyecto en tu navegador',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 16,
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-                              ElevatedButton.icon(
-                                onPressed: () => _openLink(link),
-                                icon: const Icon(Icons.open_in_new),
-                                label: const Text('Abrir Proyecto'),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF050A30),
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 24,
-                                    vertical: 12,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                          child: IphoneWebView(link: link),
                         ),
                       ),
                     ),

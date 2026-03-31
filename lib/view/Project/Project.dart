@@ -1,3 +1,4 @@
+import 'package:cv_anth/utils/Colors.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:animate_do/animate_do.dart';
@@ -44,7 +45,7 @@ class ProjectCard {
 }
 
 class Project extends StatefulWidget {
-  const Project({Key? key}) : super(key: key);
+  const Project({super.key});
 
   @override
   State<Project> createState() => _ProjectState();
@@ -62,7 +63,6 @@ class _ProjectState extends State<Project> {
       _projectsRef = FirebaseDatabase.instance.ref('Projects');
       _fetchProjects();
     } catch (e) {
-      print('Firebase initialization error: $e');
       setState(() {
         isLoading = false;
       });
@@ -138,8 +138,8 @@ class _ProjectState extends State<Project> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Colors.black.withOpacity(0.2),
-                  const Color.fromRGBO(1, 1, 3, 0.1),
+                  AppColors.light,
+                  AppColors.light,
                 ],
               ),
               borderRadius: const BorderRadius.only(
