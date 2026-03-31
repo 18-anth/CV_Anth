@@ -70,5 +70,31 @@
     </ul>
     <p>Visítanos: <a href="https://18-anth.github.io/CV_Anth_/PrivacyPolicy/">CV { ANTH }</a></p>
   </div>
+  <script>
+    window.addEventListener('load', function (ev) {
+      // Registrar Service Worker para notificaciones en segundo plano
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/firebase-messaging-sw.js')
+          .then((registration) => {
+            console.log('Service Worker registrado:', registration);
+          })
+          .catch((error) => {
+            console.error('Error al registrar Service Worker:', error);
+          });
+      }
+
+      // Download main.dart.js
+      _flutter.loader.loadEntrypoint({
+        serviceWorker: {
+          serviceWorkerVersion: serviceWorkerVersion,
+        },
+        onEntrypointLoaded: function (engineInitializer) {
+          engineInitializer.initializeEngine().then(function (appRunner) {
+            appRunner.runApp();
+          });
+        }
+      });
+    });
+  </script>
 </body>
 </html>
