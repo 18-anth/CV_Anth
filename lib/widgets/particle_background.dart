@@ -9,10 +9,7 @@ class Particle {
   final double radius;
   final double speed;
 
-  Particle({
-    required this.radius,
-    required this.speed,
-  }) {
+  Particle({required this.radius, required this.speed}) {
     vx = (math.Random().nextDouble() - 0.5) * speed;
     vy = (math.Random().nextDouble() - 0.5) * speed;
   }
@@ -51,11 +48,7 @@ class ParticleBackgroundPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
 
     for (final particle in particles) {
-      canvas.drawCircle(
-        Offset(particle.x, particle.y),
-        particle.radius,
-        paint,
-      );
+      canvas.drawCircle(Offset(particle.x, particle.y), particle.radius, paint);
     }
   }
 
@@ -71,11 +64,11 @@ class ParticleBackground extends StatefulWidget {
   final double particleSpeed;
 
   const ParticleBackground({
-    Key? key,
+    super.key,
     this.particleCount = 50,
     this.particleColor = const Color(0xFFF4F4F4),
     this.particleSpeed = 1.5,
-  }) : super(key: key);
+  });
 
   @override
   State<ParticleBackground> createState() => _ParticleBackgroundState();
@@ -100,11 +93,13 @@ class _ParticleBackgroundState extends State<ParticleBackground>
     final random = math.Random();
     particles = List.generate(
       widget.particleCount,
-      (index) => Particle(
-        radius: random.nextDouble() * 2 + 1,
-        speed: widget.particleSpeed,
-      )..x = random.nextDouble() * 500
-      ..y = random.nextDouble() * 500,
+      (index) =>
+          Particle(
+              radius: random.nextDouble() * 2 + 1,
+              speed: widget.particleSpeed,
+            )
+            ..x = random.nextDouble() * 500
+            ..y = random.nextDouble() * 500,
     );
   }
 

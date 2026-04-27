@@ -9,6 +9,8 @@ import 'package:cv_anth/view/Certifications/Certification.dart';
 import 'package:cv_anth/view/Certifications/CertificationDetail.dart';
 import 'package:cv_anth/view/About/AboutMe.dart';
 import 'package:cv_anth/view/Auth/LoginScreen.dart';
+import 'package:cv_anth/view/Legal/TermsScreen.dart';
+import 'package:cv_anth/view/Legal/PrivacyScreen.dart';
 import 'package:cv_anth/layouts/main_layout.dart';
 
 class RoutePaths {
@@ -22,6 +24,8 @@ class RoutePaths {
   static const String contact = '/contact';
   static const String uploadCertification = '/uploadcertification';
   static const String uploadProject = '/uploadproject';
+  static const String terms = '/terms';
+  static const String privacy = '/privacy';
 }
 
 // Navigation helper class
@@ -64,6 +68,14 @@ class AppNavigator {
 
   static void goToUploadProject(BuildContext context) {
     context.go(RoutePaths.uploadProject);
+  }
+
+  static void goToTerms(BuildContext context) {
+    context.go(RoutePaths.terms);
+  }
+
+  static void goToPrivacy(BuildContext context) {
+    context.go(RoutePaths.privacy);
   }
 }
 
@@ -195,6 +207,24 @@ final GoRouter appRouter = GoRouter(
           body: const Center(child: Text('Upload Project Page')),
           backgroundColor: AppColors.light,
         );
+      },
+    ),
+
+    // Terms of Use Route
+    GoRoute(
+      path: '/terms',
+      name: 'terms',
+      builder: (context, state) {
+        return const TermsScreen();
+      },
+    ),
+
+    // Privacy Policy Route
+    GoRoute(
+      path: '/privacy',
+      name: 'privacy',
+      builder: (context, state) {
+        return const PrivacyScreen();
       },
     ),
   ],

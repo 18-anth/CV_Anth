@@ -87,6 +87,10 @@ class _MainLayoutState extends State<MainLayout> {
         return 'About Me ';
       case '/contact':
         return 'Contact ';
+      case '/terms':
+        return 'Terms of Use';
+      case '/privacy':
+        return 'Privacy Policy';
       default:
         return 'CV { Anth }';
     }
@@ -161,11 +165,7 @@ class _MainLayoutState extends State<MainLayout> {
                   CircleAvatar(
                     radius: 35,
                     backgroundColor: AppColors.light,
-                    child: Icon(
-                      Icons.person,
-                      size: 36,
-                      color: AppColors.light,
-                    ),
+                    child: Icon(Icons.person, size: 36, color: AppColors.light),
                   ),
                   SizedBox(height: 8),
                   Text(
@@ -253,6 +253,22 @@ class _MainLayoutState extends State<MainLayout> {
               onTap: () {
                 Navigator.pop(context);
                 context.go('/aboutme');
+              },
+            ),
+            _DrawerItem(
+              icon: Icons.description,
+              title: 'Terms of Use',
+              onTap: () {
+                Navigator.pop(context);
+                context.go('/terms');
+              },
+            ),
+            _DrawerItem(
+              icon: Icons.privacy_tip,
+              title: 'Privacy Policy',
+              onTap: () {
+                Navigator.pop(context);
+                context.go('/privacy');
               },
             ),
             // Solo mostrar opciones de upload si está autenticado
