@@ -1,10 +1,10 @@
 import 'package:cv_anth/utils/Colors.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/RobotModel.dart';
+import '../../services/firebase_service.dart';
 
 class ProjectCard {
   final String id;
@@ -19,7 +19,7 @@ class ProjectCard {
     required this.timestamp,
   });
 
-  factory ProjectCard.fromMap(String id, Map<dynamic, dynamic> data) {
+  factory ProjectCard.fromMap(Map<String, dynamic> data) {
     int timestamp = 0;
     final rawTimestamp = data['timestamp'];
 
@@ -30,13 +30,12 @@ class ProjectCard {
         final dateTime = DateTime.parse(rawTimestamp);
         timestamp = dateTime.millisecondsSinceEpoch;
       } catch (e) {
-        print('Error parsing timestamp: $e');
         timestamp = 0;
       }
     }
 
     return ProjectCard(
-      id: id,
+      id: data['id']?.toString() ?? '',
       name: data['name'] ?? 'Sin nombre',
       description: data['description'] ?? '',
       timestamp: timestamp,
@@ -52,50 +51,25 @@ class Project extends StatefulWidget {
 }
 
 class _ProjectState extends State<Project> {
-  late DatabaseReference _projectsRef;
   List<ProjectCard> cardsData = [];
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    try {
-      _projectsRef = FirebaseDatabase.instance.ref('Projects');
-      _fetchProjects();
-    } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
-    }
+    _fetchProjects();
   }
 
-  void _fetchProjects() {
+  Future<void> _fetchProjects() async {
     try {
-      _projectsRef.onValue.listen((event) {
-        final data = event.snapshot.value as Map<dynamic, dynamic>?;
-
-        if (data != null) {
-          final projects = data.entries
-              .map(
-                (entry) => ProjectCard.fromMap(
-                  entry.key as String,
-                  entry.value as Map<dynamic, dynamic>,
-                ),
-              )
-              .toList();
-          setState(() {
-            cardsData = projects;
-            isLoading = false;
-          });
-        } else {
-          setState(() {
-            cardsData = [];
-            isLoading = false;
-          });
-        }
+      final data = await FirebaseService.fetchProjects();
+      if (!mounted) return;
+      setState(() {
+        cardsData = data.map((e) => ProjectCard.fromMap(e)).toList();
+        isLoading = false;
       });
     } catch (e) {
-      print('Error fetching projects: $e');
+      if (!mounted) return;
       setState(() {
         isLoading = false;
       });
@@ -137,10 +111,7 @@ class _ProjectState extends State<Project> {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  AppColors.light,
-                  AppColors.light,
-                ],
+                colors: [AppColors.light, AppColors.light],
               ),
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(32),

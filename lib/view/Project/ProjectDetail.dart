@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:go_router/go_router.dart';
 import '../../Components/iphone_webview.dart';
+import '../../services/firebase_service.dart';
 
 
 class ProjectDetail extends StatefulWidget {
@@ -14,7 +14,7 @@ class ProjectDetail extends StatefulWidget {
 }
 
 class _ProjectDetailState extends State<ProjectDetail> {
-  Map<dynamic, dynamic>? project;
+  Map<String, dynamic>? project;
   bool isLoading = true;
   String? errorMessage;
   String? selectedView;
@@ -26,37 +26,24 @@ class _ProjectDetailState extends State<ProjectDetail> {
   }
 
   void _loadProject() {
-    try {
-      final database = FirebaseDatabase.instance;
-      final projectRef = database.ref('Projects/${widget.projectId}');
-
-      projectRef
-          .get()
-          .then((snapshot) {
-            if (snapshot.exists) {
-              setState(() {
-                project = snapshot.value as Map<dynamic, dynamic>;
-                isLoading = false;
-              });
-            } else {
-              setState(() {
-                errorMessage = 'Proyecto no encontrado';
-                isLoading = false;
-              });
-            }
-          })
-          .catchError((error) {
-            setState(() {
-              errorMessage = 'Error al cargar: $error';
-              isLoading = false;
-            });
-          });
-    } catch (e) {
+    FirebaseService.fetchProjectById(widget.projectId).then((data) {
+      if (data != null) {
+        setState(() {
+          project = data;
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          errorMessage = 'Proyecto no encontrado';
+          isLoading = false;
+        });
+      }
+    }).catchError((error) {
       setState(() {
-        errorMessage = 'Error: $e';
+        errorMessage = 'Error al cargar: $error';
         isLoading = false;
       });
-    }
+    });
   }
 
   double _getPreviewWidth(String? view) {

@@ -8,11 +8,13 @@
       "version": "1.0.0+1",
       "dependencies": [
         "animate_do",
+        "cloud_firestore",
         "cupertino_icons",
         "firebase_core",
         "firebase_database",
         "firebase_storage",
         "flutter",
+        "flutter_3d_controller",
         "go_router",
         "material_design_icons_flutter",
         "model_viewer_plus",
@@ -100,6 +102,19 @@
       ]
     },
     {
+      "name": "cloud_firestore",
+      "version": "6.3.0",
+      "dependencies": [
+        "cloud_firestore_platform_interface",
+        "cloud_firestore_web",
+        "collection",
+        "firebase_core",
+        "firebase_core_platform_interface",
+        "flutter",
+        "meta"
+      ]
+    },
+    {
       "name": "material_design_icons_flutter",
       "version": "7.0.7296",
       "dependencies": [
@@ -128,6 +143,17 @@
         "webview_flutter",
         "webview_flutter_android",
         "webview_flutter_wkwebview"
+      ]
+    },
+    {
+      "name": "flutter_3d_controller",
+      "version": "2.3.0",
+      "dependencies": [
+        "flutter",
+        "flutter_inappwebview",
+        "http",
+        "path",
+        "vector_math"
       ]
     },
     {
@@ -187,7 +213,7 @@
     },
     {
       "name": "firebase_core",
-      "version": "4.6.0",
+      "version": "4.7.0",
       "dependencies": [
         "firebase_core_platform_interface",
         "firebase_core_web",
@@ -649,6 +675,42 @@
       ]
     },
     {
+      "name": "firebase_core_platform_interface",
+      "version": "6.0.3",
+      "dependencies": [
+        "collection",
+        "flutter",
+        "flutter_test",
+        "meta",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "cloud_firestore_web",
+      "version": "5.3.0",
+      "dependencies": [
+        "_flutterfire_internals",
+        "cloud_firestore_platform_interface",
+        "collection",
+        "firebase_core",
+        "firebase_core_web",
+        "flutter",
+        "flutter_web_plugins"
+      ]
+    },
+    {
+      "name": "cloud_firestore_platform_interface",
+      "version": "7.2.0",
+      "dependencies": [
+        "_flutterfire_internals",
+        "collection",
+        "firebase_core",
+        "flutter",
+        "meta",
+        "plugin_platform_interface"
+      ]
+    },
+    {
       "name": "webview_flutter_wkwebview",
       "version": "3.23.0",
       "dependencies": [
@@ -688,6 +750,29 @@
         "flutter",
         "meta",
         "platform"
+      ]
+    },
+    {
+      "name": "flutter_inappwebview",
+      "version": "6.1.5",
+      "dependencies": [
+        "flutter",
+        "flutter_inappwebview_android",
+        "flutter_inappwebview_ios",
+        "flutter_inappwebview_macos",
+        "flutter_inappwebview_platform_interface",
+        "flutter_inappwebview_web",
+        "flutter_inappwebview_windows"
+      ]
+    },
+    {
+      "name": "http",
+      "version": "1.6.0",
+      "dependencies": [
+        "async",
+        "http_parser",
+        "meta",
+        "web"
       ]
     },
     {
@@ -837,19 +922,8 @@
       ]
     },
     {
-      "name": "firebase_core_platform_interface",
-      "version": "6.0.3",
-      "dependencies": [
-        "collection",
-        "flutter",
-        "flutter_test",
-        "meta",
-        "plugin_platform_interface"
-      ]
-    },
-    {
       "name": "firebase_core_web",
-      "version": "3.5.1",
+      "version": "3.6.0",
       "dependencies": [
         "firebase_core_platform_interface",
         "flutter",
@@ -951,9 +1025,71 @@
       ]
     },
     {
+      "name": "_flutterfire_internals",
+      "version": "1.3.69",
+      "dependencies": [
+        "collection",
+        "firebase_core",
+        "firebase_core_platform_interface",
+        "flutter",
+        "meta"
+      ]
+    },
+    {
       "name": "platform",
       "version": "3.1.6",
       "dependencies": []
+    },
+    {
+      "name": "flutter_inappwebview_windows",
+      "version": "0.6.0",
+      "dependencies": [
+        "flutter",
+        "flutter_inappwebview_platform_interface"
+      ]
+    },
+    {
+      "name": "flutter_inappwebview_web",
+      "version": "1.1.2",
+      "dependencies": [
+        "flutter",
+        "flutter_inappwebview_platform_interface",
+        "flutter_web_plugins",
+        "web"
+      ]
+    },
+    {
+      "name": "flutter_inappwebview_macos",
+      "version": "1.1.2",
+      "dependencies": [
+        "flutter",
+        "flutter_inappwebview_platform_interface"
+      ]
+    },
+    {
+      "name": "flutter_inappwebview_ios",
+      "version": "1.1.2",
+      "dependencies": [
+        "flutter",
+        "flutter_inappwebview_platform_interface"
+      ]
+    },
+    {
+      "name": "flutter_inappwebview_android",
+      "version": "1.1.3",
+      "dependencies": [
+        "flutter",
+        "flutter_inappwebview_platform_interface"
+      ]
+    },
+    {
+      "name": "flutter_inappwebview_platform_interface",
+      "version": "1.3.0+1",
+      "dependencies": [
+        "flutter",
+        "flutter_inappwebview_internal_annotations",
+        "plugin_platform_interface"
+      ]
     },
     {
       "name": "uuid",
@@ -976,25 +1112,9 @@
       ]
     },
     {
-      "name": "http",
-      "version": "1.6.0",
-      "dependencies": [
-        "async",
-        "http_parser",
-        "meta",
-        "web"
-      ]
-    },
-    {
-      "name": "_flutterfire_internals",
-      "version": "1.3.68",
-      "dependencies": [
-        "collection",
-        "firebase_core",
-        "firebase_core_platform_interface",
-        "flutter",
-        "meta"
-      ]
+      "name": "flutter_inappwebview_internal_annotations",
+      "version": "1.3.0",
+      "dependencies": []
     },
     {
       "name": "path_provider_windows",

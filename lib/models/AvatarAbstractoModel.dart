@@ -1,5 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter_3d_controller/flutter_3d_controller.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 
 class AvatarAbstractoModel extends StatefulWidget {
@@ -11,6 +12,7 @@ class AvatarAbstractoModel extends StatefulWidget {
 
 class _AvatarAbstractoModelState extends State<AvatarAbstractoModel> {
   late Future<String> _modelUrlFuture;
+  final Flutter3DController _controller = Flutter3DController();
   bool _isMounted = true;
 
   @override
@@ -26,20 +28,7 @@ class _AvatarAbstractoModelState extends State<AvatarAbstractoModel> {
   }
 
   Future<String> _getModelUrl() async {
-    try {
-      final firebaseStorage = FirebaseStorage.instance;
-      final ref = firebaseStorage.ref('ModelBlender/Avatar_abstracto.glb');
-      final url = await ref
-          .getDownloadURL()
-          .timeout(const Duration(seconds: 30));
-      return url;
-    } catch (error) {
-      debugPrint('Error al obtener URL del modelo Avatar: $error');
-      if (_isMounted) {
-        return 'error';
-      }
-      rethrow;
-    }
+    return 'https://drive.google.com/uc?export=download&id=13eK7Av8w_2Y62kN6Z5EKaK7O7N03MajJ';
   }
 
   @override
@@ -62,7 +51,8 @@ class _AvatarAbstractoModelState extends State<AvatarAbstractoModel> {
           );
         }
 
-        if (snapshot.hasError || (snapshot.hasData && snapshot.data == 'error')) {
+        if (snapshot.hasError ||
+            (snapshot.hasData && snapshot.data == 'error')) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -91,15 +81,18 @@ class _AvatarAbstractoModelState extends State<AvatarAbstractoModel> {
         return SizedBox(
           height: MediaQuery.of(context).size.height,
           width: MediaQuery.of(context).size.width,
-          child: ModelViewer(
-            src: snapshot.data!,
-            alt: 'Avatar Abstracto',
-            ar: false,
-            autoRotate: true,
-            cameraControls: true,
-            disablePan: true,
-            disableZoom: false,
-          ),
+          child: kIsWeb
+              ? ModelViewer(
+                  src: snapshot.data!,
+                  alt: 'Avatar Abstracto',
+                  autoRotate: true,
+                  cameraControls: true,
+                )
+              : Flutter3DViewer(
+                  src: snapshot.data!,
+                  controller: _controller,
+                  progressBarColor: Colors.deepPurple,
+                ),
         );
       },
     );

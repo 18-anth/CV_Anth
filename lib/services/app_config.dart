@@ -14,6 +14,14 @@ class AppConfig {
   static String get appId => EnvLoader.getRequired('APP_ID');
   static String get measurementId => EnvLoader.getRequired('MEASUREMENT_ID');
 
+  // 🗂️ Google Drive Configuration
+  static String get googleApiKey =>
+      EnvLoader.getRequired('REACT_APP_GOOGLE_API_KEY');
+  static String get googleClientId =>
+      EnvLoader.getRequired('REACT_APP_GOOGLE_CLIENT_ID');
+  static String get googleDriveFolderId =>
+      EnvLoader.getRequired('REACT_APP_GOOGLE_DRIVE_FOLDER_ID');
+
   //  Validación de configuración
 
   /// Verifica que todas las variables de Firebase estén configuradas

@@ -1,9 +1,10 @@
 import 'package:cv_anth/utils/Colors.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../services/firebase_service.dart';
+import '../../services/google_drive_service.dart';
 
 class CertificationDetail extends StatefulWidget {
   final String certificationId;
@@ -15,7 +16,7 @@ class CertificationDetail extends StatefulWidget {
 }
 
 class _CertificationDetailState extends State<CertificationDetail> {
-  Map<dynamic, dynamic>? certification;
+  Map<String, dynamic>? certification;
   bool isLoading = true;
   String? errorMessage;
 
@@ -26,37 +27,25 @@ class _CertificationDetailState extends State<CertificationDetail> {
   }
 
   void _loadCertification() {
-    try {
-      final database = FirebaseDatabase.instance;
-      final certRef = database.ref('Certifications/${widget.certificationId}');
-
-      certRef
-          .get()
-          .then((snapshot) {
-            if (snapshot.exists) {
-              setState(() {
-                certification = snapshot.value as Map<dynamic, dynamic>;
-                isLoading = false;
-              });
-            } else {
-              setState(() {
-                errorMessage = 'Certificación no encontrada';
-                isLoading = false;
-              });
-            }
-          })
-          .catchError((error) {
-            setState(() {
-              errorMessage = 'Error al cargar: $error';
-              isLoading = false;
-            });
-          });
-    } catch (e) {
+    FirebaseService.fetchCertificationById(widget.certificationId)
+        .then((data) {
+      if (data != null) {
+        setState(() {
+          certification = data;
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          errorMessage = 'Certificación no encontrada';
+          isLoading = false;
+        });
+      }
+    }).catchError((error) {
       setState(() {
-        errorMessage = 'Error: $e';
+        errorMessage = 'Error al cargar: $error';
         isLoading = false;
       });
-    }
+    });
   }
 
   Widget _buildPdfOrImageViewer(String url) {
@@ -187,8 +176,18 @@ class _CertificationDetailState extends State<CertificationDetail> {
     }
 
     final name = certification?['name'] ?? 'Sin nombre';
-    final pdfUrl = certification?['pdfUrl'] ?? '';
     final description = certification?['description'] ?? '';
+
+    // Resolución de la URL del PDF:
+    // 1) Si el documento tiene 'pdfUrl' se usa directamente.
+    // 2) Si tiene 'driveFileId' se construye la URL de previsualización de Drive.
+    final rawPdfUrl = certification?['pdfUrl'] as String? ?? '';
+    final driveFileId = certification?['driveFileId'] as String? ?? '';
+    final pdfUrl = rawPdfUrl.isNotEmpty
+        ? rawPdfUrl
+        : driveFileId.isNotEmpty
+            ? GoogleDriveService.previewUrl(driveFileId)
+            : '';
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F4F4),

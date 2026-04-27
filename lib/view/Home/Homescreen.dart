@@ -273,9 +273,11 @@ class _HomeScreenState extends State<HomeScreen>
                         ),
                       ),
                       const SizedBox(width: 40),
-                      FadeInRight(
-                        duration: const Duration(milliseconds: 1000),
-                        child: const RobotModel(),
+                      Flexible(
+                        child: FadeInRight(
+                          duration: const Duration(milliseconds: 1000),
+                          child: const RobotModel(),
+                        ),
                       ),
                     ],
                   );

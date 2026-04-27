@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter_3d_controller/flutter_3d_controller.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 
 class TreeModel extends StatefulWidget {
@@ -11,6 +13,7 @@ class TreeModel extends StatefulWidget {
 
 class _TreeModelState extends State<TreeModel> {
   late Future<String> _modelUrlFuture;
+  final Flutter3DController _controller = Flutter3DController();
   bool _isMounted = true;
 
   @override
@@ -91,15 +94,18 @@ class _TreeModelState extends State<TreeModel> {
         return SizedBox(
           height: MediaQuery.of(context).size.height,
           width: MediaQuery.of(context).size.width,
-          child: ModelViewer(
-            src: snapshot.data!,
-            alt: 'Árbol',
-            ar: false,
-            autoRotate: true,
-            cameraControls: true,
-            disablePan: true,
-            disableZoom: false,
-          ),
+          child: kIsWeb
+              ? ModelViewer(
+                  src: snapshot.data!,
+                  alt: 'Árbol',
+                  autoRotate: true,
+                  cameraControls: true,
+                )
+              : Flutter3DViewer(
+                  src: snapshot.data!,
+                  controller: _controller,
+                  progressBarColor: Colors.deepPurple,
+                ),
         );
       },
     );

@@ -1,10 +1,10 @@
 import 'package:cv_anth/utils/Colors.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
-import 'package:firebase_database/firebase_database.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/BookModel.dart';
+import '../../services/firebase_service.dart';
 
 class CertificationModel {
   final String id;
@@ -19,9 +19,9 @@ class CertificationModel {
     this.imageUrl,
   });
 
-  factory CertificationModel.fromMap(String id, Map<dynamic, dynamic> data) {
+  factory CertificationModel.fromMap(Map<String, dynamic> data) {
     return CertificationModel(
-      id: id,
+      id: data['id']?.toString() ?? '',
       name: data['name'] ?? 'Sin nombre',
       description: data['description'] ?? '',
       imageUrl: data['imageUrl'],
@@ -60,31 +60,15 @@ class _CertificationState extends State<Certification>
     super.dispose();
   }
 
-  void _loadCertifications() {
+  Future<void> _loadCertifications() async {
     try {
-      final database = FirebaseDatabase.instance;
-      final certRef = database.ref('Certifications');
-
-      certRef.onValue.listen(
-        (DatabaseEvent event) {
-          final data = event.snapshot.value as Map<dynamic, dynamic>?;
-          if (data != null) {
-            final certList = <CertificationModel>[];
-            data.forEach((key, value) {
-              certList.add(CertificationModel.fromMap(key, value));
-            });
-            setState(() {
-              certifications = certList;
-              order = List.generate(certifications.length, (i) => i);
-            });
-          }
-        },
-        onError: (error) {
-          print('Error loading certifications: $error');
-        },
-      );
+      final data = await FirebaseService.fetchCertifications();
+      setState(() {
+        certifications = data.map((e) => CertificationModel.fromMap(e)).toList();
+        order = List.generate(certifications.length, (i) => i);
+      });
     } catch (e) {
-      print('Firebase initialization error: $e');
+      // Sin certificaciones si falla
     }
   }
 

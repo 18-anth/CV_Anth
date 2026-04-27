@@ -49,12 +49,7 @@
 
   <title>CV { ANTH }</title>
   <link rel="manifest" href="manifest.json">
-    <script>
-    // The value below is injected by flutter build, do not touch.
-    const serviceWorkerVersion = null;
-  </script>
-  <!-- This script adds the flutter initialization JS code -->
-  <script src="flutter.js" defer></script>
+  <script src="flutter_bootstrap.js" async></script>
 </head>
 <body>
   <div id="seo-content" style="display:none;">
@@ -71,9 +66,9 @@
     <p>Visítanos: <a href="https://18-anth.github.io/CV_Anth_/PrivacyPolicy/">CV { ANTH }</a></p>
   </div>
   <script>
-    window.addEventListener('load', function (ev) {
-      // Registrar Service Worker para notificaciones en segundo plano
-      if ('serviceWorker' in navigator) {
+    // Registrar Service Worker para notificaciones en segundo plano
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
         navigator.serviceWorker.register('/firebase-messaging-sw.js')
           .then((registration) => {
             console.log('Service Worker registrado:', registration);
@@ -81,20 +76,8 @@
           .catch((error) => {
             console.error('Error al registrar Service Worker:', error);
           });
-      }
-
-      // Download main.dart.js
-      _flutter.loader.loadEntrypoint({
-        serviceWorker: {
-          serviceWorkerVersion: serviceWorkerVersion,
-        },
-        onEntrypointLoaded: function (engineInitializer) {
-          engineInitializer.initializeEngine().then(function (appRunner) {
-            appRunner.runApp();
-          });
-        }
       });
-    });
+    }
   </script>
 </body>
 </html>

@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter_3d_controller/flutter_3d_controller.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 
 class BookModel extends StatefulWidget {
@@ -11,6 +13,7 @@ class BookModel extends StatefulWidget {
 
 class _BookModelState extends State<BookModel> {
   late Future<String> _modelUrlFuture;
+  final Flutter3DController _controller = Flutter3DController();
   bool _isMounted = true;
 
   @override
@@ -91,15 +94,18 @@ class _BookModelState extends State<BookModel> {
         return SizedBox(
           height: MediaQuery.of(context).size.height * 0.8,
           width: MediaQuery.of(context).size.width,
-          child: ModelViewer(
-            src: snapshot.data!,
-            alt: 'Libro',
-            ar: false,
-            autoRotate: true,
-            cameraControls: true,
-            disablePan: true,
-            disableZoom: false,
-          ),
+          child: kIsWeb
+              ? ModelViewer(
+                  src: snapshot.data!,
+                  alt: 'Libro',
+                  autoRotate: true,
+                  cameraControls: true,
+                )
+              : Flutter3DViewer(
+                  src: snapshot.data!,
+                  controller: _controller,
+                  progressBarColor: Colors.deepPurple,
+                ),
         );
       },
     );

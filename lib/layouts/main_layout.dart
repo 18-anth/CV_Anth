@@ -67,12 +67,22 @@ class _MainLayoutState extends State<MainLayout> {
 
   void _handleLogin() {
     showLoginDialog(context);
-    // Escuchar cambios de autenticación
+  }
+
+  @override
+  void initState() {
+    super.initState();
     authController.addListener(_onAuthStateChanged);
   }
 
+  @override
+  void dispose() {
+    authController.removeListener(_onAuthStateChanged);
+    super.dispose();
+  }
+
   void _onAuthStateChanged() {
-    setState(() {});
+    if (mounted) setState(() {});
   }
 
   String _getAppBarTitle() {
