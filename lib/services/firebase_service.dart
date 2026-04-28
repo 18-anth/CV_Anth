@@ -1,63 +1,77 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
 
-/// Servicio para obtener datos de Firebase Firestore.
+/// Servicio para obtener datos de Firebase Realtime Database.
 ///
-/// Colecciones esperadas en Firestore:
-///   - `projects`       → documentos con campos: name, description, timestamp,
+/// Nodos esperados en la Realtime Database:
+///   - `Projects`       → objetos con campos: name, description, timestamp,
 ///                        githubUrl?, demoUrl?, technologies?, driveFileId?
-///   - `certifications` → documentos con campos: name, description,
+///   - `Certifications` → objetos con campos: name, description,
 ///                        driveFileId (ID del PDF en Drive), imageUrl?
-///
-/// Los archivos grandes (PDFs, .glb) se sirven desde Google Drive /
-/// Firebase Storage respectivamente y se referencian por ID/path.
 class FirebaseService {
-  static final _db = FirebaseFirestore.instance;
+  static final _db = FirebaseDatabase.instance;
 
   // ───────────── PROJECTS ─────────────
 
-  /// Retorna la lista de proyectos desde la colección `projects`.
+  /// Retorna la lista de proyectos desde el nodo `Projects`.
   static Future<List<Map<String, dynamic>>> fetchProjects() async {
-    final snap = await _db
-        .collection('projects')
-        .orderBy('timestamp', descending: true)
-        .get();
-    return snap.docs.map((doc) {
-      final data = Map<String, dynamic>.from(doc.data());
-      data['id'] = doc.id;
+    final snap = await _db.ref('Projects').get();
+    if (!snap.exists || snap.value == null) return [];
+
+    final raw = snap.value as Map<dynamic, dynamic>;
+    final list = raw.entries.map((entry) {
+      final data = Map<String, dynamic>.from(entry.value as Map);
+      data['id'] = entry.key.toString();
       return data;
     }).toList();
+
+    list.sort((a, b) {
+      final ta = (a['timestamp'] ?? 0) as num;
+      final tb = (b['timestamp'] ?? 0) as num;
+      return tb.compareTo(ta);
+    });
+
+    return list;
   }
 
-  /// Retorna un proyecto por su `docId` de Firestore.
-  static Future<Map<String, dynamic>?> fetchProjectById(String docId) async {
-    final doc = await _db.collection('projects').doc(docId).get();
-    if (!doc.exists) return null;
-    final data = Map<String, dynamic>.from(doc.data()!);
-    data['id'] = doc.id;
+  /// Retorna un proyecto por su clave en Realtime Database.
+  static Future<Map<String, dynamic>?> fetchProjectById(String id) async {
+    final snap = await _db.ref('Projects/$id').get();
+    if (!snap.exists || snap.value == null) return null;
+    final data = Map<String, dynamic>.from(snap.value as Map);
+    data['id'] = id;
     return data;
   }
 
   // ───────────── CERTIFICATIONS ─────────────
 
-  /// Retorna la lista de certificaciones desde la colección `certifications`.
-  /// Cada documento debe tener un campo `driveFileId` con el ID del PDF en Drive.
+  /// Retorna la lista de certificaciones desde el nodo `Certifications`.
   static Future<List<Map<String, dynamic>>> fetchCertifications() async {
-    final snap = await _db.collection('certifications').orderBy('name').get();
-    return snap.docs.map((doc) {
-      final data = Map<String, dynamic>.from(doc.data());
-      data['id'] = doc.id;
+    final snap = await _db.ref('Certifications').get();
+    if (!snap.exists || snap.value == null) return [];
+
+    final raw = snap.value as Map<dynamic, dynamic>;
+    final list = raw.entries.map((entry) {
+      final data = Map<String, dynamic>.from(entry.value as Map);
+      data['id'] = entry.key.toString();
       return data;
     }).toList();
+
+    list.sort((a, b) {
+      final na = (a['name'] ?? '').toString();
+      final nb = (b['name'] ?? '').toString();
+      return na.compareTo(nb);
+    });
+
+    return list;
   }
 
-  /// Retorna una certificación por su `docId` de Firestore.
-  static Future<Map<String, dynamic>?> fetchCertificationById(
-    String docId,
-  ) async {
-    final doc = await _db.collection('certifications').doc(docId).get();
-    if (!doc.exists) return null;
-    final data = Map<String, dynamic>.from(doc.data()!);
-    data['id'] = doc.id;
+  /// Retorna una certificación por su clave en Realtime Database.
+  static Future<Map<String, dynamic>?> fetchCertificationById(String id) async {
+    final snap = await _db.ref('Certifications/$id').get();
+    if (!snap.exists || snap.value == null) return null;
+    final data = Map<String, dynamic>.from(snap.value as Map);
+    data['id'] = id;
     return data;
   }
 }
+

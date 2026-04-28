@@ -25,25 +25,22 @@ class _ProjectDetailState extends State<ProjectDetail> {
     _loadProject();
   }
 
-  void _loadProject() {
-    FirebaseService.fetchProjectById(widget.projectId).then((data) {
-      if (data != null) {
-        setState(() {
-          project = data;
-          isLoading = false;
-        });
-      } else {
-        setState(() {
-          errorMessage = 'Proyecto no encontrado';
-          isLoading = false;
-        });
-      }
-    }).catchError((error) {
+  Future<void> _loadProject() async {
+    try {
+      final data = await FirebaseService.fetchProjectById(widget.projectId);
+      if (!mounted) return;
+      setState(() {
+        project = data;
+        errorMessage = data == null ? 'Proyecto no encontrado' : null;
+        isLoading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
       setState(() {
         errorMessage = 'Error al cargar: $error';
         isLoading = false;
       });
-    });
+    }
   }
 
   double _getPreviewWidth(String? view) {

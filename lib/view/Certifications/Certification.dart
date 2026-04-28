@@ -43,6 +43,8 @@ class _CertificationState extends State<Certification>
   late AnimationController _dragController;
   int? draggedIndex;
   double dragOffset = 0;
+  bool isLoading = true;
+  String? errorMessage;
 
   @override
   void initState() {
@@ -63,12 +65,21 @@ class _CertificationState extends State<Certification>
   Future<void> _loadCertifications() async {
     try {
       final data = await FirebaseService.fetchCertifications();
+      if (!mounted) return;
       setState(() {
-        certifications = data.map((e) => CertificationModel.fromMap(e)).toList();
+        certifications = data
+            .map((e) => CertificationModel.fromMap(e))
+            .toList();
         order = List.generate(certifications.length, (i) => i);
+        isLoading = false;
       });
     } catch (e) {
-      // Sin certificaciones si falla
+      debugPrint('Error cargando certificaciones: $e');
+      if (!mounted) return;
+      setState(() {
+        isLoading = false;
+        errorMessage = e.toString();
+      });
     }
   }
 
@@ -233,12 +244,47 @@ class _CertificationState extends State<Certification>
                   Column(
                     children: [
                       SizedBox(height: 40),
-                      if (certifications.isEmpty)
+                      if (isLoading)
+                        const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(40),
+                            child: Column(
+                              children: [
+                                CircularProgressIndicator(
+                                  color: Colors.white54,
+                                ),
+                                SizedBox(height: 16),
+                                Text(
+                                  'Cargando certificaciones...',
+                                  style: TextStyle(
+                                    color: Colors.white54,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                      else if (errorMessage != null)
                         Center(
                           child: Padding(
                             padding: const EdgeInsets.all(40),
                             child: Text(
-                              'Cargando certificaciones...',
+                              'Error: $errorMessage',
+                              style: const TextStyle(
+                                color: Colors.redAccent,
+                                fontSize: 14,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        )
+                      else if (certifications.isEmpty)
+                        const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(40),
+                            child: Text(
+                              'No hay certificaciones disponibles.',
                               style: TextStyle(
                                 color: Colors.white54,
                                 fontSize: 18,

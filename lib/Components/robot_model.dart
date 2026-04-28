@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_3d_controller/flutter_3d_controller.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 
@@ -22,15 +21,7 @@ class _RobotModelState extends State<RobotModel> {
   }
 
   Future<String> _getModelUrl() async {
-    try {
-      const modelPath = 'Robot.glb';
-      final storageRef = FirebaseStorage.instance.ref(modelPath);
-      final downloadURL = await storageRef.getDownloadURL();
-      return downloadURL;
-    } catch (error) {
-      debugPrint('Error al obtener la URL del modelo: $error');
-      rethrow;
-    }
+    return 'https://drive.google.com/uc?export=download&id=1g1VT5_dnJDf4C4LsHW2EFpYsLmXEEyz1';
   }
 
   @override
