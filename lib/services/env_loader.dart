@@ -18,22 +18,14 @@ class EnvLoader {
       // Para web, intentar cargar desde la raíz
       // Para móviles, cargar desde assets/env.txt
       if (kIsWeb) {
-        // Web: intentar cargar .env desde la raíz
+        // Web: cargar desde assets/env.txt
         try {
-          final content = await rootBundle.loadString('.env');
+          final content = await rootBundle.loadString('assets/env.txt');
           _env = _parseEnv(content);
           _isLoaded = true;
           return;
         } catch (e) {
-          // Fallback: intentar assets/env.txt
-          try {
-            final content = await rootBundle.loadString('assets/env.txt');
-            _env = _parseEnv(content);
-            _isLoaded = true;
-            return;
-          } catch (e2) {
-            throw Exception('⚠️ No se pudo cargar .env ni assets/env.txt en web: $e2');
-          }
+          throw Exception('⚠️ No se pudo cargar assets/env.txt en web: $e');
         }
       } else {
         // Móviles: cargar desde assets/env.txt

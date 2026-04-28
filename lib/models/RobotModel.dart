@@ -3,97 +3,72 @@ import 'package:flutter/material.dart';
 import 'package:flutter_3d_controller/flutter_3d_controller.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 
+const String _modelDriveUrl =
+    'https://drive.google.com/uc?export=download&id=1Ty8SVK_jeV7yvRibQyH_UJ9L5hkoTLE0';
+
 class RobotModel extends StatefulWidget {
-  const RobotModel({Key? key}) : super(key: key);
+  const RobotModel({super.key});
 
   @override
   State<RobotModel> createState() => _RobotModelState();
 }
 
 class _RobotModelState extends State<RobotModel> {
-  late Future<String> _modelUrlFuture;
   final Flutter3DController _controller = Flutter3DController();
-  bool _isMounted = true;
 
   @override
   void initState() {
     super.initState();
-    _modelUrlFuture = _getModelUrl();
+    debugPrint('🚀 [RobotModel] initState — plataforma web: $kIsWeb');
+    if (!kIsWeb) {
+      _controller.onModelLoaded.addListener(() {
+        debugPrint(
+          '🔔 [RobotModel] onModelLoaded: ${_controller.onModelLoaded.value}',
+        );
+        if (mounted && _controller.onModelLoaded.value) {
+          _controller.playAnimation();
+        }
+      });
+    }
   }
 
   @override
   void dispose() {
-    _isMounted = false;
+    _controller.onModelLoaded.removeListener(() {});
     super.dispose();
-  }
-
-  Future<String> _getModelUrl() async {
-    return 'https://drive.google.com/uc?export=download&id=1Ty8SVK_jeV7yvRibQyH_UJ9L5hkoTLE0';
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_isMounted) return const SizedBox.shrink();
-
-    return FutureBuilder<String>(
-      future: _modelUrlFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                CircularProgressIndicator(),
-                SizedBox(height: 16),
-                Text('Cargando modelo 3D...'),
-              ],
+    return SizedBox(
+      height: 400,
+      width: double.infinity,
+      child: kIsWeb
+          ? ModelViewer(
+              src: _modelDriveUrl,
+              alt: 'Robot 3D',
+              autoRotate: true,
+              cameraControls: true,
+              backgroundColor: const Color.fromARGB(0, 0, 0, 0),
+            )
+          : Flutter3DViewer(
+              src: _modelDriveUrl,
+              controller: _controller,
+              activeGestureInterceptor: true,
+              progressBarColor: Colors.deepPurple,
+              enableTouch: true,
+              onProgress: (double progressValue) {
+                debugPrint(
+                  '📦 [RobotModel] Progreso: ${(progressValue * 100).toStringAsFixed(0)}%',
+                );
+              },
+              onLoad: (String modelAddress) {
+                debugPrint('✅ [RobotModel] .glb cargado: $modelAddress');
+              },
+              onError: (String error) {
+                debugPrint('❌ [RobotModel] Error: $error');
+              },
             ),
-          );
-        }
-
-        if (snapshot.hasError || (snapshot.hasData && snapshot.data == 'error')) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.cloud_off, size: 48, color: Colors.grey),
-                const SizedBox(height: 16),
-                const Text(
-                  'No se pudo cargar el modelo 3D',
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Error: ${snapshot.error ?? "Conexión perdida"}',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
-            ),
-          );
-        }
-
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('No se encontró el modelo'));
-        }
-
-        return SizedBox(
-          height: MediaQuery.of(context).size.height * 0.8,
-          width: MediaQuery.of(context).size.width,
-          child: kIsWeb
-              ? ModelViewer(
-                  src: snapshot.data!,
-                  alt: 'Robot Futurista',
-                  autoRotate: true,
-                  cameraControls: true,
-                )
-              : Flutter3DViewer(
-                  src: snapshot.data!,
-                  controller: _controller,
-                  progressBarColor: Colors.deepPurple,
-                ),
-        );
-      },
     );
   }
 }
