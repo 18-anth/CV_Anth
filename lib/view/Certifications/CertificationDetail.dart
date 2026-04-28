@@ -1,4 +1,6 @@
 import 'package:cv_anth/utils/Colors.dart';
+import 'package:cv_anth/utils/web_pdf_viewer.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -49,10 +51,17 @@ class _CertificationDetailState extends State<CertificationDetail> {
   }
 
   Widget _buildPdfOrImageViewer(String url) {
-    final isPdf = url.toLowerCase().endsWith('.pdf');
+    // En web, el iframe del browser maneja tanto PDFs como imágenes sin CORS
+    if (kIsWeb) {
+      final viewId = 'cert-iframe-${url.hashCode}';
+      return buildWebPdfViewerWidget(url, viewId);
+    }
+
+    final isPdf = url.toLowerCase().endsWith('.pdf') ||
+        url.contains('drive.google.com') ||
+        url.contains('docs.google.com');
 
     if (isPdf) {
-      // Para PDFs, usar WebView directamente (como <embed> en React)
       return SizedBox(
         height: 800,
         child: WebViewWidget(

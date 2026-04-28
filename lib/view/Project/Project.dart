@@ -174,7 +174,8 @@ class _ProjectState extends State<Project> {
             ),
           ),
           // Sección de tarjetas
-          Padding(
+          Container(
+            color: const Color(0xFFF6F8FC),
             padding: const EdgeInsets.symmetric(vertical: 20),
             child: isLoading
                 ? const CircularProgressIndicator()
@@ -246,65 +247,180 @@ class _ProjectState extends State<Project> {
     );
   }
 
+  // Paleta de acentos por índice para dar identidad visual a cada tarjeta
+  static const List<List<Color>> _cardGradients = [
+    [Color(0xFFB8C6DB), Color(0xFFA8B8CC)],
+    [Color(0xFFB5CCBA), Color(0xFFA3BFA8)],
+    [Color(0xFFD6C5E0), Color(0xFFC4B0D4)],
+    [Color(0xFFD4C5B0), Color(0xFFC8B89A)],
+    [Color(0xFFB0C8D4), Color(0xFF9BBAC6)],
+    [Color(0xFFD4B0B8), Color(0xFFC49AA3)],
+  ];
+
   Widget _buildProjectCard(ProjectCard card, int index) {
+    final gradient = _cardGradients[index % _cardGradients.length];
+
     return FadeInUp(
-      from: 100,
-      delay: Duration(milliseconds: 50 * index),
-      duration: const Duration(milliseconds: 600),
-      child: Card(
-        elevation: 4,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        color: AppColors.primary,
-        child: InkWell(
-          onTap: () {
-            context.go('/project/${card.id}');
-          },
-          borderRadius: BorderRadius.circular(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      card.name,
-                      style: const TextStyle(
-                        color: Color(0xFF333333),
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      card.description,
-                      style: const TextStyle(
-                        color: Colors.grey,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
+      from: 60,
+      delay: Duration(milliseconds: 80 * index),
+      duration: const Duration(milliseconds: 500),
+      child: GestureDetector(
+        onTap: () => context.go('/project/${card.id}'),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: gradient[0].withOpacity(0.18),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
               ),
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      _formatDate(card.timestamp),
-                      style: const TextStyle(color: Colors.grey, fontSize: 12),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.share),
-                      color: AppColors.blackOption,
-                      onPressed: () => _shareProject(card),
-                    ),
-                  ],
-                ),
+              BoxShadow(
+                color: Colors.black.withOpacity(0.06),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
             ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Banner superior con gradiente
+                Container(
+                  height: 8,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: gradient),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Icono + nombre
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: 42,
+                            height: 42,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: gradient,
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.code_rounded,
+                              color: Colors.white,
+                              size: 22,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              card.name,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Color(0xFF1A1A2E),
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      // Descripción
+                      Text(
+                        card.description,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFF6B7280),
+                          fontSize: 14,
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Divider sutil
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Divider(
+                    height: 1,
+                    color: Colors.grey.withOpacity(0.15),
+                  ),
+                ),
+                // Footer
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 10, 8, 10),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.calendar_today_rounded,
+                        size: 13,
+                        color: Colors.grey.withOpacity(0.6),
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        _formatDate(card.timestamp),
+                        style: TextStyle(
+                          color: Colors.grey.withOpacity(0.7),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const Spacer(),
+                      // Botón compartir
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: () => _shareProject(card),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Icon(
+                              Icons.ios_share_rounded,
+                              size: 18,
+                              color: const Color(0xFF7A8FA6),
+                            ),
+                          ),
+                        ),
+                      ),
+                      // Botón ver proyecto
+                      Container(
+                        margin: const EdgeInsets.only(right: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 7,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(colors: gradient),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Text(
+                          'Ver más',
+                          style: TextStyle(
+                            color: Color(0xFF4A5568),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

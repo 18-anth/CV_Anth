@@ -36,30 +36,16 @@ class Certification extends StatefulWidget {
   State<Certification> createState() => _CertificationState();
 }
 
-class _CertificationState extends State<Certification>
-    with TickerProviderStateMixin {
+class _CertificationState extends State<Certification> {
   List<CertificationModel> certifications = [];
   List<int> order = [];
-  late AnimationController _dragController;
-  int? draggedIndex;
-  double dragOffset = 0;
   bool isLoading = true;
   String? errorMessage;
 
   @override
   void initState() {
     super.initState();
-    _dragController = AnimationController(
-      duration: const Duration(milliseconds: 300),
-      vsync: this,
-    );
     _loadCertifications();
-  }
-
-  @override
-  void dispose() {
-    _dragController.dispose();
-    super.dispose();
   }
 
   Future<void> _loadCertifications() async {
@@ -81,23 +67,6 @@ class _CertificationState extends State<Certification>
         errorMessage = e.toString();
       });
     }
-  }
-
-  void _handleDragUpdate(int index, DragUpdateDetails details) {
-    setState(() {
-      draggedIndex = index;
-      dragOffset = details.localPosition.dy;
-    });
-  }
-
-  void _handleDragEnd(int index) {
-    _dragController.forward().then((_) {
-      setState(() {
-        draggedIndex = null;
-        dragOffset = 0;
-      });
-      _dragController.reset();
-    });
   }
 
   @override
@@ -185,317 +154,298 @@ class _CertificationState extends State<Certification>
             const SizedBox(height: 40),
 
             // Segunda sección: Lista de certificaciones
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF0d0d0d), Color(0xFF1a1a2e)],
-                ),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(32),
-                  topRight: Radius.circular(32),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.5),
-                    blurRadius: 20,
-                    spreadRadius: 4,
-                  ),
-                ],
-              ),
-              child: Stack(
-                children: [
-                  // Círculos decorativos
-                  Positioned(
-                    top: 20,
-                    left: 30,
-                    child: Container(
-                      width: 300,
-                      height: 300,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            Colors.white.withOpacity(0.04),
-                            Colors.transparent,
-                          ],
-                        ),
+            Stack(
+              children: [
+                // Círculos decorativos
+                Positioned(
+                  top: 20,
+                  left: 30,
+                  child: Container(
+                    width: 300,
+                    height: 300,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          Colors.white.withOpacity(0.04),
+                          Colors.transparent,
+                        ],
                       ),
                     ),
                   ),
-                  Positioned(
-                    bottom: 50,
-                    right: 40,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            Colors.white.withOpacity(0.03),
-                            Colors.transparent,
-                          ],
-                        ),
+                ),
+                Positioned(
+                  bottom: 50,
+                  right: 40,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          Colors.white.withOpacity(0.03),
+                          Colors.transparent,
+                        ],
                       ),
                     ),
                   ),
+                ),
 
-                  // Lista de certificaciones
-                  Column(
-                    children: [
-                      SizedBox(height: 40),
-                      if (isLoading)
-                        const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(40),
-                            child: Column(
-                              children: [
-                                CircularProgressIndicator(
+                // Lista de certificaciones
+                Column(
+                  children: [
+                    SizedBox(height: 40),
+                    if (isLoading)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(40),
+                          child: Column(
+                            children: [
+                              CircularProgressIndicator(color: Colors.white54),
+                              SizedBox(height: 16),
+                              Text(
+                                'Cargando certificaciones...',
+                                style: TextStyle(
                                   color: Colors.white54,
+                                  fontSize: 18,
                                 ),
-                                SizedBox(height: 16),
-                                Text(
-                                  'Cargando certificaciones...',
-                                  style: TextStyle(
-                                    color: Colors.white54,
-                                    fontSize: 18,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        )
-                      else if (errorMessage != null)
-                        Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(40),
-                            child: Text(
-                              'Error: $errorMessage',
-                              style: const TextStyle(
-                                color: Colors.redAccent,
-                                fontSize: 14,
                               ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        )
-                      else if (certifications.isEmpty)
-                        const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(40),
-                            child: Text(
-                              'No hay certificaciones disponibles.',
-                              style: TextStyle(
-                                color: Colors.white54,
-                                fontSize: 18,
-                              ),
-                            ),
-                          ),
-                        )
-                      else
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 0,
-                          ),
-                          child: Wrap(
-                            spacing: 24,
-                            runSpacing: 24,
-                            alignment: WrapAlignment.center,
-                            children: List.generate(certifications.length, (
-                              index,
-                            ) {
-                              final displayIndex = order[index];
-                              final cert = certifications[displayIndex];
-                              final isDragged = draggedIndex == index;
-
-                              final itemWidth = isMobile
-                                  ? double.infinity
-                                  : isTablet
-                                  ? (MediaQuery.of(context).size.width - 68) / 2
-                                  : (MediaQuery.of(context).size.width - 68) /
-                                        3;
-
-                              return SizedBox(
-                                width: itemWidth,
-                                child: FadeInUp(
-                                  delay: Duration(milliseconds: index * 100),
-                                  duration: const Duration(milliseconds: 800),
-                                  child: GestureDetector(
-                                    onVerticalDragUpdate: (details) =>
-                                        _handleDragUpdate(index, details),
-                                    onVerticalDragEnd: (_) =>
-                                        _handleDragEnd(index),
-                                    child: MouseRegion(
-                                      onEnter: (_) => _dragController.forward(),
-                                      onExit: (_) => _dragController.reverse(),
-                                      child: AnimatedBuilder(
-                                        animation: _dragController,
-                                        builder: (context, child) {
-                                          double scale =
-                                              1.0 +
-                                              (_dragController.value * 0.05);
-                                          if (isDragged) {
-                                            scale =
-                                                1.0 + (dragOffset.abs() / 500);
-                                          }
-
-                                          return Transform.scale(
-                                            scale: scale,
-                                            child: GestureDetector(
-                                              onTap: () {
-                                                context.go(
-                                                  '/certification/${cert.id}',
-                                                );
-                                              },
-                                              child: Container(
-                                                decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                  gradient: LinearGradient(
-                                                    begin: Alignment.topLeft,
-                                                    end: Alignment.bottomRight,
-                                                    colors: [
-                                                      Colors.white.withOpacity(
-                                                        0.05,
-                                                      ),
-                                                      Colors.white.withOpacity(
-                                                        0.02,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  border: Border.all(
-                                                    color: Colors.white
-                                                        .withOpacity(0.1),
-                                                    width: 1,
-                                                  ),
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      color: Colors.black
-                                                          .withOpacity(0.37),
-                                                      blurRadius: 32,
-                                                      spreadRadius: 8,
-                                                    ),
-                                                  ],
-                                                ),
-                                                child: Stack(
-                                                  children: [
-                                                    // Backdrop filter effect con Container
-                                                    Positioned.fill(
-                                                      child: ClipRRect(
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                              20,
-                                                            ),
-                                                        child: BackdropFilter(
-                                                          filter:
-                                                              ui.ImageFilter.blur(
-                                                                sigmaX: 10,
-                                                                sigmaY: 10,
-                                                              ),
-                                                          child: Container(
-                                                            color: Colors
-                                                                .transparent,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    // Contenido
-                                                    Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                            24,
-                                                          ),
-                                                      child: Column(
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .start,
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
-                                                        mainAxisSize:
-                                                            MainAxisSize.min,
-                                                        children: [
-                                                          Text(
-                                                            cert.name,
-                                                            style: TextStyle(
-                                                              color:
-                                                                  Colors.white,
-                                                              fontSize: 18,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w400,
-                                                              letterSpacing: 2,
-                                                              shadows: [
-                                                                Shadow(
-                                                                  color: Colors
-                                                                      .black
-                                                                      .withOpacity(
-                                                                        0.2,
-                                                                      ),
-                                                                  blurRadius: 4,
-                                                                  offset:
-                                                                      Offset(
-                                                                        2,
-                                                                        2,
-                                                                      ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ),
-                                                          const SizedBox(
-                                                            height: 16,
-                                                          ),
-                                                          Text(
-                                                            'Ver certificado',
-                                                            style: TextStyle(
-                                                              color: Colors
-                                                                  .white70,
-                                                              fontSize: 12,
-                                                              fontFamily:
-                                                                  'Courier New',
-                                                              letterSpacing: 4,
-                                                              shadows: [
-                                                                Shadow(
-                                                                  color: Colors
-                                                                      .black
-                                                                      .withOpacity(
-                                                                        0.3,
-                                                                      ),
-                                                                  blurRadius: 4,
-                                                                  offset:
-                                                                      Offset(
-                                                                        2,
-                                                                        2,
-                                                                      ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }),
+                            ],
                           ),
                         ),
-                      SizedBox(height: 40),
-                    ],
-                  ),
-                ],
-              ),
+                      )
+                    else if (errorMessage != null)
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(40),
+                          child: Text(
+                            'Error: $errorMessage',
+                            style: const TextStyle(
+                              color: Colors.redAccent,
+                              fontSize: 14,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      )
+                    else if (certifications.isEmpty)
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(40),
+                          child: Text(
+                            'No hay certificaciones disponibles.',
+                            style: TextStyle(
+                              color: Colors.white54,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ),
+                      )
+                    else
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 0,
+                        ),
+                        child: Wrap(
+                          spacing: 24,
+                          runSpacing: 24,
+                          alignment: WrapAlignment.center,
+                          children: List.generate(certifications.length, (index) {
+                            final displayIndex = order[index];
+                            final cert = certifications[displayIndex];
+                            final itemWidth = isMobile
+                                ? double.infinity
+                                : isTablet
+                                ? (MediaQuery.of(context).size.width - 68) / 2
+                                : (MediaQuery.of(context).size.width - 68) / 3;
+
+                            return _CertificationCard(
+                              cert: cert,
+                              itemWidth: itemWidth,
+                              animationDelay: Duration(milliseconds: index * 100),
+                            );
+                          }),
+                        ),
+                      ),
+                    SizedBox(height: 40),
+                  ],
+                ),
+              ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CertificationCard extends StatefulWidget {
+  final CertificationModel cert;
+  final double itemWidth;
+  final Duration animationDelay;
+
+  const _CertificationCard({
+    required this.cert,
+    required this.itemWidth,
+    required this.animationDelay,
+  });
+
+  @override
+  State<_CertificationCard> createState() => _CertificationCardState();
+}
+
+class _CertificationCardState extends State<_CertificationCard>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _hoverController;
+
+  @override
+  void initState() {
+    super.initState();
+    _hoverController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+  }
+
+  @override
+  void dispose() {
+    _hoverController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: widget.itemWidth,
+      child: FadeInUp(
+        delay: widget.animationDelay,
+        duration: const Duration(milliseconds: 800),
+        child: MouseRegion(
+          onEnter: (_) => _hoverController.forward(),
+          onExit: (_) => _hoverController.reverse(),
+          child: AnimatedBuilder(
+            animation: _hoverController,
+            builder: (context, child) {
+              final scale = 1.0 + (_hoverController.value * 0.05);
+              return Transform.scale(
+                scale: scale,
+                child: GestureDetector(
+                  onTap: () => context.go('/certification/${widget.cert.id}'),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          AppColors.black.withOpacity(0.85),
+                          AppColors.blackOption,
+                          Colors.black,
+                        ],
+                        stops: const [0.0, 0.5, 1.0],
+                      ),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.1),
+                        width: 0.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 32,
+                          spreadRadius: 4,
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      children: [
+                        // Efecto espejo: reflejo superior
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          child: ClipRRect(
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(20),
+                              topRight: Radius.circular(20),
+                            ),
+                            child: Container(
+                              height: 60,
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    Colors.white.withOpacity(0.12),
+                                    Colors.white.withOpacity(0.04),
+                                    Colors.transparent,
+                                  ],
+                                  stops: const [0.0, 0.4, 1.0],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        // Backdrop blur
+                        Positioned.fill(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(20),
+                            child: BackdropFilter(
+                              filter: ui.ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                              child: Container(color: Colors.transparent),
+                            ),
+                          ),
+                        ),
+                        // Contenido
+                        Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                widget.cert.name,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w400,
+                                  letterSpacing: 2,
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 4,
+                                      offset: const Offset(2, 2),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Ver certificado',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                  fontFamily: 'Courier New',
+                                  letterSpacing: 4,
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.black.withOpacity(0.3),
+                                      blurRadius: 4,
+                                      offset: const Offset(2, 2),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
