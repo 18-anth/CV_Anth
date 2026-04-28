@@ -1,7 +1,9 @@
+import 'dart:ui_web' as ui_web;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
+// ignore: avoid_web_libraries_in_flutter
+import 'dart:html' as html;
 
 class IphoneWebView extends StatefulWidget {
   final String link;
@@ -55,23 +57,14 @@ class _IphoneWebViewState extends State<IphoneWebView> {
   }
 
   void _sendMessageToIframe() {
-    _webViewController.runJavaScript(
-      '''
+    _webViewController.runJavaScript('''
       if (window.parent !== window) {
         window.parent.postMessage(
           { type: 'appLoaded', data: 'La aplicación Flutter se cargó' },
           '*'
         );
       }
-      ''',
-    );
-  }
-
-  Future<void> _openLink() async {
-    final Uri url = Uri.parse(widget.link);
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    }
+      ''');
   }
 
   @override
@@ -84,12 +77,22 @@ class _IphoneWebViewState extends State<IphoneWebView> {
   }
 
   Widget _buildWebView() {
+    // Registrar el iframe en el registry de Flutter web
+    final String viewId = 'iframe-${widget.link.hashCode}';
+    // ignore: avoid_web_libraries_in_flutter
+    ui_web.platformViewRegistry.registerViewFactory(viewId, (int id) {
+      final iframe = html.IFrameElement()
+        ..src = widget.link
+        ..style.border = 'none'
+        ..style.width = '100%'
+        ..style.height = '100%'
+        ..allow = 'fullscreen';
+      return iframe;
+    });
+
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(
-          color: Colors.grey[300]!,
-          width: 1,
-        ),
+        border: Border.all(color: Colors.grey[300]!, width: 1),
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
@@ -99,40 +102,9 @@ class _IphoneWebViewState extends State<IphoneWebView> {
           ),
         ],
       ),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.open_in_new,
-              size: 48,
-              color: Colors.grey[400],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Vista previa no disponible en web',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _openLink,
-              icon: const Icon(Icons.open_in_new),
-              label: const Text('Abrir Proyecto'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF050A30),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-              ),
-            ),
-          ],
-        ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: HtmlElementView(viewType: viewId),
       ),
     );
   }
@@ -145,10 +117,7 @@ class _IphoneWebViewState extends State<IphoneWebView> {
           height: double.infinity,
           decoration: BoxDecoration(
             color: Colors.white,
-            border: Border.all(
-              color: Colors.grey[300]!,
-              width: 1,
-            ),
+            border: Border.all(color: Colors.grey[300]!, width: 1),
             borderRadius: BorderRadius.circular(8),
             boxShadow: [
               BoxShadow(
@@ -160,9 +129,7 @@ class _IphoneWebViewState extends State<IphoneWebView> {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
-            child: WebViewWidget(
-              controller: _webViewController,
-            ),
+            child: WebViewWidget(controller: _webViewController),
           ),
         ),
         if (isLoading)
@@ -171,12 +138,9 @@ class _IphoneWebViewState extends State<IphoneWebView> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Center(
-              child: CircularProgressIndicator(),
-            ),
+            child: const Center(child: CircularProgressIndicator()),
           ),
       ],
     );
   }
 }
-

@@ -79,7 +79,7 @@ class _ContactPageState extends State<ContactPage>
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [AppColors.light, AppColors.light],
+                colors: [AppColors.primary, AppColors.primary],
               ),
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(32),
@@ -106,7 +106,7 @@ class _ContactPageState extends State<ContactPage>
                           : isTablet
                           ? MediaQuery.of(context).size.width * 0.6
                           : MediaQuery.of(context).size.width * 0.4,
-                      height: 300,
+                      height: 400,
                       child: const ContactModel(),
                     ),
                   ),
@@ -144,163 +144,130 @@ class _ContactPageState extends State<ContactPage>
 
           // Segunda sección: Formulario y redes sociales
           Container(
-            height: MediaQuery.of(context).size.height * 1.2,
-            color: Colors.white,
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 40),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Formulario
-                    FadeInLeft(
-                      duration: const Duration(milliseconds: 1000),
-                      delay: const Duration(milliseconds: 200),
-                      child: Card(
-                        elevation: 8,
-                        shadowColor: Colors.black45,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Container(
-                          width: isMobile ? 350 : 400,
-                          padding: const EdgeInsets.all(20),
-                          child: Form(
-                            key: _formKey,
-                            child: Column(
-                              children: [
-                                Text(
-                                  'Escríbeme',
-                                  style: Theme.of(context).textTheme.titleLarge
-                                      ?.copyWith(fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(height: 20),
-                                TextFormField(
-                                  controller: _emailController,
-                                  decoration: InputDecoration(
-                                    hintText: 'Correo electrónico',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    contentPadding: const EdgeInsets.all(12),
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Por favor ingresa un correo';
-                                    }
-                                    if (!RegExp(
-                                      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-                                    ).hasMatch(value)) {
-                                      return 'Por favor ingresa un correo válido';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 16),
-                                TextFormField(
-                                  controller: _descriptionController,
-                                  maxLines: 4,
-                                  decoration: InputDecoration(
-                                    hintText: 'Escribe una descripción',
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    contentPadding: const EdgeInsets.all(12),
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Por favor ingresa una descripción';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 20),
-                                ElevatedButton(
-                                  onPressed: _submitForm,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Color(0xFF9c27b0),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 32,
-                                      vertical: 12,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    'Enviar',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 40),
+            padding: EdgeInsets.symmetric(
+              horizontal: isMobile ? 20 : 60,
+              vertical: 60,
+            ),
+            child: isMobile
+                ? Column(
+                    children: [
+                      _buildForm(context, isMobile),
+                      const SizedBox(height: 60),
+                      _buildContactInfo(context),
+                    ],
+                  )
+                : Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: _buildForm(context, isMobile)),
+                      const SizedBox(width: 60),
+                      Expanded(child: _buildContactInfo(context)),
+                    ],
+                  ),
+          ),
 
-                    // Redes sociales
-                    FadeIn(
-                      duration: const Duration(milliseconds: 1000),
-                      delay: const Duration(milliseconds: 400),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _SocialIconButton(
-                            icon: Icons.facebook,
-                            color: Colors.blue,
-                            url:
-                                'https://www.facebook.com/profile.php?id=100095502885829',
-                            onTap: _launchUrl,
-                          ),
-                          const SizedBox(width: 20),
-                          _SocialIconButton(
-                            icon: Icons.photo_camera,
-                            color: Color(0xFFdc2743),
-                            url: 'https://www.instagram.com/thony_cm_18/',
-                            onTap: _launchUrl,
-                          ),
-                          const SizedBox(width: 20),
-                          _SocialIconButton(
-                            icon: Icons.chat,
-                            color: Colors.green,
-                            url:
-                                'https://api.whatsapp.com/qr/FNSLSZHWS3CFM1?autoload=1&app_absent=0',
-                            onTap: _launchUrl,
-                          ),
-                          const SizedBox(width: 20),
-                          _SocialIconButton(
-                            icon: Icons.business,
-                            color: Colors.blue,
-                            url:
-                                'https://www.linkedin.com/in/anthony-c-a12928111/',
-                            onTap: _launchUrl,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 40),
+          // Footer
+          _buildFooter(context, isMobile),
+        ],
+      ),
+    );
+  }
 
-                    // Divider
-                    Container(
-                      width: MediaQuery.of(context).size.width * 0.5,
-                      height: 2,
-                      color: Color(0xFF9c27b0),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Footer
-                    Text(
-                      '©2026 ANTHONY CORDOVA - Todos los Derechos Reservados',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Color(0xFF050A30), fontSize: 14),
-                    ),
-                  ],
+  Widget _buildForm(BuildContext context, bool isMobile) {
+    return FadeInLeft(
+      duration: const Duration(milliseconds: 800),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Etiqueta de sección
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFF9c27b0).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: const Color(0xFF9c27b0).withOpacity(0.3),
+              ),
+            ),
+            child: const Text(
+              '// send_message()',
+              style: TextStyle(
+                color: Color(0xFF9c27b0),
+                fontSize: 12,
+                fontFamily: 'monospace',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            '¿Tienes un proyecto\nen mente?',
+            style: TextStyle(
+              color: Color(0xFF050A30),
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              height: 1.2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Hablemos y construyamos algo increíble juntos.',
+            style: TextStyle(color: Colors.grey, fontSize: 15, height: 1.5),
+          ),
+          const SizedBox(height: 32),
+          // Card formulario
+          Container(
+            padding: const EdgeInsets.all(28),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.07),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
                 ),
+              ],
+            ),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildInput(
+                    controller: _emailController,
+                    hint: 'tu@email.com',
+                    label: 'Correo electrónico',
+                    icon: Icons.alternate_email,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor ingresa un correo';
+                      }
+                      if (!RegExp(
+                        r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
+                      ).hasMatch(value)) {
+                        return 'Correo inválido';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  _buildInput(
+                    controller: _descriptionController,
+                    hint: 'Cuéntame sobre tu idea...',
+                    label: 'Mensaje',
+                    icon: Icons.message_outlined,
+                    maxLines: 5,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Por favor escribe un mensaje';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  _AnimatedSendButton(onPressed: _submitForm),
+                ],
               ),
             ),
           ),
@@ -308,70 +275,430 @@ class _ContactPageState extends State<ContactPage>
       ),
     );
   }
+
+  Widget _buildInput({
+    required TextEditingController controller,
+    required String hint,
+    required String label,
+    required IconData icon,
+    int maxLines = 1,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      maxLines: maxLines,
+      validator: validator,
+      style: const TextStyle(color: Color(0xFF050A30), fontSize: 14),
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
+        labelStyle: const TextStyle(color: Colors.grey),
+        prefixIcon: Icon(icon, color: const Color(0xFF9c27b0), size: 20),
+        filled: true,
+        fillColor: const Color(0xFFF9F9F9),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey[200]!),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF9c27b0), width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.red),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.red, width: 1.5),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildContactInfo(BuildContext context) {
+    final socials = [
+      _SocialData(
+        icon: Icons.facebook,
+        label: 'Facebook',
+        handle: 'Anthony Córdova',
+        color: const Color(0xFF1877F2),
+        url: 'https://www.facebook.com/profile.php?id=100095502885829',
+      ),
+      _SocialData(
+        icon: Icons.photo_camera,
+        label: 'Instagram',
+        handle: '@thony_cm_18',
+        color: const Color(0xFFE1306C),
+        url: 'https://www.instagram.com/thony_cm_18/',
+      ),
+      _SocialData(
+        icon: Icons.chat,
+        label: 'WhatsApp',
+        handle: 'Enviar mensaje',
+        color: const Color(0xFF25D366),
+        url:
+            'https://api.whatsapp.com/qr/FNSLSZHWS3CFM1?autoload=1&app_absent=0',
+      ),
+      _SocialData(
+        icon: Icons.work_outline,
+        label: 'LinkedIn',
+        handle: 'Anthony Córdova',
+        color: const Color(0xFF0A66C2),
+        url: 'https://www.linkedin.com/in/anthony-c-a12928111/',
+      ),
+    ];
+
+    return FadeInRight(
+      duration: const Duration(milliseconds: 800),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFF050A30).withOpacity(0.07),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: const Color(0xFF050A30).withOpacity(0.15),
+              ),
+            ),
+            child: const Text(
+              '// social_links[]',
+              style: TextStyle(
+                color: Color(0xFF050A30),
+                fontSize: 12,
+                fontFamily: 'monospace',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Conéctate\nconmigo',
+            style: TextStyle(
+              color: Color(0xFF050A30),
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+              height: 1.2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'También puedes encontrarme en estas plataformas.',
+            style: TextStyle(color: Colors.grey, fontSize: 15, height: 1.5),
+          ),
+          const SizedBox(height: 32),
+          ...socials.asMap().entries.map((entry) {
+            final i = entry.key;
+            final s = entry.value;
+            return FadeInRight(
+              duration: const Duration(milliseconds: 600),
+              delay: Duration(milliseconds: 100 * i),
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: _SocialCard(data: s, onTap: _launchUrl),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFooter(BuildContext context, bool isMobile) {
+    const techStack = [
+      'Flutter',
+      'Dart',
+      'Firebase',
+      'Node.js',
+      'React',
+      'Git',
+    ];
+
+    return Container(
+      color: AppColors.primary,
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 24 : 60,
+        vertical: 40,
+      ),
+      child: Column(
+        children: [
+          // Tech stack tags
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            alignment: WrapAlignment.center,
+            children: techStack.map((tech) {
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  border: Border.all(color: AppColors.blackOption.withOpacity(0.15)),
+                  borderRadius: BorderRadius.circular(20),
+                  color: AppColors.blackOption.withOpacity(0.05),
+                ),
+                child: Text(
+                  tech,
+                  style: TextStyle(
+                    color: AppColors.blackOption.withOpacity(0.6),
+                    fontSize: 12,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 28),
+          // Divider degradado
+          Container(
+            height: 1,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Colors.transparent,
+                  Colors.white.withOpacity(0.2),
+                  Colors.transparent,
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          // Nombre + copyright
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: 'Anthony',
+                      style: TextStyle(
+                        color: AppColors.blackOption.withOpacity(0.9),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                    TextSpan(
+                      text: '.dev',
+                      style: const TextStyle(
+                        color: Color(0xFF9c27b0),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                '©2026 — Full Stack Developer',
+                style: TextStyle(
+                  color: AppColors.blackOption.withOpacity(0.35),
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-class _SocialIconButton extends StatefulWidget {
+// ─── Modelo de datos para redes sociales ───
+class _SocialData {
   final IconData icon;
+  final String label;
+  final String handle;
   final Color color;
   final String url;
-  final Function(String) onTap;
 
-  const _SocialIconButton({
+  const _SocialData({
     required this.icon,
+    required this.label,
+    required this.handle,
     required this.color,
     required this.url,
-    required this.onTap,
   });
-
-  @override
-  State<_SocialIconButton> createState() => _SocialIconButtonState();
 }
 
-class _SocialIconButtonState extends State<_SocialIconButton>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _scaleController;
-  late Animation<double> _scaleAnimation;
+// ─── Tarjeta de red social ───
+class _SocialCard extends StatefulWidget {
+  final _SocialData data;
+  final Future<void> Function(String) onTap;
+
+  const _SocialCard({required this.data, required this.onTap});
 
   @override
-  void initState() {
-    super.initState();
-    _scaleController = AnimationController(
-      duration: const Duration(milliseconds: 200),
-      vsync: this,
-    );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
-      CurvedAnimation(parent: _scaleController, curve: Curves.easeInOut),
-    );
-  }
+  State<_SocialCard> createState() => _SocialCardState();
+}
 
-  @override
-  void dispose() {
-    _scaleController.dispose();
-    super.dispose();
-  }
+class _SocialCardState extends State<_SocialCard> {
+  bool _hovered = false;
 
   @override
   Widget build(BuildContext context) {
-    return ScaleTransition(
-      scale: _scaleAnimation,
-      child: IconButton(
-        iconSize: 50,
-        icon: Icon(widget.icon),
-        color: widget.color,
-        onPressed: () {
-          _scaleController.forward().then((_) {
-            _scaleController.reverse();
-          });
-          widget.onTap(widget.url);
-        },
-        splashColor: widget.color.withOpacity(0.2),
-        onHover: (isHovering) {
-          if (isHovering) {
-            _scaleController.forward();
-          } else {
-            _scaleController.reverse();
-          }
-        },
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        transform: Matrix4.translationValues(_hovered ? -6 : 0, 0, 0),
+        child: GestureDetector(
+          onTap: () => widget.onTap(widget.data.url),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: _hovered
+                    ? widget.data.color.withOpacity(0.4)
+                    : Colors.grey[200]!,
+              ),
+              boxShadow: _hovered
+                  ? [
+                      BoxShadow(
+                        color: widget.data.color.withOpacity(0.15),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: widget.data.color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    widget.data.icon,
+                    color: widget.data.color,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.data.label,
+                        style: const TextStyle(
+                          color: Color(0xFF050A30),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        widget.data.handle,
+                        style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  size: 14,
+                  color: _hovered ? widget.data.color : Colors.grey[400],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Botón de envío animado ───
+class _AnimatedSendButton extends StatefulWidget {
+  final VoidCallback onPressed;
+
+  const _AnimatedSendButton({required this.onPressed});
+
+  @override
+  State<_AnimatedSendButton> createState() => _AnimatedSendButtonState();
+}
+
+class _AnimatedSendButtonState extends State<_AnimatedSendButton> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: _hovered
+                ? [const Color(0xFF7B1FA2), const Color(0xFF9c27b0)]
+                : [const Color(0xFF9c27b0), const Color(0xFFAB47BC)],
+          ),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: _hovered
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF9c27b0).withOpacity(0.4),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ]
+              : [],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: widget.onPressed,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    'Enviar mensaje',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  AnimatedSlide(
+                    duration: const Duration(milliseconds: 200),
+                    offset: _hovered ? const Offset(0.3, 0) : Offset.zero,
+                    child: const Icon(
+                      Icons.send_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

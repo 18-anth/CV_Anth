@@ -108,7 +108,7 @@ class _CertificationState extends State<Certification>
         MediaQuery.of(context).size.width < 1024;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.primary,
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -119,7 +119,7 @@ class _CertificationState extends State<Certification>
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [AppColors.light, AppColors.light],
+                  colors: [AppColors.primary, AppColors.primary],
                 ),
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(32),

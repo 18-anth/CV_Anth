@@ -29,7 +29,7 @@ class _AboutMeState extends State<AboutMe> {
         MediaQuery.of(context).size.width >= 600 &&
         MediaQuery.of(context).size.width < 1024;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.primary,
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -40,7 +40,7 @@ class _AboutMeState extends State<AboutMe> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [AppColors.light, AppColors.light],
+                  colors: [AppColors.primary, AppColors.primary],
                 ),
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(32),
@@ -67,7 +67,7 @@ class _AboutMeState extends State<AboutMe> {
                             : isTablet
                             ? MediaQuery.of(context).size.width * 0.6
                             : MediaQuery.of(context).size.width * 0.4,
-                        height: 300,
+                        height: 400,
                         child: const AvatarAbstractoModel(),
                       ),
                     ),

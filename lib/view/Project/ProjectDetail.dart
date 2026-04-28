@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../Components/iphone_webview.dart';
+import '../../Components/device_frame.dart';
 import '../../services/firebase_service.dart';
-
 
 class ProjectDetail extends StatefulWidget {
   final String projectId;
@@ -71,8 +71,6 @@ class _ProjectDetailState extends State<ProjectDetail> {
 
   @override
   Widget build(BuildContext context) {
-    final isMobile = MediaQuery.of(context).size.width < 600;
-
     if (isLoading) {
       return Scaffold(
         backgroundColor: Colors.white,
@@ -133,6 +131,86 @@ class _ProjectDetailState extends State<ProjectDetail> {
     final description = project?['description'] ?? '';
     final link = project?['link'] ?? '';
 
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    final isWeb = MediaQuery.of(context).size.width >= 1024;
+
+    // ── Columna izquierda: título y descripción ──
+    final titleColumn = Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisAlignment: MainAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          name,
+          style: const TextStyle(
+            color: Color(0xFF050A30),
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          description,
+          textAlign: TextAlign.justify,
+          style: const TextStyle(
+            color: Colors.grey,
+            fontSize: 16,
+            height: 1.5,
+          ),
+        ),
+      ],
+    );
+
+    // ── Columna derecha: tabs + preview ──
+    final previewColumn = link.isNotEmpty
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildViewTab('iphone', Icons.phone_iphone, 'iPhone'),
+                    _buildViewTab('android', Icons.phone_android, 'Android'),
+                    _buildViewTab('tablet', Icons.tablet_mac, 'Tablet'),
+                    _buildViewTab(null, Icons.devices_other, 'Auto'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Preview container
+              Center(
+                child: SizedBox(
+                  width: _getPreviewWidth(selectedView),
+                  height: isMobile ? 640 : 820,
+                  child: selectedView == null
+                      ? IphoneWebView(link: link)
+                      : DeviceFrame(
+                          deviceType: selectedView == 'iphone'
+                              ? DeviceType.iphone
+                              : selectedView == 'android'
+                              ? DeviceType.android
+                              : DeviceType.tablet,
+                          child: IphoneWebView(link: link),
+                        ),
+                ),
+              ),
+            ],
+          )
+        : Container(
+            padding: const EdgeInsets.all(40),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Center(
+              child: Text(
+                'No hay enlace disponible para este proyecto',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+          );
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -148,90 +226,27 @@ class _ProjectDetailState extends State<ProjectDetail> {
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Título y descripción
-              Container(
-                margin: const EdgeInsets.only(bottom: 30),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          child: isWeb
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(
-                      name,
-                      style: const TextStyle(
-                        color: Color(0xFF050A30),
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      description,
-                      style: const TextStyle(
-                        color: Colors.grey,
-                        fontSize: 16,
-                        height: 1.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Tabs para selector de vista
-              if (link.isNotEmpty)
-                Column(
-                  children: [
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          _buildViewTab('iphone', Icons.phone_iphone, 'iPhone'),
-                          _buildViewTab(
-                            'android',
-                            Icons.phone_android,
-                            'Android',
-                          ),
-                          _buildViewTab('tablet', Icons.tablet_mac, 'Tablet'),
-                          _buildViewTab(null, Icons.devices_other, 'Auto'),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Preview container
-                    Container(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      child: Center(
-                        child: Container(
-                          width: _getPreviewWidth(selectedView),
-                          constraints: BoxConstraints(
-                            maxHeight: isMobile ? 600 : 800,
-                          ),
-                          child: IphoneWebView(link: link),
-                        ),
-                      ),
-                    ),
+                    // Columna izquierda
+                    Expanded(flex: 2, child: titleColumn),
+                    // Columna derecha
+                    Expanded(flex: 3, child: previewColumn),
                   ],
                 )
-              else
-                Container(
-                  padding: const EdgeInsets.all(40),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'No hay enlace disponible para este proyecto',
-                      style: TextStyle(color: Colors.grey),
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 30),
+                      child: titleColumn,
                     ),
-                  ),
+                    previewColumn,
+                    const SizedBox(height: 40),
+                  ],
                 ),
-
-              const SizedBox(height: 40),
-            ],
-          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(

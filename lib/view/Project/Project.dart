@@ -111,7 +111,7 @@ class _ProjectState extends State<Project> {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [AppColors.light, AppColors.light],
+                colors: [AppColors.primary, AppColors.primary],
               ),
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(32),
@@ -138,7 +138,7 @@ class _ProjectState extends State<Project> {
                           : isTablet
                           ? MediaQuery.of(context).size.width * 0.6
                           : MediaQuery.of(context).size.width * 0.4,
-                      height: 300,
+                      height: 400,
                       child: const RobotModel(),
                     ),
                   ),
@@ -196,28 +196,48 @@ class _ProjectState extends State<Project> {
         : isTablet
         ? 2
         : 3;
-    double childAspectRatio = isMobile ? 1.0 : 0.85;
 
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1400),
           child: SlideInLeft(
             duration: const Duration(milliseconds: 600),
-            child: GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: crossAxisCount,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: childAspectRatio,
-              ),
-              itemCount: cardsData.length,
-              itemBuilder: (context, index) {
-                final card = cardsData[index];
-                return _buildProjectCard(card, index);
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final colWidth =
+                    (constraints.maxWidth - 16.0 * (crossAxisCount - 1)) /
+                    crossAxisCount;
+                final columns = List.generate(
+                  crossAxisCount,
+                  (_) => <Widget>[],
+                );
+                for (int i = 0; i < cardsData.length; i++) {
+                  columns[i % crossAxisCount].add(
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: _buildProjectCard(cardsData[i], i),
+                    ),
+                  );
+                }
+                final rowChildren = <Widget>[];
+                for (int col = 0; col < crossAxisCount; col++) {
+                  if (col > 0) rowChildren.add(const SizedBox(width: 16));
+                  rowChildren.add(
+                    SizedBox(
+                      width: colWidth,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: columns[col],
+                      ),
+                    ),
+                  );
+                }
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: rowChildren,
+                );
               },
             ),
           ),
@@ -234,7 +254,7 @@ class _ProjectState extends State<Project> {
       child: Card(
         elevation: 4,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        color: const Color(0xFFF4F4F4),
+        color: AppColors.primary,
         child: InkWell(
           onTap: () {
             context.go('/project/${card.id}');
@@ -243,41 +263,28 @@ class _ProjectState extends State<Project> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(16),
-                      topRight: Radius.circular(16),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      card.name,
+                      style: const TextStyle(
+                        color: Color(0xFF333333),
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                    color: const Color(0xFFF4F4F4),
-                  ),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          card.name,
-                          style: const TextStyle(
-                            color: Color(0xFF333333),
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          card.description,
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 14,
-                          ),
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
+                    const SizedBox(height: 8),
+                    Text(
+                      card.description,
+                      style: const TextStyle(
+                        color: Colors.grey,
+                        fontSize: 14,
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
               Padding(
@@ -291,7 +298,7 @@ class _ProjectState extends State<Project> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.share),
-                      color: Colors.grey,
+                      color: AppColors.blackOption,
                       onPressed: () => _shareProject(card),
                     ),
                   ],

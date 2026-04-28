@@ -25,8 +25,8 @@ class FirebaseService {
     }).toList();
 
     list.sort((a, b) {
-      final ta = (a['timestamp'] ?? 0) as num;
-      final tb = (b['timestamp'] ?? 0) as num;
+      final ta = num.tryParse(a['timestamp']?.toString() ?? '0') ?? 0;
+      final tb = num.tryParse(b['timestamp']?.toString() ?? '0') ?? 0;
       return tb.compareTo(ta);
     });
 
