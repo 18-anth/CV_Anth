@@ -182,10 +182,28 @@ class _MainLayoutState extends State<MainLayout> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircleAvatar(
-                    radius: 35,
-                    backgroundColor: AppColors.light,
-                    child: Icon(Icons.person, size: 36, color: AppColors.light),
+                  Container(
+                    width: 70,
+                    height: 70,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.darkgrey,
+                    ),
+                    child: ClipOval(
+                      child: Image.asset(
+                        'assets/img/yotraje.png',
+                        width: 70,
+                        height: 70,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(
+                            Icons.person,
+                            size: 36,
+                            color: AppColors.light,
+                          );
+                        },
+                      ),
+                    ),
                   ),
                   SizedBox(height: 8),
                   Text(

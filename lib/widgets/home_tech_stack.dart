@@ -7,7 +7,7 @@ class HomeTechStack extends StatelessWidget {
   final List<TechItem> techs;
 
   const HomeTechStack({
-    Key? key,
+    super.key,
     this.techs = const [
       TechItem(label: 'Flutter', icon: Icons.flutter_dash),
       TechItem(label: 'Dart', icon: Icons.code),
@@ -16,7 +16,7 @@ class HomeTechStack extends StatelessWidget {
       TechItem(label: 'Firebase', icon: Icons.cloud),
       TechItem(label: 'AWS', icon: Icons.cloud_queue),
     ],
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
