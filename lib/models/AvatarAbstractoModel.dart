@@ -4,7 +4,7 @@ import 'package:flutter_3d_controller/flutter_3d_controller.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 
 class AvatarAbstractoModel extends StatefulWidget {
-  const AvatarAbstractoModel({Key? key}) : super(key: key);
+  const AvatarAbstractoModel({super.key});
 
   @override
   State<AvatarAbstractoModel> createState() => _AvatarAbstractoModelState();
@@ -28,7 +28,7 @@ class _AvatarAbstractoModelState extends State<AvatarAbstractoModel> {
   }
 
   Future<String> _getModelUrl() async {
-    return 'https://drive.google.com/uc?export=download&id=13eK7Av8w_2Y62kN6Z5EKaK7O7N03MajJ';
+    return 'https://raw.githubusercontent.com/18-anth/CV_Anth/proyecto/assets/svg/ModelBlender_Avatar_abstracto.glb';
   }
 
   @override

@@ -4,7 +4,7 @@ import 'package:flutter_3d_controller/flutter_3d_controller.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 
 class BookModel extends StatefulWidget {
-  const BookModel({Key? key}) : super(key: key);
+  const BookModel({super.key});
 
   @override
   State<BookModel> createState() => _BookModelState();
@@ -28,7 +28,7 @@ class _BookModelState extends State<BookModel> {
   }
 
   Future<String> _getModelUrl() async {
-    return 'https://drive.google.com/uc?export=download&id=1K-TqkGXzGOPVs_RRbgB3Q1__4OM6tk4r';
+    return 'https://raw.githubusercontent.com/18-anth/CV_Anth/proyecto/assets/svg/ModelBlender_Libro.glb';
   }
 
   @override

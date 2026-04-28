@@ -123,10 +123,20 @@ class _MainLayoutState extends State<MainLayout> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_getAppBarTitle()),
-        backgroundColor: AppColors.light,
+        backgroundColor: AppColors.primary,
         elevation: 0,
         centerTitle: true,
-        foregroundColor: AppColors.darkgrey,
+        foregroundColor: AppColors.blackOption,
+        toolbarTextStyle: TextStyle(
+          color: AppColors.blackOption,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
+        titleTextStyle: TextStyle(
+          color: AppColors.blackOption,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
         actions: [
           // Botón de Login/Logout condicionado por autenticación
           Padding(
@@ -166,7 +176,7 @@ class _MainLayoutState extends State<MainLayout> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [AppColors.darkgrey, AppColors.darkgrey],
+                  colors: [AppColors.blackOption, AppColors.darkgrey],
                 ),
               ),
               child: Column(
@@ -324,10 +334,10 @@ class _MainLayoutState extends State<MainLayout> {
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
-        backgroundColor: AppColors.light,
+        backgroundColor: AppColors.primary,
         selectedItemColor: AppColors.blackOption,
-        unselectedItemColor: Colors.grey[300],
-        elevation: 8,
+        elevation: 0,
+        unselectedItemColor: Colors.grey[400],
         items: [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.work), label: 'Projects'),

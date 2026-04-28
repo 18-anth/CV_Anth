@@ -101,10 +101,12 @@ class _HomeTechState extends State<HomeTech> {
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          color: AppColors.grey,
+          color: AppColors.primary,
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(32),
             topRight: Radius.circular(32),
+            bottomLeft: Radius.circular(32),
+            bottomRight: Radius.circular(32),
           ),
           boxShadow: [
             BoxShadow(

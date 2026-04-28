@@ -45,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen>
             width: double.infinity,
             constraints: const BoxConstraints(minHeight: 100),
             decoration: BoxDecoration(
-              color: const Color(0xFFF4F4F4),
+              color: AppColors.primary,
               borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(32),
                 bottomRight: Radius.circular(32),
@@ -69,7 +69,7 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                     child: ParticleBackground(
                       particleCount: 50,
-                      particleColor: const Color(0xFFF4F4F4),
+                      particleColor: AppColors.primary,
                       particleSpeed: 1.5,
                     ),
                   ),
@@ -82,10 +82,7 @@ class _HomeScreenState extends State<HomeScreen>
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [
-                          AppColors.light,
-                          AppColors.light,
-                        ],
+                        colors: [AppColors.primary, AppColors.primary],
                       ),
                       borderRadius: const BorderRadius.only(
                         bottomLeft: Radius.circular(32),
@@ -126,7 +123,9 @@ class _HomeScreenState extends State<HomeScreen>
                                 borderRadius: BorderRadius.circular(32),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.blackOption.withOpacity(0.3),
+                                    color: AppColors.blackOption.withOpacity(
+                                      0.3,
+                                    ),
                                     blurRadius: 20,
                                     spreadRadius: 5,
                                   ),

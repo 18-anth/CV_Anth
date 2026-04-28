@@ -4,7 +4,7 @@ import 'package:flutter_3d_controller/flutter_3d_controller.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 
 class ContactModel extends StatefulWidget {
-  const ContactModel({Key? key}) : super(key: key);
+  const ContactModel({super.key});
 
   @override
   State<ContactModel> createState() => _ContactModelState();
@@ -28,7 +28,7 @@ class _ContactModelState extends State<ContactModel> {
   }
 
   Future<String> _getModelUrl() async {
-    return 'https://drive.google.com/uc?export=download&id=1Ag9V4ffvxKJwj-jC4hdn75r6591xrE_j';
+    return 'https://raw.githubusercontent.com/18-anth/CV_Anth/proyecto/assets/svg/ModelBlender_Satelite.glb';
   }
 
   @override

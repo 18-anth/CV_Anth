@@ -4,7 +4,7 @@ import 'package:flutter_3d_controller/flutter_3d_controller.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 
 class TreeModel extends StatefulWidget {
-  const TreeModel({Key? key}) : super(key: key);
+  const TreeModel({super.key});
 
   @override
   State<TreeModel> createState() => _TreeModelState();
@@ -28,7 +28,7 @@ class _TreeModelState extends State<TreeModel> {
   }
 
   Future<String> _getModelUrl() async {
-    return 'https://drive.google.com/uc?export=download&id=1Wt_O6rc9N5AHRWEa_k889aqXyIX_P8S6';
+    return 'https://raw.githubusercontent.com/18-anth/CV_Anth/proyecto/assets/svg/ModelBlender_Tronco.glb';
   }
 
   @override

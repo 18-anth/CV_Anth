@@ -4,7 +4,7 @@ import 'package:flutter_3d_controller/flutter_3d_controller.dart';
 import 'package:model_viewer_plus/model_viewer_plus.dart';
 
 const String _modelDriveUrl =
-    'https://drive.google.com/uc?export=download&id=1Ty8SVK_jeV7yvRibQyH_UJ9L5hkoTLE0';
+    'https://raw.githubusercontent.com/18-anth/CV_Anth/proyecto/assets/svg/ModelBlender_robot_futurista.glb';
 
 class RobotModel extends StatefulWidget {
   const RobotModel({super.key});
