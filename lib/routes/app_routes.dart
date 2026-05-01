@@ -6,6 +6,7 @@ import 'package:cv_anth/view/Contact/Contact.dart';
 import 'package:cv_anth/view/Project/Project.dart';
 import 'package:cv_anth/view/Project/ProjectDetail.dart';
 import 'package:cv_anth/view/Project/UploadProject.dart';
+import 'package:cv_anth/view/Project/EditProject.dart';
 import 'package:cv_anth/view/Certifications/Certification.dart';
 import 'package:cv_anth/view/Certifications/CertificationDetail.dart';
 import 'package:cv_anth/view/About/AboutMe.dart';
@@ -19,6 +20,7 @@ class RoutePaths {
   static const String login = '/login';
   static const String project = '/project';
   static const String projectDetail = '/project/:id';
+  static const String editProject = '/project/:id/edit';
   static const String aboutMe = '/aboutme';
   static const String certification = '/certification';
   static const String certificationDetail = '/certification/:id';
@@ -45,6 +47,10 @@ class AppNavigator {
 
   static void goToProjectDetail(BuildContext context, String id) {
     context.go('/project/$id');
+  }
+
+  static void goToEditProject(BuildContext context, String id) {
+    context.go('/project/$id/edit');
   }
 
   static void goToAboutMe(BuildContext context) {
@@ -154,6 +160,16 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) {
         final String projectId = state.pathParameters['id']!;
         return ProjectDetail(projectId: projectId);
+      },
+    ),
+
+    // Edit Project Route
+    GoRoute(
+      path: '/project/:id/edit',
+      name: 'editProject',
+      builder: (context, state) {
+        final String projectId = state.pathParameters['id']!;
+        return EditProject(projectId: projectId);
       },
     ),
 

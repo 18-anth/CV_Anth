@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../Components/iphone_webview.dart';
 import '../../Components/device_frame.dart';
 import '../../services/firebase_service.dart';
+import '../../controllers/auth_controller.dart';
 
 class ProjectDetail extends StatefulWidget {
   final String projectId;
@@ -152,11 +154,7 @@ class _ProjectDetailState extends State<ProjectDetail> {
         Text(
           description,
           textAlign: TextAlign.justify,
-          style: const TextStyle(
-            color: Colors.grey,
-            fontSize: 16,
-            height: 1.5,
-          ),
+          style: const TextStyle(color: Colors.grey, fontSize: 16, height: 1.5),
         ),
       ],
     );
@@ -222,6 +220,22 @@ class _ProjectDetailState extends State<ProjectDetail> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/project'),
         ),
+        actions: [
+          // Botón de editar (solo visible si está autenticado)
+          Consumer<AuthController>(
+            builder: (context, auth, child) {
+              if (!auth.isAuthenticated) {
+                return const SizedBox.shrink();
+              }
+              return IconButton(
+                icon: const Icon(Icons.edit),
+                tooltip: 'Editar Proyecto',
+                onPressed: () =>
+                    context.go('/project/${widget.projectId}/edit'),
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
