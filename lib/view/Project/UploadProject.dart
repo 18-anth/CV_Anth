@@ -113,6 +113,114 @@ class _UploadProjectState extends State<UploadProject> {
   }
 
   // ══════════════════════════════════════════════════════════════
+  // DIÁLOGO DE INSTRUCCIONES DE AUTENTICACIÓN
+  // ══════════════════════════════════════════════════════════════
+
+  Future<bool> _showAuthInstructions() async {
+    return await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.info_outline, color: Colors.blue),
+            SizedBox(width: 10),
+            Text('Autorización de Google Drive'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Se abrirá una ventana emergente de Google para autorizar el acceso a Google Drive.',
+              style: TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Por favor, sigue estos pasos:',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            ),
+            const SizedBox(height: 10),
+            _buildInstructionStep('1', 'Espera a que se abra la ventana de Google'),
+            _buildInstructionStep('2', 'Selecciona tu cuenta de Google'),
+            _buildInstructionStep('3', 'Haz clic en "Permitir" o "Allow"'),
+            _buildInstructionStep('4', 'NO cierres la ventana manualmente'),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.amber.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.amber.shade300),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.warning_amber, color: Colors.amber),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Si cierras la ventana, la subida se cancelará',
+                      style: TextStyle(fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton.icon(
+            onPressed: () => Navigator.pop(context, true),
+            icon: const Icon(Icons.check),
+            label: const Text('Entendido, continuar'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    ) ?? false;
+  }
+
+  Widget _buildInstructionStep(String number, String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Container(
+            width: 24,
+            height: 24,
+            decoration: BoxDecoration(
+              color: Colors.blue,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: Text(
+                number,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(text, style: const TextStyle(fontSize: 14)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════
   // MÉTODO PARA GUARDAR EL PROYECTO
   // ══════════════════════════════════════════════════════════════
 
@@ -135,10 +243,18 @@ class _UploadProjectState extends State<UploadProject> {
     });
 
     try {
-      // 0. Pre-autenticar con Google Drive
+      // 0. Mostrar instrucciones antes de autenticar
+      if (!mounted) return;
+      final shouldContinue = await _showAuthInstructions();
+      if (!shouldContinue) {
+        setState(() => _isUploading = false);
+        return;
+      }
+
+      // 1. Pre-autenticar con Google Drive
       setState(() => _uploadStatus = 'Autenticando con Google Drive...');
       final authenticated = await GoogleDriveUploadService.preAuthenticate();
-      
+
       if (!authenticated) {
         throw Exception('AUTENTICACION_CANCELADA');
       }
@@ -242,21 +358,26 @@ class _UploadProjectState extends State<UploadProject> {
         _isUploading = false;
         _uploadProgress = 0.0;
       });
-      
+
       // Mensajes de error más amigables
       String errorMessage;
       final errorStr = e.toString();
-      
-      if (errorStr.contains('POPUP_CERRADO') || errorStr.contains('popup_closed')) {
-        errorMessage = '❌ Se cerró la ventana de Google.\n\nPor favor, autoriza el acceso a Google Drive para poder subir las imágenes.';
+
+      if (errorStr.contains('POPUP_CERRADO') ||
+          errorStr.contains('popup_closed')) {
+        errorMessage =
+            '❌ Se cerró la ventana de Google.\n\nPor favor, autoriza el acceso a Google Drive para poder subir las imágenes.';
       } else if (errorStr.contains('AUTENTICACION_CANCELADA')) {
-        errorMessage = '❌ Autenticación cancelada.\n\nNecesitas autorizar el acceso a Google Drive para subir imágenes.';
-      } else if (errorStr.contains('NetworkError') || errorStr.contains('network')) {
-        errorMessage = '❌ Error de conexión.\n\nVerifica tu conexión a internet e intenta nuevamente.';
+        errorMessage =
+            '❌ Autenticación cancelada.\n\nNecesitas autorizar el acceso a Google Drive para subir imágenes.';
+      } else if (errorStr.contains('NetworkError') ||
+          errorStr.contains('network')) {
+        errorMessage =
+            '❌ Error de conexión.\n\nVerifica tu conexión a internet e intenta nuevamente.';
       } else {
         errorMessage = 'Error al guardar proyecto: $e';
       }
-      
+
       _showError(errorMessage);
     }
   }

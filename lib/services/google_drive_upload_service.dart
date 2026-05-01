@@ -10,17 +10,30 @@ import 'app_config.dart';
 /// 📤 Servicio para subir imágenes directamente a Google Drive
 /// usando Google Sign-In y Google Drive API
 class GoogleDriveUploadService {
+  // Singleton instances
   static GoogleSignIn? _googleSignIn;
   static drive.DriveApi? _driveApi;
+  static bool _isInitialized = false;
 
-  /// Inicializa Google Sign-In con los scopes necesarios
+  /// Inicializa Google Sign-In con los scopes necesarios (solo una vez)
   static GoogleSignIn _getGoogleSignIn() {
-    _googleSignIn ??= GoogleSignIn(
-      clientId: AppConfig.googleClientId,
-      scopes: [
-        drive.DriveApi.driveFileScope, // Permiso para crear/modificar archivos
-      ],
-    );
+    if (_googleSignIn == null) {
+      if (_isInitialized) {
+        throw Exception('GoogleSignIn ya fue inicializado pero la instancia es nula');
+      }
+      
+      _googleSignIn = GoogleSignIn(
+        clientId: AppConfig.googleClientId,
+        scopes: [
+          drive.DriveApi.driveFileScope, // Permiso para crear/modificar archivos
+        ],
+      );
+      _isInitialized = true;
+      
+      if (kIsWeb) {
+        print('✅ GoogleSignIn inicializado para web');
+      }
+    }
     return _googleSignIn!;
   }
 
@@ -115,14 +128,39 @@ class GoogleDriveUploadService {
       await _ensureAuthenticated();
       return true;
     } catch (e) {
+      print('❌ Error en preAuthenticate: $e');
       return false;
     }
   }
 
   /// Verifica si el usuario ya está autenticado
   static bool isAuthenticated() {
-    final googleSignIn = _getGoogleSignIn();
-    return googleSignIn.currentUser != null;
+    if (!_isInitialized || _googleSignIn == null) {
+      return false;
+    }
+    return _googleSignIn!.currentUser != null;
+  }
+
+  /// Cierra la sesión de Google
+  static Future<void> signOut() async {
+    try {
+      if (_googleSignIn != null) {
+        await _googleSignIn!.signOut();
+        _driveApi = null;
+        print('✅ Sesión de Google cerrada');
+      }
+    } catch (e) {
+      print('⚠️ Error al cerrar sesión de Google: $e');
+    }
+  }
+
+  /// Limpia todas las instancias (útil para reiniciar el servicio)
+  static Future<void> dispose() async {
+    await signOut();
+    _googleSignIn = null;
+    _driveApi = null;
+    _isInitialized = false;
+    print('✅ Servicio de Google Drive limpiado');
   }
 
   /// Sube un archivo a Google Drive
@@ -265,12 +303,5 @@ class GoogleDriveUploadService {
       default:
         return 'image/jpeg';
     }
-  }
-
-  /// Cierra la sesión de Google (opcional)
-  static Future<void> signOut() async {
-    final googleSignIn = _getGoogleSignIn();
-    await googleSignIn.signOut();
-    _driveApi = null;
   }
 }
