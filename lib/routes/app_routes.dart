@@ -5,6 +5,7 @@ import 'package:cv_anth/view/Home/Homescreen.dart';
 import 'package:cv_anth/view/Contact/Contact.dart';
 import 'package:cv_anth/view/Project/Project.dart';
 import 'package:cv_anth/view/Project/ProjectDetail.dart';
+import 'package:cv_anth/view/Project/UploadProject.dart';
 import 'package:cv_anth/view/Certifications/Certification.dart';
 import 'package:cv_anth/view/Certifications/CertificationDetail.dart';
 import 'package:cv_anth/view/About/AboutMe.dart';
@@ -193,20 +194,7 @@ final GoRouter appRouter = GoRouter(
       path: '/uploadproject',
       name: 'uploadProject',
       builder: (context, state) {
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Upload Project | CV { Anth }'),
-            backgroundColor: AppColors.light,
-            foregroundColor: AppColors.light,
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () => context.go('/project'),
-            ),
-          ),
-          body: const Center(child: Text('Upload Project Page')),
-          backgroundColor: AppColors.light,
-        );
+        return const UploadProject();
       },
     ),
 

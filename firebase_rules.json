@@ -1,0 +1,63 @@
+{
+    "rules": {
+        "Projects": {
+            ".read": "auth != null",
+            ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+            "$projectId": {
+                ".validate": "newData.hasChildren(['name', 'timestamp'])",
+                "name": {
+                    ".validate": "newData.isString()"
+                },
+                "timestamp": {
+                    ".validate": "newData.isNumber()"
+                }
+            }
+        },
+        "Certifications": {
+            ".read": "auth != null",
+            ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+            "$certId": {
+                ".validate": "newData.hasChildren(['name', 'driveFileId'])",
+                "name": {
+                    ".validate": "newData.isString()"
+                },
+                "driveFileId": {
+                    ".validate": "newData.isString()"
+                },
+                "description": {
+                    ".validate": "newData.isString()"
+                }
+            }
+        },
+        "Skills": {
+            ".read": "auth != null",
+            ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+            "$skillId": {
+                ".validate": "newData.hasChildren(['name'])",
+                "name": {
+                    ".validate": "newData.isString()"
+                },
+                "category": {
+                    ".validate": "newData.isString()"
+                },
+                "level": {
+                    ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 100"
+                }
+            }
+        },
+        "users": {
+            ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+            ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+            "$uid": {
+                "email": {
+                    ".validate": "newData.isString()"
+                },
+                "role": {
+                    ".validate": "newData.isString() && (newData.val() === 'admin' || newData.val() === 'user')"
+                }
+            }
+        },
+        ".read": false,
+        ".write": false
+    }
+}

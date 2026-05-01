@@ -49,5 +49,37 @@ class GoogleDriveService {
     if (files.isEmpty) return null;
     return files.first['id'] as String?;
   }
+
+  // ─── Sincronización: listar archivos de una carpeta ──────────────────────────
+
+  /// Lista todos los archivos (no carpetas) dentro de una carpeta específica.
+  /// Retorna una lista con: {id, name, mimeType, webViewLink}
+  static Future<List<Map<String, dynamic>>> listFilesInFolder(
+    String folderId, {
+    String? apiKey,
+  }) async {
+    apiKey ??= AppConfig.googleApiKey;
+
+    final uri = Uri.parse(
+      '$_baseUrl/files'
+      '?q=${Uri.encodeComponent("'$folderId' in parents and trashed=false and mimeType!='application/vnd.google-apps.folder'")}'
+      '&key=$apiKey'
+      '&fields=files(id,name,mimeType,webViewLink,createdTime)',
+    );
+
+    final response = await http.get(uri);
+    if (response.statusCode != 200) {
+      throw Exception(
+        'Drive: error al listar archivos de la carpeta (${response.statusCode})',
+      );
+    }
+
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    final files = (json['files'] as List<dynamic>? ?? [])
+        .map((file) => Map<String, dynamic>.from(file as Map))
+        .toList();
+
+    return files;
+  }
 }
 

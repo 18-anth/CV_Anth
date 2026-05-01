@@ -73,5 +73,88 @@ class FirebaseService {
     data['id'] = id;
     return data;
   }
-}
 
+  // ───────────── WRITE OPERATIONS ─────────────
+
+  /// Crea o actualiza una certificación en Firebase.
+  /// Si [id] no se proporciona, genera uno automáticamente.
+  static Future<String> saveCertification({
+    required String name,
+    required String driveFileId,
+    String? description,
+    String? imageUrl,
+    String? id,
+  }) async {
+    final certId = id ?? _generateId();
+    final data = {
+      'name': name,
+      'driveFileId': driveFileId,
+      if (description != null && description.isNotEmpty)
+        'description': description,
+      if (imageUrl != null && imageUrl.isNotEmpty) 'imageUrl': imageUrl,
+      'createdAt': DateTime.now().millisecondsSinceEpoch,
+    };
+
+    await _db.ref('Certifications/$certId').set(data);
+    return certId;
+  }
+
+  /// Elimina una certificación por su ID.
+  static Future<void> deleteCertification(String id) async {
+    await _db.ref('Certifications/$id').remove();
+  }
+
+  // ───────────── PROJECTS WRITE OPERATIONS ─────────────
+
+  /// Crea o actualiza un proyecto en Firebase.
+  /// Si [id] no se proporciona, genera uno automáticamente.
+  static Future<String> saveProject({
+    required String name,
+    required String description,
+    required String link,
+    required List<String> images,
+    required List<String> imagesMobile,
+    String? id,
+  }) async {
+    final projectId = id ?? _generateUUID();
+    final data = {
+      'name': name,
+      'description': description,
+      'link': link,
+      'images': images,
+      'imagesMobile': imagesMobile,
+      'timestamp': DateTime.now().toIso8601String(),
+    };
+
+    await _db.ref('Projects/$projectId').set(data);
+    return projectId;
+  }
+
+  /// Elimina un proyecto por su ID.
+  static Future<void> deleteProject(String id) async {
+    await _db.ref('Projects/$id').remove();
+  }
+
+  // ───────────── HELPERS ─────────────
+
+  /// Genera un UUID v4 simple (compatible con la estructura de Firebase).
+  static String _generateUUID() {
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final random1 = DateTime.now().microsecond;
+    final random2 = (timestamp * random1) % 1000000;
+    
+    return '${timestamp.toRadixString(16)}-${random1.toRadixString(16)}-${random2.toRadixString(16)}-${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}';
+  }
+
+  /// Genera un ID único (similar al de Firebase).
+  static String _generateId() {
+    const chars =
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+    final random = DateTime.now().millisecondsSinceEpoch.toString();
+    final result = StringBuffer(random);
+    for (int i = 0; i < 10; i++) {
+      result.write(chars[DateTime.now().microsecond % chars.length]);
+    }
+    return result.toString();
+  }
+}

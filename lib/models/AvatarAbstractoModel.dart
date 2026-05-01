@@ -29,6 +29,7 @@ class _AvatarAbstractoModelState extends State<AvatarAbstractoModel> {
 
   Future<String> _getModelUrl() async {
     return 'https://raw.githubusercontent.com/18-anth/CV_Anth/proyecto/assets/svg/ModelBlender_Avatar_abstracto.glb';
+    // https://raw.githubusercontent.com/ElGringoAutoTaller/PlatformRepo/proyecto/assets/database/demo_data.json
   }
 
   @override

@@ -4,7 +4,7 @@ import 'package:animate_do/animate_do.dart';
 import '../../models/AvatarAbstractoModel.dart';
 
 class AboutMe extends StatefulWidget {
-  const AboutMe({Key? key}) : super(key: key);
+  const AboutMe({super.key});
 
   @override
   State<AboutMe> createState() => _AboutMeState();

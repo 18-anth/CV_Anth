@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../models/RobotModel.dart';
 import '../../services/firebase_service.dart';
+import '../../controllers/auth_controller.dart';
 
 class ProjectCard {
   final String id;
@@ -175,16 +177,26 @@ class _ProjectState extends State<Project> {
           ),
           // Sección de tarjetas
           Container(
-            color: const Color(0xFFF6F8FC),
             padding: const EdgeInsets.symmetric(vertical: 20),
-            child: isLoading
-                ? const CircularProgressIndicator()
-                : cardsData.isEmpty
-                ? const SizedBox(
-                    height: 200,
-                    child: Center(child: Text('No hay proyectos disponibles')),
-                  )
-                : _buildProjectGrid(isMobile, isTablet),
+            child: Column(
+              children: [
+                // Botón para agregar proyecto (solo si está autenticado)
+                _buildAddProjectButton(),
+                const SizedBox(height: 20),
+
+                // Grid de proyectos
+                isLoading
+                    ? const CircularProgressIndicator()
+                    : cardsData.isEmpty
+                    ? const SizedBox(
+                        height: 200,
+                        child: Center(
+                          child: Text('No hay proyectos disponibles'),
+                        ),
+                      )
+                    : _buildProjectGrid(isMobile, isTablet),
+              ],
+            ),
           ),
         ],
       ),
@@ -424,6 +436,106 @@ class _ProjectState extends State<Project> {
           ),
         ),
       ),
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // BOTÓN PARA AGREGAR PROYECTO (solo si está autenticado)
+  // ══════════════════════════════════════════════════════════════
+
+  Widget _buildAddProjectButton() {
+    return Consumer<AuthController>(
+      builder: (context, auth, child) {
+        // Solo mostrar si el usuario está autenticado
+        if (!auth.isAuthenticated) {
+          return const SizedBox.shrink();
+        }
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1400),
+              child: FadeInDown(
+                duration: const Duration(milliseconds: 600),
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Color(0xFF050A30), Color(0xFF0d0d0d)],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => context.go('/uploadproject'),
+                      borderRadius: BorderRadius.circular(16),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.2),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.add_circle_outline,
+                                color: Colors.white,
+                                size: 32,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Agregar Nuevo Proyecto',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Sube tus proyectos con imágenes y enlaces',
+                                    style: TextStyle(
+                                      color: Colors.white.withOpacity(0.8),
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(
+                              Icons.arrow_forward_ios,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -47,8 +47,50 @@ class _LoginScreenState extends State<LoginScreen> {
       _passwordController.text.trim(),
     );
 
-    if (success && mounted) {
-      Navigator.pop(context);
+    if (!mounted) return;
+
+    if (success) {
+      // Login exitoso - cerrar el diálogo después de un pequeño delay
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    } else {
+      // El error ya está en _errorMessage y se muestra en el widget
+      // El usuario puede intentar de nuevo
+    }
+  }
+
+  void _handleRegister() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      setState(() {
+        _errorMessage = 'Email y contraseña son requeridos';
+      });
+      return;
+    }
+
+    final success = await _authController.register(email, password);
+
+    if (!mounted) return;
+
+    if (success) {
+      // Registro exitoso - mostrar mensaje
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✅ Registro exitoso. Ya estás autenticado.'),
+          backgroundColor: Color(0xFF050A30),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    } else {
+      // El error ya está en _errorMessage y se muestra en el widget
     }
   }
 
@@ -78,10 +120,7 @@ class _LoginScreenState extends State<LoginScreen> {
               SizedBox(height: 8),
               Text(
                 'Acceso a edición de perfil',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey[600],
-                ),
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
               ),
               SizedBox(height: 24),
 
@@ -104,10 +143,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: AppColors.light,
-                      width: 2,
-                    ),
+                    borderSide: BorderSide(color: AppColors.light, width: 2),
                   ),
                 ),
                 keyboardType: TextInputType.emailAddress,
@@ -146,10 +182,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: AppColors.light,
-                      width: 2,
-                    ),
+                    borderSide: BorderSide(color: AppColors.light, width: 2),
                   ),
                 ),
               ),
@@ -167,10 +200,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   child: Text(
                     _errorMessage!,
-                    style: TextStyle(
-                      color: Colors.red[700],
-                      fontSize: 13,
-                    ),
+                    style: TextStyle(color: Colors.red[700], fontSize: 13),
                   ),
                 ),
               SizedBox(height: 20),
@@ -238,39 +268,46 @@ class _LoginScreenState extends State<LoginScreen> {
 
               SizedBox(height: 16),
 
-              // Credenciales de demo
+              // Info de registro
               Container(
-                padding: EdgeInsets.all(10),
+                padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: Colors.blue[50],
+                  border: Border.all(color: Colors.blue[200]!),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Credenciales de prueba:',
+                      '📝 ¿No tienes cuenta?',
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: Colors.grey[700],
+                        color: Colors.blue[700],
                       ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Usa las credenciales de tu cuenta Firebase.',
+                      style: TextStyle(fontSize: 11, color: Colors.blue[600]),
                     ),
                     SizedBox(height: 6),
-                    Text(
-                      'Email: admin@example.com',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey[700],
-                        fontFamily: 'monospace',
+                    TextButton(
+                      onPressed: () => _handleRegister(),
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
-                    ),
-                    Text(
-                      'Contraseña: password123',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey[700],
-                        fontFamily: 'monospace',
+                      child: Text(
+                        'Registrarse con un nuevo email',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.blue[700],
+                          fontWeight: FontWeight.bold,
+                          decoration: TextDecoration.underline,
+                        ),
                       ),
                     ),
                   ],
@@ -286,8 +323,5 @@ class _LoginScreenState extends State<LoginScreen> {
 
 /// 🎯 Mostrar diálogo de login
 void showLoginDialog(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (context) => const LoginScreen(),
-  );
+  showDialog(context: context, builder: (context) => const LoginScreen());
 }

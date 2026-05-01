@@ -5,9 +5,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cv_anth/firebase_options.dart';
 import 'package:cv_anth/services/env_loader.dart';
 import 'package:cv_anth/controllers/auth_controller.dart';
+import 'package:provider/provider.dart';
 
-// 🌍 Variable global para el controlador de autenticación (exportada)
-final AuthController authController = AuthController();
+// 🌍 Variable global para el controlador de autenticación (se inicializa después de Firebase)
+late AuthController authController;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,7 +21,7 @@ void main() async {
     print('⚠️ Error al cargar variables de entorno: $e');
   }
 
-  // 🔥 Inicializar Firebase
+  // 🔥 Inicializar Firebase PRIMERO
   try {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
@@ -29,6 +30,9 @@ void main() async {
   } catch (e) {
     print('⚠️ Error al inicializar Firebase: $e');
   }
+
+  // 🔐 DESPUÉS inicializar AuthController (ahora Firebase ya existe)
+  authController = AuthController();
 
   runApp(const MyApp());
 }
@@ -62,14 +66,17 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      debugShowCheckedModeBanner: false,
-      title: 'CV { Anth }',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.light),
-        useMaterial3: true,
+    return ChangeNotifierProvider.value(
+      value: authController,
+      child: MaterialApp.router(
+        debugShowCheckedModeBanner: false,
+        title: 'CV { Anth }',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: AppColors.light),
+          useMaterial3: true,
+        ),
+        routerConfig: appRouter,
       ),
-      routerConfig: appRouter,
     );
   }
 }
