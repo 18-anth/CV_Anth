@@ -114,15 +114,17 @@ class FirebaseService {
     required String link,
     required List<String> images,
     required List<String> imagesMobile,
+    String? logo,
     String? id,
   }) async {
-    final projectId = id ?? _generateUUID();
+    final projectId = id ?? generateUUID();
     final data = {
       'name': name,
       'description': description,
       'link': link,
       'images': images,
       'imagesMobile': imagesMobile,
+      'logo': logo ?? '',
       'timestamp': DateTime.now().toIso8601String(),
     };
 
@@ -138,11 +140,11 @@ class FirebaseService {
   // ───────────── HELPERS ─────────────
 
   /// Genera un UUID v4 simple (compatible con la estructura de Firebase).
-  static String _generateUUID() {
+  static String generateUUID() {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final random1 = DateTime.now().microsecond;
     final random2 = (timestamp * random1) % 1000000;
-    
+
     return '${timestamp.toRadixString(16)}-${random1.toRadixString(16)}-${random2.toRadixString(16)}-${DateTime.now().millisecondsSinceEpoch.toRadixString(16)}';
   }
 

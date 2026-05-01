@@ -6,7 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'dart:io' show File;
 import '../../controllers/auth_controller.dart';
 import '../../services/firebase_service.dart';
-import '../../services/firebase_storage_service.dart';
+import '../../services/google_drive_upload_service.dart';
 import '../../utils/Colors.dart';
 
 class EditProject extends StatefulWidget {
@@ -31,6 +31,10 @@ class _EditProjectState extends State<EditProject> {
   // URLs de imágenes existentes
   final List<String> _existingWebImages = [];
   final List<String> _existingMobileImages = [];
+
+  // Logo
+  String? _existingLogo;
+  PlatformFile? _newLogo;
 
   bool _isLoading = true;
   bool _isUploading = false;
@@ -84,6 +88,9 @@ class _EditProjectState extends State<EditProject> {
             (projectData['imagesMobile'] as List).map((e) => e.toString()),
           );
         }
+
+        // Cargar logo
+        _existingLogo = projectData['logo'] as String?;
 
         _isLoading = false;
       });
@@ -156,6 +163,36 @@ class _EditProjectState extends State<EditProject> {
     });
   }
 
+  Future<void> _pickNewLogo() async {
+    try {
+      // Usar FilePicker (funciona en todas las plataformas incluido web)
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.isNotEmpty) {
+        setState(() {
+          _newLogo = result.files.first;
+        });
+      }
+    } catch (e) {
+      _showError('Error al seleccionar logo: $e');
+    }
+  }
+
+  void _removeExistingLogo() {
+    setState(() {
+      _existingLogo = null;
+    });
+  }
+
+  void _removeNewLogo() {
+    setState(() {
+      _newLogo = null;
+    });
+  }
+
   // ══════════════════════════════════════════════════════════════
   // MÉTODO PARA ACTUALIZAR EL PROYECTO
   // ══════════════════════════════════════════════════════════════
@@ -178,17 +215,28 @@ class _EditProjectState extends State<EditProject> {
     setState(() {
       _isUploading = true;
       _uploadProgress = 0.0;
-      _uploadStatus = 'Preparando...';
+      _uploadStatus = 'Conectando con Google Drive...';
     });
 
     try {
-      // 1. Subir nuevas imágenes web
+      // 0. Pre-autenticar con Google Drive si hay nuevas imágenes
+      if (_newWebImages.isNotEmpty || _newMobileImages.isNotEmpty || _newLogo != null) {
+        setState(() => _uploadStatus = 'Autenticando con Google Drive...');
+        final authenticated = await GoogleDriveUploadService.preAuthenticate();
+        
+        if (!authenticated) {
+          throw Exception('AUTENTICACION_CANCELADA');
+        }
+      }
+
+      // 1. Subir nuevas imágenes web a Google Drive
       List<String> newWebImageUrls = [];
       if (_newWebImages.isNotEmpty) {
-        setState(() => _uploadStatus = 'Subiendo nuevas imágenes web...');
-        newWebImageUrls = await FirebaseStorageService.uploadMultipleImages(
-          images: _newWebImages,
-          folder: 'Project/Web',
+        setState(() => _uploadStatus = 'Subiendo nuevas imágenes web a Google Drive...');
+        newWebImageUrls = await GoogleDriveUploadService.uploadMultipleImages(
+          projectId: widget.projectId,
+          type: 'web',
+          files: _newWebImages,
           onProgress: (current, total) {
             setState(() {
               _uploadProgress = (current / total) * 0.3;
@@ -198,13 +246,14 @@ class _EditProjectState extends State<EditProject> {
         );
       }
 
-      // 2. Subir nuevas imágenes mobile
+      // 2. Subir nuevas imágenes mobile a Google Drive
       List<String> newMobileImageUrls = [];
       if (_newMobileImages.isNotEmpty) {
-        setState(() => _uploadStatus = 'Subiendo nuevas imágenes mobile...');
-        newMobileImageUrls = await FirebaseStorageService.uploadMultipleImages(
-          images: _newMobileImages,
-          folder: 'Project/Mobile',
+        setState(() => _uploadStatus = 'Subiendo nuevas imágenes mobile a Google Drive...');
+        newMobileImageUrls = await GoogleDriveUploadService.uploadMultipleImages(
+          projectId: widget.projectId,
+          type: 'mobile',
+          files: _newMobileImages,
           onProgress: (current, total) {
             setState(() {
               _uploadProgress = 0.3 + (current / total) * 0.3;
@@ -214,14 +263,32 @@ class _EditProjectState extends State<EditProject> {
         );
       }
 
-      // 3. Combinar imágenes existentes con las nuevas
+      // 3. Subir logo a Google Drive si hay uno nuevo
+      String? logoUrl = _existingLogo;
+      if (_newLogo != null) {
+        setState(() => _uploadStatus = 'Subiendo logo a Google Drive...');
+        final logoUrls = await GoogleDriveUploadService.uploadMultipleImages(
+          projectId: widget.projectId,
+          type: 'logo',
+          files: [_newLogo!],
+          onProgress: (current, total) {
+            setState(() {
+              _uploadProgress = 0.6;
+              _uploadStatus = 'Subiendo logo...';
+            });
+          },
+        );
+        logoUrl = logoUrls.isNotEmpty ? logoUrls.first : null;
+      }
+
+      // 4. Combinar imágenes existentes con las nuevas
       final allWebImages = [..._existingWebImages, ...newWebImageUrls];
       final allMobileImages = [..._existingMobileImages, ...newMobileImageUrls];
 
-      // 4. Actualizar en Firebase Database
+      // 5. Actualizar URLs en Firebase Realtime Database
       setState(() {
         _uploadProgress = 0.7;
-        _uploadStatus = 'Actualizando proyecto...';
+        _uploadStatus = 'Actualizando proyecto en base de datos...';
       });
 
       await FirebaseService.saveProject(
@@ -231,6 +298,7 @@ class _EditProjectState extends State<EditProject> {
         link: _linkController.text.trim(),
         images: allWebImages,
         imagesMobile: allMobileImages,
+        logo: logoUrl,
       );
 
       setState(() {
@@ -257,7 +325,22 @@ class _EditProjectState extends State<EditProject> {
         _isUploading = false;
         _uploadProgress = 0.0;
       });
-      _showError('Error al actualizar proyecto: $e');
+      
+      // Mensajes de error más amigables
+      String errorMessage;
+      final errorStr = e.toString();
+      
+      if (errorStr.contains('POPUP_CERRADO') || errorStr.contains('popup_closed')) {
+        errorMessage = '❌ Se cerró la ventana de Google.\n\nPor favor, autoriza el acceso a Google Drive para poder subir las imágenes.';
+      } else if (errorStr.contains('AUTENTICACION_CANCELADA')) {
+        errorMessage = '❌ Autenticación cancelada.\n\nNecesitas autorizar el acceso a Google Drive para subir imágenes.';
+      } else if (errorStr.contains('NetworkError') || errorStr.contains('network')) {
+        errorMessage = '❌ Error de conexión.\n\nVerifica tu conexión a internet e intenta nuevamente.';
+      } else {
+        errorMessage = 'Error al actualizar proyecto: $e';
+      }
+      
+      _showError(errorMessage);
     }
   }
 
@@ -479,6 +562,8 @@ class _EditProjectState extends State<EditProject> {
                     return null;
                   },
                 ),
+                const SizedBox(height: 32),
+                _buildLogoSection(),
               ],
             ),
           ),
@@ -570,6 +655,8 @@ class _EditProjectState extends State<EditProject> {
           },
         ),
         const SizedBox(height: 32),
+        _buildLogoSection(),
+        const SizedBox(height: 32),
         _buildImageSection(
           title: 'Imágenes Web',
           subtitle: 'Imágenes para versión de escritorio',
@@ -600,6 +687,202 @@ class _EditProjectState extends State<EditProject> {
   // ══════════════════════════════════════════════════════════════
   // WIDGETS REUTILIZABLES
   // ══════════════════════════════════════════════════════════════
+  Widget _buildLogoSection() {
+    final hasLogo = _existingLogo != null || _newLogo != null;
+    final isNewLogo = _newLogo != null;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.orange[50],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.orange[300]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Encabezado
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.business_center,
+                  color: Colors.orange,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Logo del Proyecto',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Imagen representativa del proyecto',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // Botón para agregar/cambiar
+          OutlinedButton.icon(
+            onPressed: _pickNewLogo,
+            icon: Icon(
+              hasLogo ? Icons.change_circle : Icons.add_photo_alternate,
+              color: Colors.orange,
+            ),
+            label: Text(
+              hasLogo ? 'Cambiar Logo' : 'Agregar Logo',
+              style: const TextStyle(color: Colors.orange),
+            ),
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: Colors.orange),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Preview del logo
+          if (hasLogo)
+            Center(
+              child: isNewLogo
+                  ? _buildNewLogoPreview()
+                  : _buildExistingLogoPreview(),
+            ),
+
+          // Mensaje si no hay logo
+          if (!hasLogo)
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.image_not_supported, size: 40, color: Colors.grey),
+                  SizedBox(width: 12),
+                  Text(
+                    'No hay logo aún',
+                    style: TextStyle(color: Colors.grey, fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExistingLogoPreview() {
+    return Stack(
+      children: [
+        Container(
+          width: 200,
+          height: 200,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            image: DecorationImage(
+              image: NetworkImage(_existingLogo!),
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
+        Positioned(
+          top: 8,
+          right: 8,
+          child: GestureDetector(
+            onTap: _removeExistingLogo,
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.close, color: Colors.white, size: 20),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNewLogoPreview() {
+    return Stack(
+      children: [
+        Container(
+          width: 200,
+          height: 200,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.green, width: 3),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: kIsWeb
+                ? Image.memory(_newLogo!.bytes!, fit: BoxFit.contain)
+                : Image.file(File(_newLogo!.path!), fit: BoxFit.contain),
+          ),
+        ),
+        Positioned(
+          top: 8,
+          right: 8,
+          child: GestureDetector(
+            onTap: _removeNewLogo,
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.close, color: Colors.white, size: 20),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 8,
+          left: 8,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.green,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: const Text(
+              'NUEVO',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
   Widget _buildTextField({
     required TextEditingController controller,

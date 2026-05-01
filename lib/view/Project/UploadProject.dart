@@ -6,7 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'dart:io' show File;
 import '../../controllers/auth_controller.dart';
 import '../../services/firebase_service.dart';
-import '../../services/firebase_storage_service.dart';
+import '../../services/google_drive_upload_service.dart';
 import '../../utils/Colors.dart';
 
 class UploadProject extends StatefulWidget {
@@ -24,6 +24,7 @@ class _UploadProjectState extends State<UploadProject> {
 
   final List<PlatformFile> _webImages = [];
   final List<PlatformFile> _mobileImages = [];
+  PlatformFile? _logo;
 
   bool _isUploading = false;
   double _uploadProgress = 0.0;
@@ -87,6 +88,30 @@ class _UploadProjectState extends State<UploadProject> {
     });
   }
 
+  Future<void> _pickLogo() async {
+    try {
+      // Usar FilePicker (funciona en todas las plataformas incluido web)
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+      );
+
+      if (result != null && result.files.isNotEmpty) {
+        setState(() {
+          _logo = result.files.first;
+        });
+      }
+    } catch (e) {
+      _showError('Error al seleccionar logo: $e');
+    }
+  }
+
+  void _removeLogo() {
+    setState(() {
+      _logo = null;
+    });
+  }
+
   // ══════════════════════════════════════════════════════════════
   // MÉTODO PARA GUARDAR EL PROYECTO
   // ══════════════════════════════════════════════════════════════
@@ -106,17 +131,31 @@ class _UploadProjectState extends State<UploadProject> {
     setState(() {
       _isUploading = true;
       _uploadProgress = 0.0;
-      _uploadStatus = 'Preparando...';
+      _uploadStatus = 'Conectando con Google Drive...';
     });
 
     try {
-      // 1. Subir imágenes web
+      // 0. Pre-autenticar con Google Drive
+      setState(() => _uploadStatus = 'Autenticando con Google Drive...');
+      final authenticated = await GoogleDriveUploadService.preAuthenticate();
+      
+      if (!authenticated) {
+        throw Exception('AUTENTICACION_CANCELADA');
+      }
+
+      // 1. Generar ID del proyecto
+      final projectId = FirebaseService.generateUUID();
+
+      // 1. Subir imágenes web a Google Drive
       List<String> webImageUrls = [];
       if (_webImages.isNotEmpty) {
-        setState(() => _uploadStatus = 'Subiendo imágenes web...');
-        webImageUrls = await FirebaseStorageService.uploadMultipleImages(
-          images: _webImages,
-          folder: 'Project/Web',
+        setState(
+          () => _uploadStatus = 'Subiendo imágenes web a Google Drive...',
+        );
+        webImageUrls = await GoogleDriveUploadService.uploadMultipleImages(
+          projectId: projectId,
+          type: 'web',
+          files: _webImages,
           onProgress: (current, total) {
             setState(() {
               _uploadProgress = (current / total) * 0.4;
@@ -126,34 +165,57 @@ class _UploadProjectState extends State<UploadProject> {
         );
       }
 
-      // 2. Subir imágenes mobile
+      // 2. Subir imágenes mobile a Google Drive
       List<String> mobileImageUrls = [];
       if (_mobileImages.isNotEmpty) {
-        setState(() => _uploadStatus = 'Subiendo imágenes mobile...');
-        mobileImageUrls = await FirebaseStorageService.uploadMultipleImages(
-          images: _mobileImages,
-          folder: 'Project/Mobile',
+        setState(
+          () => _uploadStatus = 'Subiendo imágenes mobile a Google Drive...',
+        );
+        mobileImageUrls = await GoogleDriveUploadService.uploadMultipleImages(
+          projectId: projectId,
+          type: 'mobile',
+          files: _mobileImages,
           onProgress: (current, total) {
             setState(() {
-              _uploadProgress = 0.4 + (current / total) * 0.4;
+              _uploadProgress = 0.4 + (current / total) * 0.3;
               _uploadStatus = 'Subiendo imagen mobile $current de $total';
             });
           },
         );
       }
 
-      // 3. Guardar en Firebase Database
+      // 3. Subir logo a Google Drive
+      String? logoUrl;
+      if (_logo != null) {
+        setState(() => _uploadStatus = 'Subiendo logo a Google Drive...');
+        final logoUrls = await GoogleDriveUploadService.uploadMultipleImages(
+          projectId: projectId,
+          type: 'logo',
+          files: [_logo!],
+          onProgress: (current, total) {
+            setState(() {
+              _uploadProgress = 0.7;
+              _uploadStatus = 'Subiendo logo...';
+            });
+          },
+        );
+        logoUrl = logoUrls.isNotEmpty ? logoUrls.first : null;
+      }
+
+      // 4. Guardar URLs en Firebase Realtime Database
       setState(() {
         _uploadProgress = 0.8;
-        _uploadStatus = 'Guardando proyecto...';
+        _uploadStatus = 'Guardando proyecto en base de datos...';
       });
 
       await FirebaseService.saveProject(
+        id: projectId, // Usar el mismo ID generado
         name: _nameController.text.trim(),
         description: _descriptionController.text.trim(),
         link: _linkController.text.trim(),
         images: webImageUrls,
         imagesMobile: mobileImageUrls,
+        logo: logoUrl,
       );
 
       setState(() {
@@ -180,7 +242,22 @@ class _UploadProjectState extends State<UploadProject> {
         _isUploading = false;
         _uploadProgress = 0.0;
       });
-      _showError('Error al guardar proyecto: $e');
+      
+      // Mensajes de error más amigables
+      String errorMessage;
+      final errorStr = e.toString();
+      
+      if (errorStr.contains('POPUP_CERRADO') || errorStr.contains('popup_closed')) {
+        errorMessage = '❌ Se cerró la ventana de Google.\n\nPor favor, autoriza el acceso a Google Drive para poder subir las imágenes.';
+      } else if (errorStr.contains('AUTENTICACION_CANCELADA')) {
+        errorMessage = '❌ Autenticación cancelada.\n\nNecesitas autorizar el acceso a Google Drive para subir imágenes.';
+      } else if (errorStr.contains('NetworkError') || errorStr.contains('network')) {
+        errorMessage = '❌ Error de conexión.\n\nVerifica tu conexión a internet e intenta nuevamente.';
+      } else {
+        errorMessage = 'Error al guardar proyecto: $e';
+      }
+      
+      _showError(errorMessage);
     }
   }
 
@@ -273,10 +350,7 @@ class _UploadProjectState extends State<UploadProject> {
             const SizedBox(height: 30),
             Text(
               _uploadStatus,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
@@ -288,10 +362,7 @@ class _UploadProjectState extends State<UploadProject> {
             const SizedBox(height: 10),
             Text(
               '${(_uploadProgress * 100).toInt()}%',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
           ],
         ),
@@ -382,6 +453,10 @@ class _UploadProjectState extends State<UploadProject> {
                   },
                   keyboardType: TextInputType.url,
                 ),
+                const SizedBox(height: 40),
+
+                // Sección de Logo
+                _buildLogoSection(),
                 const SizedBox(height: 40),
 
                 // Sección de imágenes WEB
@@ -481,10 +556,7 @@ class _UploadProjectState extends State<UploadProject> {
               children: [
                 const Text(
                   'Autenticado como:',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
                 ),
                 Text(
                   authController.userEmail ?? 'Usuario',
@@ -573,18 +645,12 @@ class _UploadProjectState extends State<UploadProject> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: kIsWeb && file.bytes != null
-                ? Image.memory(
-                    file.bytes!,
-                    fit: BoxFit.cover,
-                  )
+                ? Image.memory(file.bytes!, fit: BoxFit.cover)
                 : file.path != null
-                    ? Image.file(
-                        File(file.path!),
-                        fit: BoxFit.cover,
-                      )
-                    : const Center(
-                        child: Icon(Icons.image, size: 50, color: Colors.grey),
-                      ),
+                ? Image.file(File(file.path!), fit: BoxFit.cover)
+                : const Center(
+                    child: Icon(Icons.image, size: 50, color: Colors.grey),
+                  ),
           ),
         ),
         // Botón eliminar
@@ -599,16 +665,192 @@ class _UploadProjectState extends State<UploadProject> {
               customBorder: const CircleBorder(),
               child: const Padding(
                 padding: EdgeInsets.all(6),
-                child: Icon(
-                  Icons.close,
-                  size: 18,
-                  color: Colors.white,
-                ),
+                child: Icon(Icons.close, size: 18, color: Colors.white),
               ),
             ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildLogoSection() {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.orange[50],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.orange[300]!, width: 2),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Encabezado
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.business_center,
+                  color: Colors.orange,
+                  size: 32,
+                ),
+              ),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '🏢 Logo del Proyecto',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0d0d0d),
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      'Imagen representativa del proyecto',
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // Botón para agregar
+          OutlinedButton.icon(
+            onPressed: _pickLogo,
+            icon: const Icon(Icons.add_photo_alternate, color: Colors.orange),
+            label: const Text(
+              'Agregar Logo',
+              style: TextStyle(color: Colors.orange),
+            ),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              side: const BorderSide(color: Colors.orange, width: 2),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Preview
+          if (_logo == null)
+            Container(
+              padding: const EdgeInsets.all(40),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange[200]!),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.image_not_supported,
+                    size: 48,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'No hay logo aún',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                  ),
+                ],
+              ),
+            )
+          else
+            Center(
+              child: Stack(
+                children: [
+                  Container(
+                    width: 200,
+                    height: 200,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.orange, width: 3),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.orange.withOpacity(0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: kIsWeb && _logo!.bytes != null
+                          ? Image.memory(_logo!.bytes!, fit: BoxFit.contain)
+                          : _logo!.path != null
+                          ? Image.file(File(_logo!.path!), fit: BoxFit.contain)
+                          : const Center(
+                              child: Icon(
+                                Icons.image,
+                                size: 50,
+                                color: Colors.grey,
+                              ),
+                            ),
+                    ),
+                  ),
+                  // Botón eliminar
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Material(
+                      color: Colors.red,
+                      shape: const CircleBorder(),
+                      child: InkWell(
+                        onTap: _removeLogo,
+                        customBorder: const CircleBorder(),
+                        child: const Padding(
+                          padding: EdgeInsets.all(8),
+                          child: Icon(
+                            Icons.close,
+                            size: 20,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Badge "NUEVO"
+                  Positioned(
+                    bottom: 8,
+                    left: 8,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.orange,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text(
+                        'LOGO',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -621,9 +863,7 @@ class _UploadProjectState extends State<UploadProject> {
       labelText: label,
       hintText: hint,
       prefixIcon: Icon(icon),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: Colors.grey[300]!, width: 1.5),

@@ -10,6 +10,7 @@
         "animate_do",
         "cloud_firestore",
         "cupertino_icons",
+        "extension_google_sign_in_as_googleapis_auth",
         "file_picker",
         "firebase_auth",
         "firebase_core",
@@ -18,6 +19,9 @@
         "flutter",
         "flutter_3d_controller",
         "go_router",
+        "google_sign_in",
+        "googleapis",
+        "http",
         "image_picker",
         "material_design_icons_flutter",
         "model_viewer_plus",
@@ -102,6 +106,46 @@
         "test_api",
         "vector_math",
         "vm_service"
+      ]
+    },
+    {
+      "name": "extension_google_sign_in_as_googleapis_auth",
+      "version": "2.0.13",
+      "dependencies": [
+        "flutter",
+        "google_sign_in",
+        "googleapis_auth",
+        "http",
+        "meta"
+      ]
+    },
+    {
+      "name": "googleapis",
+      "version": "13.2.0",
+      "dependencies": [
+        "_discoveryapis_commons",
+        "http"
+      ]
+    },
+    {
+      "name": "google_sign_in",
+      "version": "6.3.0",
+      "dependencies": [
+        "flutter",
+        "google_sign_in_android",
+        "google_sign_in_ios",
+        "google_sign_in_platform_interface",
+        "google_sign_in_web"
+      ]
+    },
+    {
+      "name": "http",
+      "version": "1.6.0",
+      "dependencies": [
+        "async",
+        "http_parser",
+        "meta",
+        "web"
       ]
     },
     {
@@ -719,6 +763,77 @@
       ]
     },
     {
+      "name": "googleapis_auth",
+      "version": "2.0.0",
+      "dependencies": [
+        "args",
+        "crypto",
+        "google_identity_services_web",
+        "http",
+        "http_parser"
+      ]
+    },
+    {
+      "name": "_discoveryapis_commons",
+      "version": "1.0.7",
+      "dependencies": [
+        "http",
+        "http_parser",
+        "meta"
+      ]
+    },
+    {
+      "name": "google_sign_in_web",
+      "version": "0.12.4+4",
+      "dependencies": [
+        "flutter",
+        "flutter_web_plugins",
+        "google_identity_services_web",
+        "google_sign_in_platform_interface",
+        "http",
+        "web"
+      ]
+    },
+    {
+      "name": "google_sign_in_platform_interface",
+      "version": "2.5.0",
+      "dependencies": [
+        "flutter",
+        "plugin_platform_interface"
+      ]
+    },
+    {
+      "name": "google_sign_in_ios",
+      "version": "5.9.0",
+      "dependencies": [
+        "flutter",
+        "google_sign_in_platform_interface"
+      ]
+    },
+    {
+      "name": "google_sign_in_android",
+      "version": "6.2.1",
+      "dependencies": [
+        "flutter",
+        "google_sign_in_platform_interface"
+      ]
+    },
+    {
+      "name": "web",
+      "version": "1.1.1",
+      "dependencies": []
+    },
+    {
+      "name": "http_parser",
+      "version": "4.1.2",
+      "dependencies": [
+        "collection",
+        "source_span",
+        "string_scanner",
+        "typed_data"
+      ]
+    },
+    {
       "name": "image_picker_windows",
       "version": "0.2.2",
       "dependencies": [
@@ -785,11 +900,6 @@
         "flutter_plugin_android_lifecycle",
         "image_picker_platform_interface"
       ]
-    },
-    {
-      "name": "web",
-      "version": "1.1.1",
-      "dependencies": []
     },
     {
       "name": "cross_file",
@@ -921,16 +1031,6 @@
         "flutter_inappwebview_platform_interface",
         "flutter_inappwebview_web",
         "flutter_inappwebview_windows"
-      ]
-    },
-    {
-      "name": "http",
-      "version": "1.6.0",
-      "dependencies": [
-        "async",
-        "http_parser",
-        "meta",
-        "web"
       ]
     },
     {
@@ -1122,16 +1222,6 @@
       ]
     },
     {
-      "name": "http_parser",
-      "version": "4.1.2",
-      "dependencies": [
-        "collection",
-        "source_span",
-        "string_scanner",
-        "typed_data"
-      ]
-    },
-    {
       "name": "typed_data",
       "version": "1.4.0",
       "dependencies": [
@@ -1168,6 +1258,14 @@
       "version": "88.0.0",
       "dependencies": [
         "meta"
+      ]
+    },
+    {
+      "name": "google_identity_services_web",
+      "version": "0.3.3+1",
+      "dependencies": [
+        "meta",
+        "web"
       ]
     },
     {

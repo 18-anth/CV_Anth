@@ -13,12 +13,14 @@ class ProjectCard {
   final String name;
   final String description;
   final int timestamp;
+  final String? logo;
 
   ProjectCard({
     required this.id,
     required this.name,
     required this.description,
     required this.timestamp,
+    this.logo,
   });
 
   factory ProjectCard.fromMap(Map<String, dynamic> data) {
@@ -41,6 +43,7 @@ class ProjectCard {
       name: data['name'] ?? 'Sin nombre',
       description: data['description'] ?? '',
       timestamp: timestamp,
+      logo: data['logo'] as String?,
     );
   }
 }
@@ -327,11 +330,52 @@ class _ProjectState extends State<Project> {
                               ),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(
-                              Icons.code_rounded,
-                              color: Colors.white,
-                              size: 22,
-                            ),
+                            child: (card.logo != null && card.logo!.isNotEmpty)
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: Image.network(
+                                      card.logo!,
+                                      width: 42,
+                                      height: 42,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                            return const Icon(
+                                              Icons.code_rounded,
+                                              color: Colors.white,
+                                              size: 22,
+                                            );
+                                          },
+                                      loadingBuilder: (context, child, loadingProgress) {
+                                        if (loadingProgress == null)
+                                          return child;
+                                        return Center(
+                                          child: SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              value:
+                                                  loadingProgress
+                                                          .expectedTotalBytes !=
+                                                      null
+                                                  ? loadingProgress
+                                                            .cumulativeBytesLoaded /
+                                                        loadingProgress
+                                                            .expectedTotalBytes!
+                                                  : null,
+                                              strokeWidth: 2,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  )
+                                : const Icon(
+                                    Icons.code_rounded,
+                                    color: Colors.white,
+                                    size: 22,
+                                  ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
