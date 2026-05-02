@@ -120,6 +120,7 @@ class FirebaseService {
     String? endDate,
     String? logo,
     String? id,
+    List<String>? technologies,
   }) async {
     final projectId = id ?? generateUUID();
     final data = {
@@ -131,9 +132,12 @@ class FirebaseService {
       'logo': logo ?? '',
       'timestamp': DateTime.now().toIso8601String(),
       if (title != null && title.isNotEmpty) 'title': title,
-      if (classification != null && classification.isNotEmpty) 'classification': classification,
+      if (classification != null && classification.isNotEmpty)
+        'classification': classification,
       if (startDate != null && startDate.isNotEmpty) 'startDate': startDate,
       if (endDate != null && endDate.isNotEmpty) 'endDate': endDate,
+      if (technologies != null && technologies.isNotEmpty)
+        'technologies': technologies,
     };
 
     await _db.ref('Projects/$projectId').set(data);

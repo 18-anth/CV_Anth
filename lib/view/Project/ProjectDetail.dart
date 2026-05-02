@@ -5,6 +5,7 @@ import '../../Components/iphone_webview.dart';
 import '../../Components/device_frame.dart';
 import '../../services/firebase_service.dart';
 import '../../controllers/auth_controller.dart';
+import '../../utils/Colors.dart';
 
 class ProjectDetail extends StatefulWidget {
   final String projectId;
@@ -167,6 +168,7 @@ class _ProjectDetailState extends State<ProjectDetail> {
     final classification = project?['classification'] as String?;
     final startDate = project?['startDate'] as String?;
     final endDate = project?['endDate'] as String?;
+    final technologies = project?['technologies'] as List<dynamic>?;
 
     final isMobile = MediaQuery.of(context).size.width < 600;
     final isWeb = MediaQuery.of(context).size.width >= 1024;
@@ -339,6 +341,11 @@ class _ProjectDetailState extends State<ProjectDetail> {
               ],
             ),
           ),
+          const SizedBox(height: 16),
+        ],
+        // Tecnologías (si existen)
+        if (technologies != null && technologies.isNotEmpty) ...[
+          _buildTechnologiesSection(technologies),
           const SizedBox(height: 16),
         ],
       ],
@@ -811,6 +818,379 @@ class _ProjectDetailState extends State<ProjectDetail> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // SECCIÓN DE TECNOLOGÍAS ORGANIZADAS
+  // ══════════════════════════════════════════════════════════════
+
+  // Mapa de categorías con sus tecnologías y colores
+  static const Map<String, List<String>> _technologiesMap = {
+    'Lenguajes de Programación': [
+      'Dart',
+      'Flutter',
+      'JavaScript',
+      'TypeScript',
+      'Python',
+      'Java',
+      'Kotlin',
+      'Swift',
+      'C#',
+      'C++',
+      'PHP',
+      'Ruby',
+      'Go',
+      'Rust',
+    ],
+    'Frontend': [
+      'React',
+      'React Native',
+      'Angular',
+      'Vue.js',
+      'Next.js',
+      'Nuxt.js',
+      'Svelte',
+      'HTML5',
+      'CSS3',
+      'SASS',
+      'Tailwind CSS',
+      'Bootstrap',
+      'Material UI',
+    ],
+    'Backend': [
+      'Node.js',
+      'Express.js',
+      'NestJS',
+      'Django',
+      'Flask',
+      'FastAPI',
+      'Spring Boot',
+      'Laravel',
+      'Ruby on Rails',
+      '.NET Core',
+    ],
+    'Bases de Datos': [
+      'Firebase Realtime DB',
+      'Firestore',
+      'MongoDB',
+      'MySQL',
+      'PostgreSQL',
+      'SQLite',
+      'Redis',
+      'Elasticsearch',
+      'Oracle',
+      'SQL Server',
+    ],
+    'Cloud & DevOps': [
+      'Google Cloud',
+      'AWS',
+      'Azure',
+      'Firebase',
+      'Docker',
+      'Kubernetes',
+      'Jenkins',
+      'GitHub Actions',
+      'GitLab CI/CD',
+      'Terraform',
+    ],
+    'Metodologías': [
+      'Scrum',
+      'Kanban',
+      'Agile',
+      'Waterfall',
+      'Lean',
+      'XP (Extreme Programming)',
+    ],
+    'Arquitectura': [
+      'MVC',
+      'MVVM',
+      'Clean Architecture',
+      'Hexagonal Architecture',
+      'Microservicios',
+      'Monolítico',
+      'REST API',
+      'GraphQL',
+      'gRPC',
+    ],
+    'Control de Versiones': ['Git', 'GitHub', 'GitLab', 'Bitbucket', 'SVN'],
+    'Testing': [
+      'Jest',
+      'Mocha',
+      'Cypress',
+      'Selenium',
+      'JUnit',
+      'PyTest',
+      'Flutter Test',
+    ],
+    'Inteligencia Artificial': [
+      'TensorFlow',
+      'PyTorch',
+      'Keras',
+      'Scikit-learn',
+      'OpenAI',
+      'Hugging Face',
+      'LangChain',
+      'Machine Learning',
+      'Deep Learning',
+      'Computer Vision',
+      'NLP',
+      'GPT',
+      'LLaMA',
+      'Stable Diffusion',
+      'YOLO',
+      'Random Forest',
+      'XGBoost',
+      'LightGBM',
+      'Gradient Boosting',
+      'Extra Trees',
+      'CatBoost',
+      'AdaBoost',
+      'Neural Networks',
+      'CNN',
+      'RNN',
+      'Transformers',
+      'SVM',
+      'Decision Trees',
+      'K-Means',
+      'PCA',
+      'Regresión Logística',
+    ],
+    'Otros': [
+      'GraphQL',
+      'WebSockets',
+      'OAuth',
+      'JWT',
+      'Socket.io',
+      'Redux',
+      'Provider',
+      'Bloc',
+      'GetX',
+    ],
+  };
+
+  // Iconos para cada categoría
+  static const Map<String, IconData> _categoryIcons = {
+    'Lenguajes de Programación': Icons.code,
+    'Frontend': Icons.web,
+    'Backend': Icons.storage,
+    'Bases de Datos': Icons.storage_rounded,
+    'Cloud & DevOps': Icons.cloud,
+    'Metodologías': Icons.track_changes,
+    'Arquitectura': Icons.account_tree,
+    'Control de Versiones': Icons.source,
+    'Testing': Icons.bug_report,
+    'Inteligencia Artificial': Icons.psychology,
+    'Otros': Icons.extension,
+  };
+
+  // Organiza las tecnologías por categorías
+  Map<String, List<String>> _categorizeTechnologies(
+    List<dynamic> technologies,
+  ) {
+    final categorized = <String, List<String>>{};
+    final techSet = technologies.map((e) => e.toString()).toSet();
+
+    _technologiesMap.forEach((category, categoryTechs) {
+      final matchingTechs = categoryTechs
+          .where((tech) => techSet.contains(tech))
+          .toList();
+      if (matchingTechs.isNotEmpty) {
+        categorized[category] = matchingTechs;
+      }
+    });
+
+    return categorized;
+  }
+
+  Widget _buildTechnologiesSection(List<dynamic> technologies) {
+    final categorized = _categorizeTechnologies(technologies);
+
+    if (categorized.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.light5,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.grey, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Encabezado principal
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.black,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.black.withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.settings_suggest,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Stack Tecnológico',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.black,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    Text(
+                      '${technologies.length} tecnologías utilizadas',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.darkgrey,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          // Categorías con sus tecnologías en dos columnas (siempre)
+          () {
+            final categories = categorized.entries.toList();
+            final mid = (categories.length / 2).ceil();
+            final leftCategories = categories.sublist(0, mid);
+            final rightCategories = categories.sublist(mid);
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    children: leftCategories.map((entry) {
+                      return _buildCategoryWidget(entry.key, entry.value);
+                    }).toList(),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    children: rightCategories.map((entry) {
+                      return _buildCategoryWidget(entry.key, entry.value);
+                    }).toList(),
+                  ),
+                ),
+              ],
+            );
+          }(),
+        ],
+      ),
+    );
+  }
+
+  // Construye el widget de una categoría individual
+  Widget _buildCategoryWidget(String category, List<String> techs) {
+    final icon = _categoryIcons[category] ?? Icons.code;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Encabezado de categoría
+          Row(
+            children: [
+              Icon(icon, size: 18, color: AppColors.black),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  category,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.black,
+                    letterSpacing: 0.3,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.grey,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '${techs.length}',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.black,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          // Tecnologías de la categoría
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.start,
+            children: techs.map((tech) {
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.black,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.black.withOpacity(0.15),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  tech,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
       ),
     );
   }
