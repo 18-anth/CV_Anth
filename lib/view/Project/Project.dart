@@ -86,6 +86,36 @@ class _ProjectState extends State<Project> {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year.toString().substring(2)}';
   }
 
+  /// Convierte URLs de Google Drive al formato correcto que evita problemas de CORS
+  /// Usa lh3.googleusercontent.com que permite acceso directo sin CORS
+  String _fixGoogleDriveUrl(String url) {
+    if (url.isEmpty) return url;
+
+    // Si ya es el formato correcto (lh3.googleusercontent.com), devolverla sin cambios
+    if (url.contains('lh3.googleusercontent.com/d/')) {
+      return url;
+    }
+
+    // Extraer el ID del archivo de diferentes formatos de URLs de Google Drive
+    // Soporta:
+    // - https://drive.usercontent.google.com/download?id=FILE_ID
+    // - https://drive.google.com/uc?export=view&id=FILE_ID
+    // - https://drive.google.com/file/d/FILE_ID/view
+    // - https://www.googleapis.com/drive/v3/files/FILE_ID
+    RegExp regExp = RegExp(r'(?:id=|/d/|/files/)([a-zA-Z0-9_-]+)');
+    Match? match = regExp.firstMatch(url);
+
+    if (match != null && match.groupCount > 0) {
+      String fileId = match.group(1)!;
+      // Convertir al formato que funciona sin CORS
+      // lh3.googleusercontent.com sirve contenido directamente sin redirecciones
+      return 'https://lh3.googleusercontent.com/d/$fileId';
+    }
+
+    // Si no es una URL de Google Drive, devolverla sin cambios
+    return url;
+  }
+
   void _shareProject(ProjectCard card) async {
     try {
       await Share.share(
@@ -334,7 +364,7 @@ class _ProjectState extends State<Project> {
                                 ? ClipRRect(
                                     borderRadius: BorderRadius.circular(12),
                                     child: Image.network(
-                                      card.logo!,
+                                      _fixGoogleDriveUrl(card.logo!),
                                       width: 42,
                                       height: 42,
                                       fit: BoxFit.cover,
