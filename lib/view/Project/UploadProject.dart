@@ -22,6 +22,10 @@ class _UploadProjectState extends State<UploadProject> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _linkController = TextEditingController();
+  final _problemSolvedController = TextEditingController();
+  final _difficultiesController = TextEditingController();
+  final _testimonialsController = TextEditingController();
+  final _responsibilitiesController = TextEditingController();
 
   String? _selectedClassification;
   DateTime? _startDate;
@@ -35,6 +39,8 @@ class _UploadProjectState extends State<UploadProject> {
   bool _isUploading = false;
   double _uploadProgress = 0.0;
   String _uploadStatus = '';
+  bool _isLoadingTechnologies = true;
+  Map<String, List<String>> _technologiesMap = {};
 
   final List<String> _classifications = [
     'Prácticas profesionales',
@@ -42,148 +48,28 @@ class _UploadProjectState extends State<UploadProject> {
     'Proyecto universitario',
   ];
 
-  final Map<String, List<String>> _technologiesMap = {
-    'Lenguajes de Programación': [
-      'Dart',
-      'Flutter',
-      'JavaScript',
-      'TypeScript',
-      'Python',
-      'Java',
-      'Kotlin',
-      'Swift',
-      'C#',
-      'C++',
-      'PHP',
-      'Ruby',
-      'Go',
-      'Rust',
-    ],
-    'Frontend': [
-      'React',
-      'React Native',
-      'Angular',
-      'Vue.js',
-      'Next.js',
-      'Nuxt.js',
-      'Svelte',
-      'HTML5',
-      'CSS3',
-      'SASS',
-      'Tailwind CSS',
-      'Bootstrap',
-      'Material UI',
-    ],
-    'Backend': [
-      'Node.js',
-      'Express.js',
-      'NestJS',
-      'Django',
-      'Flask',
-      'FastAPI',
-      'Spring Boot',
-      'Laravel',
-      'Ruby on Rails',
-      '.NET Core',
-    ],
-    'Bases de Datos': [
-      'Firebase Realtime DB',
-      'Firestore',
-      'MongoDB',
-      'MySQL',
-      'PostgreSQL',
-      'SQLite',
-      'Redis',
-      'Elasticsearch',
-      'Oracle',
-      'SQL Server',
-    ],
-    'Cloud & DevOps': [
-      'Google Cloud',
-      'AWS',
-      'Azure',
-      'Firebase',
-      'Docker',
-      'Kubernetes',
-      'Jenkins',
-      'GitHub Actions',
-      'GitLab CI/CD',
-      'Terraform',
-    ],
-    'Metodologías': [
-      'Scrum',
-      'Kanban',
-      'Agile',
-      'Waterfall',
-      'Lean',
-      'XP (Extreme Programming)',
-    ],
-    'Arquitectura': [
-      'MVC',
-      'MVVM',
-      'Clean Architecture',
-      'Hexagonal Architecture',
-      'Microservicios',
-      'Monolítico',
-      'REST API',
-      'GraphQL',
-      'gRPC',
-    ],
-    'Control de Versiones': ['Git', 'GitHub', 'GitLab', 'Bitbucket', 'SVN'],
-    'Testing': [
-      'Jest',
-      'Mocha',
-      'Cypress',
-      'Selenium',
-      'JUnit',
-      'PyTest',
-      'Flutter Test',
-    ],
-    'Inteligencia Artificial': [
-      'TensorFlow',
-      'PyTorch',
-      'Keras',
-      'Scikit-learn',
-      'OpenAI',
-      'Hugging Face',
-      'LangChain',
-      'Machine Learning',
-      'Deep Learning',
-      'Computer Vision',
-      'NLP',
-      'GPT',
-      'LLaMA',
-      'Stable Diffusion',
-      'YOLO',
-      'Random Forest',
-      'XGBoost',
-      'LightGBM',
-      'Gradient Boosting',
-      'Extra Trees',
-      'CatBoost',
-      'AdaBoost',
-      'Neural Networks',
-      'CNN',
-      'RNN',
-      'Transformers',
-      'SVM',
-      'Decision Trees',
-      'K-Means',
-      'PCA',
-      'Regresión Logística',
-    ],
-    'Otros': [
-      'GraphQL',
-      'WebSockets',
-      'OAuth',
-      'JWT',
-      'Socket.io',
-      'Redux',
-      'Provider',
-      'Bloc',
-      'GetX',
-    ],
-  };
+  @override
+  void initState() {
+    super.initState();
+    _loadTechnologies();
+  }
+
+  Future<void> _loadTechnologies() async {
+    try {
+      final technologies = await FirebaseService.fetchTechnologies();
+      if (!mounted) return;
+      setState(() {
+        _technologiesMap = technologies;
+        _isLoadingTechnologies = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoadingTechnologies = false;
+      });
+      _showError('Error al cargar tecnologías: $e');
+    }
+  }
 
   @override
   void dispose() {
@@ -191,6 +77,10 @@ class _UploadProjectState extends State<UploadProject> {
     _nameController.dispose();
     _descriptionController.dispose();
     _linkController.dispose();
+    _problemSolvedController.dispose();
+    _difficultiesController.dispose();
+    _testimonialsController.dispose();
+    _responsibilitiesController.dispose();
     super.dispose();
   }
 
@@ -495,6 +385,10 @@ class _UploadProjectState extends State<UploadProject> {
         imagesMobile: mobileImageUrls,
         logo: logoUrl,
         technologies: _selectedTechnologies,
+        problemSolved: _problemSolvedController.text.trim(),
+        difficulties: _difficultiesController.text.trim(),
+        testimonials: _testimonialsController.text.trim(),
+        responsibilities: _responsibilitiesController.text.trim(),
       );
 
       setState(() {
@@ -593,6 +487,27 @@ class _UploadProjectState extends State<UploadProject> {
                     vertical: 15,
                   ),
                 ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Verificar carga de tecnologías
+    if (_isLoadingTechnologies) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: _buildAppBar(),
+        body: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 20),
+              Text(
+                'Cargando tecnologías...',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
             ],
           ),
@@ -828,6 +743,58 @@ class _UploadProjectState extends State<UploadProject> {
                   },
                   maxLines: 6,
                   maxLength: 1000,
+                ),
+                const SizedBox(height: 20),
+
+                // Campo: Problema que resuelve
+                TextFormField(
+                  controller: _problemSolvedController,
+                  decoration: _inputDecoration(
+                    label: 'Problema que resuelve',
+                    hint: 'Describe la necesidad del cliente o usuario...',
+                    icon: Icons.lightbulb_outline,
+                  ),
+                  maxLines: 4,
+                  maxLength: 500,
+                ),
+                const SizedBox(height: 20),
+
+                // Campo: Dificultades y soluciones
+                TextFormField(
+                  controller: _difficultiesController,
+                  decoration: _inputDecoration(
+                    label: 'Dificultades y soluciones',
+                    hint: 'Problemas técnicos importantes que resolviste...',
+                    icon: Icons.engineering,
+                  ),
+                  maxLines: 4,
+                  maxLength: 500,
+                ),
+                const SizedBox(height: 20),
+
+                // Campo: Testimonios o feedback
+                TextFormField(
+                  controller: _testimonialsController,
+                  decoration: _inputDecoration(
+                    label: 'Testimonios o feedback',
+                    hint: 'Si trabajaste para clientes, su opinión...',
+                    icon: Icons.rate_review,
+                  ),
+                  maxLines: 4,
+                  maxLength: 500,
+                ),
+                const SizedBox(height: 20),
+
+                // Campo: Responsabilidades
+                TextFormField(
+                  controller: _responsibilitiesController,
+                  decoration: _inputDecoration(
+                    label: 'Responsabilidades',
+                    hint: 'Qué hiciste exactamente dentro del proyecto...',
+                    icon: Icons.assignment_ind,
+                  ),
+                  maxLines: 4,
+                  maxLength: 500,
                 ),
                 const SizedBox(height: 20),
 

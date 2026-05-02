@@ -21,11 +21,29 @@ class _ProjectDetailState extends State<ProjectDetail> {
   bool isLoading = true;
   String? errorMessage;
   String? selectedView;
+  Map<String, List<String>> _technologiesMap = {};
 
   @override
   void initState() {
     super.initState();
+    _loadTechnologies();
     _loadProject();
+  }
+
+  Future<void> _loadTechnologies() async {
+    try {
+      final technologies = await FirebaseService.fetchTechnologies();
+      if (!mounted) return;
+      setState(() {
+        _technologiesMap = technologies;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      // No mostrar error al usuario, solo usar mapa vacío
+      setState(() {
+        _technologiesMap = {};
+      });
+    }
   }
 
   Future<void> _loadProject() async {
@@ -109,8 +127,8 @@ class _ProjectDetailState extends State<ProjectDetail> {
         backgroundColor: Colors.white,
         appBar: AppBar(
           title: const Text('Detalles del Proyecto'),
-          backgroundColor: const Color(0xFF0d0d0d),
-          foregroundColor: Colors.white,
+          backgroundColor: Colors.white,
+          foregroundColor: const Color(0xFF0d0d0d),
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
@@ -126,8 +144,8 @@ class _ProjectDetailState extends State<ProjectDetail> {
         backgroundColor: Colors.white,
         appBar: AppBar(
           title: const Text('Detalles del Proyecto'),
-          backgroundColor: const Color(0xFF0d0d0d),
-          foregroundColor: Colors.white,
+          backgroundColor: Colors.white,
+          foregroundColor: const Color(0xFF0d0d0d),
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
@@ -148,8 +166,8 @@ class _ProjectDetailState extends State<ProjectDetail> {
         backgroundColor: Colors.white,
         appBar: AppBar(
           title: const Text('Detalles del Proyecto'),
-          backgroundColor: const Color(0xFF0d0d0d),
-          foregroundColor: Colors.white,
+          backgroundColor: Colors.white,
+          foregroundColor: const Color(0xFF0d0d0d),
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
@@ -169,6 +187,10 @@ class _ProjectDetailState extends State<ProjectDetail> {
     final startDate = project?['startDate'] as String?;
     final endDate = project?['endDate'] as String?;
     final technologies = project?['technologies'] as List<dynamic>?;
+    final problemSolved = project?['problemSolved'] as String?;
+    final difficulties = project?['difficulties'] as String?;
+    final testimonials = project?['testimonials'] as String?;
+    final responsibilities = project?['responsibilities'] as String?;
 
     final isMobile = MediaQuery.of(context).size.width < 600;
     final isWeb = MediaQuery.of(context).size.width >= 1024;
@@ -181,14 +203,14 @@ class _ProjectDetailState extends State<ProjectDetail> {
       children: [
         // Logo del proyecto
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: const Color(0xFF050A30).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(40),
           ),
           child: (logo != null && logo.isNotEmpty)
               ? ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(40),
                   child: Image.network(
                     _fixGoogleDriveUrl(logo),
                     width: 500,
@@ -200,7 +222,7 @@ class _ProjectDetailState extends State<ProjectDetail> {
                         height: 500,
                         decoration: BoxDecoration(
                           color: const Color(0xFF050A30),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(40),
                         ),
                         child: const Icon(
                           Icons.code,
@@ -231,7 +253,7 @@ class _ProjectDetailState extends State<ProjectDetail> {
                   height: 500,
                   decoration: BoxDecoration(
                     color: const Color(0xFF050A30),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(40),
                   ),
                   child: const Icon(Icons.code, color: Colors.white, size: 40),
                 ),
@@ -385,6 +407,55 @@ class _ProjectDetailState extends State<ProjectDetail> {
                         ),
                 ),
               ),
+              const SizedBox(height: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: [
+                    // Problema que resuelve
+                    if (problemSolved != null && problemSolved.isNotEmpty) ...[
+                      _buildInfoSection(
+                        title: 'Problema que resuelve',
+                        icon: Icons.lightbulb_outline,
+                        content: problemSolved,
+                        color: const Color(0xFFFFA726),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    // Dificultades y soluciones
+                    if (difficulties != null && difficulties.isNotEmpty) ...[
+                      _buildInfoSection(
+                        title: 'Dificultades y soluciones',
+                        icon: Icons.engineering,
+                        content: difficulties,
+                        color: const Color(0xFF66BB6A),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    // Testimonios o feedback
+                    if (testimonials != null && testimonials.isNotEmpty) ...[
+                      _buildInfoSection(
+                        title: 'Testimonios o feedback',
+                        icon: Icons.rate_review,
+                        content: testimonials,
+                        color: const Color(0xFF42A5F5),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    // Responsabilidades
+                    if (responsibilities != null &&
+                        responsibilities.isNotEmpty) ...[
+                      _buildInfoSection(
+                        title: 'Responsabilidades',
+                        icon: Icons.assignment_ind,
+                        content: responsibilities,
+                        color: const Color(0xFFAB47BC),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ],
+                ),
+              ),
             ],
           )
         : Container(
@@ -405,8 +476,8 @@ class _ProjectDetailState extends State<ProjectDetail> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Detalles del Proyecto'),
-        backgroundColor: const Color(0xFF0d0d0d),
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF0d0d0d),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -433,7 +504,7 @@ class _ProjectDetailState extends State<ProjectDetail> {
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Contenido principal (título + preview)
               isWeb
@@ -447,7 +518,7 @@ class _ProjectDetailState extends State<ProjectDetail> {
                       ],
                     )
                   : Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Container(
                           margin: const EdgeInsets.only(bottom: 30),
@@ -826,150 +897,6 @@ class _ProjectDetailState extends State<ProjectDetail> {
   // SECCIÓN DE TECNOLOGÍAS ORGANIZADAS
   // ══════════════════════════════════════════════════════════════
 
-  // Mapa de categorías con sus tecnologías y colores
-  static const Map<String, List<String>> _technologiesMap = {
-    'Lenguajes de Programación': [
-      'Dart',
-      'Flutter',
-      'JavaScript',
-      'TypeScript',
-      'Python',
-      'Java',
-      'Kotlin',
-      'Swift',
-      'C#',
-      'C++',
-      'PHP',
-      'Ruby',
-      'Go',
-      'Rust',
-    ],
-    'Frontend': [
-      'React',
-      'React Native',
-      'Angular',
-      'Vue.js',
-      'Next.js',
-      'Nuxt.js',
-      'Svelte',
-      'HTML5',
-      'CSS3',
-      'SASS',
-      'Tailwind CSS',
-      'Bootstrap',
-      'Material UI',
-    ],
-    'Backend': [
-      'Node.js',
-      'Express.js',
-      'NestJS',
-      'Django',
-      'Flask',
-      'FastAPI',
-      'Spring Boot',
-      'Laravel',
-      'Ruby on Rails',
-      '.NET Core',
-    ],
-    'Bases de Datos': [
-      'Firebase Realtime DB',
-      'Firestore',
-      'MongoDB',
-      'MySQL',
-      'PostgreSQL',
-      'SQLite',
-      'Redis',
-      'Elasticsearch',
-      'Oracle',
-      'SQL Server',
-    ],
-    'Cloud & DevOps': [
-      'Google Cloud',
-      'AWS',
-      'Azure',
-      'Firebase',
-      'Docker',
-      'Kubernetes',
-      'Jenkins',
-      'GitHub Actions',
-      'GitLab CI/CD',
-      'Terraform',
-    ],
-    'Metodologías': [
-      'Scrum',
-      'Kanban',
-      'Agile',
-      'Waterfall',
-      'Lean',
-      'XP (Extreme Programming)',
-    ],
-    'Arquitectura': [
-      'MVC',
-      'MVVM',
-      'Clean Architecture',
-      'Hexagonal Architecture',
-      'Microservicios',
-      'Monolítico',
-      'REST API',
-      'GraphQL',
-      'gRPC',
-    ],
-    'Control de Versiones': ['Git', 'GitHub', 'GitLab', 'Bitbucket', 'SVN'],
-    'Testing': [
-      'Jest',
-      'Mocha',
-      'Cypress',
-      'Selenium',
-      'JUnit',
-      'PyTest',
-      'Flutter Test',
-    ],
-    'Inteligencia Artificial': [
-      'TensorFlow',
-      'PyTorch',
-      'Keras',
-      'Scikit-learn',
-      'OpenAI',
-      'Hugging Face',
-      'LangChain',
-      'Machine Learning',
-      'Deep Learning',
-      'Computer Vision',
-      'NLP',
-      'GPT',
-      'LLaMA',
-      'Stable Diffusion',
-      'YOLO',
-      'Random Forest',
-      'XGBoost',
-      'LightGBM',
-      'Gradient Boosting',
-      'Extra Trees',
-      'CatBoost',
-      'AdaBoost',
-      'Neural Networks',
-      'CNN',
-      'RNN',
-      'Transformers',
-      'SVM',
-      'Decision Trees',
-      'K-Means',
-      'PCA',
-      'Regresión Logística',
-    ],
-    'Otros': [
-      'GraphQL',
-      'WebSockets',
-      'OAuth',
-      'JWT',
-      'Socket.io',
-      'Redux',
-      'Provider',
-      'Bloc',
-      'GetX',
-    ],
-  };
-
   // Iconos para cada categoría
   static const Map<String, IconData> _categoryIcons = {
     'Lenguajes de Programación': Icons.code,
@@ -1189,6 +1116,71 @@ class _ProjectDetailState extends State<ProjectDetail> {
                 ),
               );
             }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // SECCIÓN DE INFORMACIÓN ADICIONAL
+  // ══════════════════════════════════════════════════════════════
+
+  Widget _buildInfoSection({
+    required String title,
+    required IconData icon,
+    required String content,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3), width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: color, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            content,
+            style: const TextStyle(
+              color: Color(0xFF0d0d0d),
+              fontSize: 14,
+              height: 1.5,
+            ),
+            textAlign: TextAlign.justify,
           ),
         ],
       ),

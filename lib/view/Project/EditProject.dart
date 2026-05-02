@@ -24,6 +24,10 @@ class _EditProjectState extends State<EditProject> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _linkController = TextEditingController();
+  final _problemSolvedController = TextEditingController();
+  final _difficultiesController = TextEditingController();
+  final _testimonialsController = TextEditingController();
+  final _responsibilitiesController = TextEditingController();
 
   String? _selectedClassification;
   DateTime? _startDate;
@@ -46,6 +50,8 @@ class _EditProjectState extends State<EditProject> {
   bool _isUploading = false;
   double _uploadProgress = 0.0;
   String _uploadStatus = '';
+  bool _isLoadingTechnologies = true;
+  Map<String, List<String>> _technologiesMap = {};
 
   final List<String> _classifications = [
     'Prácticas profesionales',
@@ -53,153 +59,28 @@ class _EditProjectState extends State<EditProject> {
     'Proyectos de universidad',
   ];
 
-  final Map<String, List<String>> _technologiesMap = {
-    'Lenguajes de Programación': [
-      'Dart',
-      'Flutter',
-      'JavaScript',
-      'TypeScript',
-      'Python',
-      'Java',
-      'Kotlin',
-      'Swift',
-      'C#',
-      'C++',
-      'PHP',
-      'Ruby',
-      'Go',
-      'Rust',
-    ],
-    'Frontend': [
-      'React',
-      'React Native',
-      'Angular',
-      'Vue.js',
-      'Next.js',
-      'Nuxt.js',
-      'Svelte',
-      'HTML5',
-      'CSS3',
-      'SASS',
-      'Tailwind CSS',
-      'Bootstrap',
-      'Material UI',
-    ],
-    'Backend': [
-      'Node.js',
-      'Express.js',
-      'NestJS',
-      'Django',
-      'Flask',
-      'FastAPI',
-      'Spring Boot',
-      'Laravel',
-      'Ruby on Rails',
-      '.NET Core',
-    ],
-    'Bases de Datos': [
-      'Firebase Realtime DB',
-      'Firestore',
-      'MongoDB',
-      'MySQL',
-      'PostgreSQL',
-      'SQLite',
-      'Redis',
-      'Elasticsearch',
-      'Oracle',
-      'SQL Server',
-    ],
-    'Cloud & DevOps': [
-      'Google Cloud',
-      'AWS',
-      'Azure',
-      'Firebase',
-      'Docker',
-      'Kubernetes',
-      'Jenkins',
-      'GitHub Actions',
-      'GitLab CI/CD',
-      'Terraform',
-    ],
-    'Metodologías': [
-      'Scrum',
-      'Kanban',
-      'Agile',
-      'Waterfall',
-      'Lean',
-      'XP (Extreme Programming)',
-    ],
-    'Arquitectura': [
-      'MVC',
-      'MVVM',
-      'Clean Architecture',
-      'Hexagonal Architecture',
-      'Microservicios',
-      'Monolítico',
-      'REST API',
-      'GraphQL',
-      'gRPC',
-    ],
-    'Control de Versiones': ['Git', 'GitHub', 'GitLab', 'Bitbucket', 'SVN'],
-    'Testing': [
-      'Jest',
-      'Mocha',
-      'Cypress',
-      'Selenium',
-      'JUnit',
-      'PyTest',
-      'Flutter Test',
-    ],
-    'Inteligencia Artificial': [
-      'TensorFlow',
-      'PyTorch',
-      'Keras',
-      'Scikit-learn',
-      'OpenAI',
-      'Hugging Face',
-      'LangChain',
-      'Machine Learning',
-      'Deep Learning',
-      'Computer Vision',
-      'NLP',
-      'GPT',
-      'LLaMA',
-      'Stable Diffusion',
-      'YOLO',
-      'Random Forest',
-      'XGBoost',
-      'LightGBM',
-      'Gradient Boosting',
-      'Extra Trees',
-      'CatBoost',
-      'AdaBoost',
-      'Neural Networks',
-      'CNN',
-      'RNN',
-      'Transformers',
-      'SVM',
-      'Decision Trees',
-      'K-Means',
-      'PCA',
-      'Regresión Logística',
-    ],
-    'Otros': [
-      'GraphQL',
-      'WebSockets',
-      'OAuth',
-      'JWT',
-      'Socket.io',
-      'Redux',
-      'Provider',
-      'Bloc',
-      'GetX',
-    ],
-  };
-
   @override
   void initState() {
     super.initState();
+    _loadTechnologies();
     _loadProjectData();
+  }
+
+  Future<void> _loadTechnologies() async {
+    try {
+      final technologies = await FirebaseService.fetchTechnologies();
+      if (!mounted) return;
+      setState(() {
+        _technologiesMap = technologies;
+        _isLoadingTechnologies = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoadingTechnologies = false;
+      });
+      _showError('Error al cargar tecnologías: $e');
+    }
   }
 
   @override
@@ -208,6 +89,10 @@ class _EditProjectState extends State<EditProject> {
     _nameController.dispose();
     _descriptionController.dispose();
     _linkController.dispose();
+    _problemSolvedController.dispose();
+    _difficultiesController.dispose();
+    _testimonialsController.dispose();
+    _responsibilitiesController.dispose();
     super.dispose();
   }
 
@@ -233,6 +118,11 @@ class _EditProjectState extends State<EditProject> {
         _nameController.text = projectData['name'] ?? '';
         _descriptionController.text = projectData['description'] ?? '';
         _linkController.text = projectData['link'] ?? '';
+        _problemSolvedController.text = projectData['problemSolved'] ?? '';
+        _difficultiesController.text = projectData['difficulties'] ?? '';
+        _testimonialsController.text = projectData['testimonials'] ?? '';
+        _responsibilitiesController.text =
+            projectData['responsibilities'] ?? '';
         _selectedClassification = projectData['classification'] as String?;
 
         // Cargar fechas
@@ -612,6 +502,10 @@ class _EditProjectState extends State<EditProject> {
         imagesMobile: allMobileImages,
         logo: logoUrl,
         technologies: _selectedTechnologies,
+        problemSolved: _problemSolvedController.text.trim(),
+        difficulties: _difficultiesController.text.trim(),
+        testimonials: _testimonialsController.text.trim(),
+        responsibilities: _responsibilitiesController.text.trim(),
       );
 
       setState(() {
@@ -722,6 +616,26 @@ class _EditProjectState extends State<EditProject> {
         backgroundColor: Colors.white,
         appBar: _buildAppBar(),
         body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_isLoadingTechnologies) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        appBar: _buildAppBar(),
+        body: const Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 20),
+              Text(
+                'Cargando tecnologías...',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
       );
     }
 
@@ -977,6 +891,38 @@ class _EditProjectState extends State<EditProject> {
                 ),
                 const SizedBox(height: 20),
                 _buildTextField(
+                  controller: _problemSolvedController,
+                  label: 'Problema que resuelve',
+                  icon: Icons.lightbulb_outline,
+                  maxLines: 4,
+                  maxLength: 500,
+                ),
+                const SizedBox(height: 20),
+                _buildTextField(
+                  controller: _difficultiesController,
+                  label: 'Dificultades y soluciones',
+                  icon: Icons.engineering,
+                  maxLines: 4,
+                  maxLength: 500,
+                ),
+                const SizedBox(height: 20),
+                _buildTextField(
+                  controller: _testimonialsController,
+                  label: 'Testimonios o feedback',
+                  icon: Icons.rate_review,
+                  maxLines: 4,
+                  maxLength: 500,
+                ),
+                const SizedBox(height: 20),
+                _buildTextField(
+                  controller: _responsibilitiesController,
+                  label: 'Responsabilidades',
+                  icon: Icons.assignment_ind,
+                  maxLines: 4,
+                  maxLength: 500,
+                ),
+                const SizedBox(height: 20),
+                _buildTextField(
                   controller: _linkController,
                   label: 'Link del Proyecto',
                   icon: Icons.link,
@@ -1177,6 +1123,38 @@ class _EditProjectState extends State<EditProject> {
             }
             return null;
           },
+        ),
+        const SizedBox(height: 20),
+        _buildTextField(
+          controller: _problemSolvedController,
+          label: 'Problema que resuelve',
+          icon: Icons.lightbulb_outline,
+          maxLines: 4,
+          maxLength: 500,
+        ),
+        const SizedBox(height: 20),
+        _buildTextField(
+          controller: _difficultiesController,
+          label: 'Dificultades y soluciones',
+          icon: Icons.engineering,
+          maxLines: 4,
+          maxLength: 500,
+        ),
+        const SizedBox(height: 20),
+        _buildTextField(
+          controller: _testimonialsController,
+          label: 'Testimonios o feedback',
+          icon: Icons.rate_review,
+          maxLines: 4,
+          maxLength: 500,
+        ),
+        const SizedBox(height: 20),
+        _buildTextField(
+          controller: _responsibilitiesController,
+          label: 'Responsabilidades',
+          icon: Icons.assignment_ind,
+          maxLines: 4,
+          maxLength: 500,
         ),
         const SizedBox(height: 20),
         _buildTextField(

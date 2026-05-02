@@ -121,6 +121,10 @@ class FirebaseService {
     String? logo,
     String? id,
     List<String>? technologies,
+    String? problemSolved,
+    String? difficulties,
+    String? testimonials,
+    String? responsibilities,
   }) async {
     final projectId = id ?? generateUUID();
     final data = {
@@ -138,6 +142,14 @@ class FirebaseService {
       if (endDate != null && endDate.isNotEmpty) 'endDate': endDate,
       if (technologies != null && technologies.isNotEmpty)
         'technologies': technologies,
+      if (problemSolved != null && problemSolved.isNotEmpty)
+        'problemSolved': problemSolved,
+      if (difficulties != null && difficulties.isNotEmpty)
+        'difficulties': difficulties,
+      if (testimonials != null && testimonials.isNotEmpty)
+        'testimonials': testimonials,
+      if (responsibilities != null && responsibilities.isNotEmpty)
+        'responsibilities': responsibilities,
     };
 
     await _db.ref('Projects/$projectId').set(data);
@@ -147,6 +159,46 @@ class FirebaseService {
   /// Elimina un proyecto por su ID.
   static Future<void> deleteProject(String id) async {
     await _db.ref('Projects/$id').remove();
+  }
+
+  // ───────────── TECHNOLOGIES ─────────────
+
+  /// Retorna las tecnologías organizadas por categorías desde Firebase.
+  /// Convierte los nombres de las claves de Firebase a nombres legibles.
+  static Future<Map<String, List<String>>> fetchTechnologies() async {
+    final snap = await _db.ref('technologies').get();
+    if (!snap.exists || snap.value == null) return {};
+
+    final raw = snap.value as Map<dynamic, dynamic>;
+    final Map<String, List<String>> technologies = {};
+
+    // Mapeo de nombres de claves en Firebase a nombres de categorías legibles
+    final categoryNames = {
+      'programminglanguages': 'Lenguajes de Programación',
+      'frontend': 'Frontend',
+      'backend': 'Backend',
+      'basesDeDatos': 'Bases de Datos',
+      'cloudDevOps': 'Cloud & DevOps',
+      'metodologias': 'Metodologías',
+      'arquitectura': 'Arquitectura',
+      'controlDeVersiones': 'Control de Versiones',
+      'testing': 'Testing',
+      'inteligenciaArtificial': 'Inteligencia Artificial',
+      'otros': 'Otros',
+    };
+
+    raw.forEach((key, value) {
+      final categoryKey = key.toString();
+      final categoryName = categoryNames[categoryKey] ?? categoryKey;
+
+      if (value is List) {
+        technologies[categoryName] = List<String>.from(
+          value.map((e) => e.toString()),
+        );
+      }
+    });
+
+    return technologies;
   }
 
   // ───────────── HELPERS ─────────────
