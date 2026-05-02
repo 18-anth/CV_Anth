@@ -45,6 +45,36 @@ class _ProjectDetailState extends State<ProjectDetail> {
     }
   }
 
+  /// Convierte URLs de Google Drive al formato correcto que evita problemas de CORS
+  /// Usa lh3.googleusercontent.com que permite acceso directo sin CORS
+  String _fixGoogleDriveUrl(String url) {
+    if (url.isEmpty) return url;
+
+    // Si ya es el formato correcto (lh3.googleusercontent.com), devolverla sin cambios
+    if (url.contains('lh3.googleusercontent.com/d/')) {
+      return url;
+    }
+
+    // Extraer el ID del archivo de diferentes formatos de URLs de Google Drive
+    // Soporta:
+    // - https://drive.usercontent.google.com/download?id=FILE_ID
+    // - https://drive.google.com/uc?export=view&id=FILE_ID
+    // - https://drive.google.com/file/d/FILE_ID/view
+    // - https://www.googleapis.com/drive/v3/files/FILE_ID
+    RegExp regExp = RegExp(r'(?:id=|/d/|/files/)([a-zA-Z0-9_-]+)');
+    Match? match = regExp.firstMatch(url);
+
+    if (match != null && match.groupCount > 0) {
+      String fileId = match.group(1)!;
+      // Convertir al formato que funciona sin CORS
+      // lh3.googleusercontent.com sirve contenido directamente sin redirecciones
+      return 'https://lh3.googleusercontent.com/d/$fileId';
+    }
+
+    // Si no es una URL de Google Drive, devolverla sin cambios
+    return url;
+  }
+
   double _getPreviewWidth(String? view) {
     final isMobile = MediaQuery.of(context).size.width < 600;
     final isTablet =
@@ -154,7 +184,7 @@ class _ProjectDetailState extends State<ProjectDetail> {
               ? ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Image.network(
-                    logo,
+                    _fixGoogleDriveUrl(logo),
                     width: 500,
                     height: 500,
                     fit: BoxFit.contain,
@@ -475,7 +505,7 @@ class _ProjectDetailState extends State<ProjectDetail> {
             fit: StackFit.expand,
             children: [
               Image.network(
-                imageUrl,
+                _fixGoogleDriveUrl(imageUrl),
                 fit: BoxFit.cover,
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) return child;
@@ -573,7 +603,7 @@ class _ProjectDetailState extends State<ProjectDetail> {
                 minScale: 0.5,
                 maxScale: 4.0,
                 child: Image.network(
-                  imageUrl,
+                  _fixGoogleDriveUrl(imageUrl),
                   fit: BoxFit.contain,
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
