@@ -1,14 +1,29 @@
 [
     {
         "origin": [
-            "*"
+            "*",
+            "https://18-anth.github.io/CV_Anth_/"
         ],
         "method": [
-            "GET"
+            "GET",
+            "POST",
+            "PUT",
+            "DELETE",
+            "OPTIONS"
         ],
         "responseHeader": [
-            "Content-Type"
+            "Content-Type",
+            "Authorization",
+            "X-Requested-With",
+            "Cache-Control",
+            "Pragma"
         ],
-        "maxAgeSeconds": 3600
+        "allowedHeader": [
+            "Content-Type",
+            "Authorization",
+            "X-Requested-With"
+        ],
+        "maxAgeSeconds": 3600,
+        "allowCredentials": true
     }
 ]
