@@ -18,9 +18,14 @@ class UploadProject extends StatefulWidget {
 
 class _UploadProjectState extends State<UploadProject> {
   final _formKey = GlobalKey<FormState>();
+  final _titleController = TextEditingController();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _linkController = TextEditingController();
+
+  String? _selectedClassification;
+  DateTime? _startDate;
+  DateTime? _endDate;
 
   final List<PlatformFile> _webImages = [];
   final List<PlatformFile> _mobileImages = [];
@@ -30,8 +35,15 @@ class _UploadProjectState extends State<UploadProject> {
   double _uploadProgress = 0.0;
   String _uploadStatus = '';
 
+  final List<String> _classifications = [
+    'Prácticas profesionales',
+    'Freelancer',
+    'Proyecto universitario',
+  ];
+
   @override
   void dispose() {
+    _titleController.dispose();
     _nameController.dispose();
     _descriptionController.dispose();
     _linkController.dispose();
@@ -118,74 +130,78 @@ class _UploadProjectState extends State<UploadProject> {
 
   Future<bool> _showAuthInstructions() async {
     return await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.info_outline, color: Colors.blue),
-            SizedBox(width: 10),
-            Text('Autorización de Google Drive'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Se abrirá una ventana emergente de Google para autorizar el acceso a Google Drive.',
-              style: TextStyle(fontSize: 16),
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.info_outline, color: Colors.blue),
+                SizedBox(width: 10),
+                Text('Autorización de Google Drive'),
+              ],
             ),
-            const SizedBox(height: 20),
-            const Text(
-              'Por favor, sigue estos pasos:',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-            ),
-            const SizedBox(height: 10),
-            _buildInstructionStep('1', 'Espera a que se abra la ventana de Google'),
-            _buildInstructionStep('2', 'Selecciona tu cuenta de Google'),
-            _buildInstructionStep('3', 'Haz clic en "Permitir" o "Allow"'),
-            _buildInstructionStep('4', 'NO cierres la ventana manualmente'),
-            const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.amber.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.amber.shade300),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.warning_amber, color: Colors.amber),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      'Si cierras la ventana, la subida se cancelará',
-                      style: TextStyle(fontSize: 13),
-                    ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Se abrirá una ventana emergente de Google para autorizar el acceso a Google Drive.',
+                  style: TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Por favor, sigue estos pasos:',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                ),
+                const SizedBox(height: 10),
+                _buildInstructionStep(
+                  '1',
+                  'Espera a que se abra la ventana de Google',
+                ),
+                _buildInstructionStep('2', 'Selecciona tu cuenta de Google'),
+                _buildInstructionStep('3', 'Haz clic en "Permitir" o "Allow"'),
+                _buildInstructionStep('4', 'NO cierres la ventana manualmente'),
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.amber.shade300),
                   ),
-                ],
+                  child: const Row(
+                    children: [
+                      Icon(Icons.warning_amber, color: Colors.amber),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Si cierras la ventana, la subida se cancelará',
+                          style: TextStyle(fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancelar'),
               ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
+              ElevatedButton.icon(
+                onPressed: () => Navigator.pop(context, true),
+                icon: const Icon(Icons.check),
+                label: const Text('Entendido, continuar'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
           ),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context, true),
-            icon: const Icon(Icons.check),
-            label: const Text('Entendido, continuar'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              foregroundColor: Colors.white,
-            ),
-          ),
-        ],
-      ),
-    ) ?? false;
+        ) ??
+        false;
   }
 
   Widget _buildInstructionStep(String number, String text) {
@@ -212,9 +228,7 @@ class _UploadProjectState extends State<UploadProject> {
             ),
           ),
           const SizedBox(width: 10),
-          Expanded(
-            child: Text(text, style: const TextStyle(fontSize: 14)),
-          ),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 14))),
         ],
       ),
     );
@@ -326,9 +340,13 @@ class _UploadProjectState extends State<UploadProject> {
 
       await FirebaseService.saveProject(
         id: projectId, // Usar el mismo ID generado
+        title: _titleController.text.trim(),
         name: _nameController.text.trim(),
         description: _descriptionController.text.trim(),
         link: _linkController.text.trim(),
+        classification: _selectedClassification,
+        startDate: _startDate?.toIso8601String(),
+        endDate: _endDate?.toIso8601String(),
         images: webImageUrls,
         imagesMobile: mobileImageUrls,
         logo: logoUrl,
@@ -517,6 +535,24 @@ class _UploadProjectState extends State<UploadProject> {
                 ),
                 const SizedBox(height: 20),
 
+                // Campo: Título
+                TextFormField(
+                  controller: _titleController,
+                  decoration: _inputDecoration(
+                    label: 'Título',
+                    hint: 'Ej: Desarrollador Full Stack',
+                    icon: Icons.star,
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'El título es requerido';
+                    }
+                    return null;
+                  },
+                  maxLength: 100,
+                ),
+                const SizedBox(height: 20),
+
                 // Campo: Nombre
                 TextFormField(
                   controller: _nameController,
@@ -532,6 +568,102 @@ class _UploadProjectState extends State<UploadProject> {
                     return null;
                   },
                   maxLength: 100,
+                ),
+                const SizedBox(height: 20),
+
+                // Campo: Clasificación
+                DropdownButtonFormField<String>(
+                  value: _selectedClassification,
+                  decoration: _inputDecoration(
+                    label: 'Clasificación',
+                    hint: 'Selecciona el tipo de proyecto',
+                    icon: Icons.category,
+                  ),
+                  items: _classifications.map((classification) {
+                    return DropdownMenuItem<String>(
+                      value: classification,
+                      child: Text(classification),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedClassification = value;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'La clasificación es requerida';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+
+                // Campo: Fecha de inicio
+                InkWell(
+                  onTap: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: _startDate ?? DateTime.now(),
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime.now(),
+                    );
+                    if (date != null) {
+                      setState(() {
+                        _startDate = date;
+                      });
+                    }
+                  },
+                  child: InputDecorator(
+                    decoration: _inputDecoration(
+                      label: 'Fecha de Inicio',
+                      hint: 'Selecciona la fecha',
+                      icon: Icons.calendar_today,
+                    ),
+                    child: Text(
+                      _startDate == null
+                          ? 'Selecciona la fecha de inicio'
+                          : '${_startDate!.day}/${_startDate!.month}/${_startDate!.year}',
+                      style: TextStyle(
+                        color: _startDate == null ? Colors.grey : Colors.black,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Campo: Fecha de culminación
+                InkWell(
+                  onTap: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: _endDate ?? DateTime.now(),
+                      firstDate: _startDate ?? DateTime(2000),
+                      lastDate: DateTime.now().add(
+                        const Duration(days: 365 * 10),
+                      ),
+                    );
+                    if (date != null) {
+                      setState(() {
+                        _endDate = date;
+                      });
+                    }
+                  },
+                  child: InputDecorator(
+                    decoration: _inputDecoration(
+                      label: 'Fecha de Culminación',
+                      hint: 'Selecciona la fecha',
+                      icon: Icons.event_available,
+                    ),
+                    child: Text(
+                      _endDate == null
+                          ? 'Selecciona la fecha de culminación'
+                          : '${_endDate!.day}/${_endDate!.month}/${_endDate!.year}',
+                      style: TextStyle(
+                        color: _endDate == null ? Colors.grey : Colors.black,
+                      ),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 20),
 

@@ -20,9 +20,14 @@ class EditProject extends StatefulWidget {
 
 class _EditProjectState extends State<EditProject> {
   final _formKey = GlobalKey<FormState>();
+  final _titleController = TextEditingController();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _linkController = TextEditingController();
+
+  String? _selectedClassification;
+  DateTime? _startDate;
+  DateTime? _endDate;
 
   // Imágenes nuevas que se van a subir
   final List<PlatformFile> _newWebImages = [];
@@ -41,6 +46,12 @@ class _EditProjectState extends State<EditProject> {
   double _uploadProgress = 0.0;
   String _uploadStatus = '';
 
+  final List<String> _classifications = [
+    'Prácticas profesionales',
+    'Freelancer',
+    'Proyectos de universidad',
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -49,6 +60,7 @@ class _EditProjectState extends State<EditProject> {
 
   @override
   void dispose() {
+    _titleController.dispose();
     _nameController.dispose();
     _descriptionController.dispose();
     _linkController.dispose();
@@ -73,9 +85,27 @@ class _EditProjectState extends State<EditProject> {
       }
 
       setState(() {
+        _titleController.text = projectData['title'] ?? '';
         _nameController.text = projectData['name'] ?? '';
         _descriptionController.text = projectData['description'] ?? '';
         _linkController.text = projectData['link'] ?? '';
+        _selectedClassification = projectData['classification'] as String?;
+        
+        // Cargar fechas
+        if (projectData['startDate'] != null) {
+          try {
+            _startDate = DateTime.parse(projectData['startDate']);
+          } catch (e) {
+            // Ignorar error de parseo
+          }
+        }
+        if (projectData['endDate'] != null) {
+          try {
+            _endDate = DateTime.parse(projectData['endDate']);
+          } catch (e) {
+            // Ignorar error de parseo
+          }
+        }
 
         // Cargar imágenes existentes
         if (projectData['images'] is List) {
@@ -409,9 +439,13 @@ class _EditProjectState extends State<EditProject> {
 
       await FirebaseService.saveProject(
         id: widget.projectId, // Usar el ID existente para actualizar
+        title: _titleController.text.trim(),
         name: _nameController.text.trim(),
         description: _descriptionController.text.trim(),
         link: _linkController.text.trim(),
+        classification: _selectedClassification,
+        startDate: _startDate?.toIso8601String(),
+        endDate: _endDate?.toIso8601String(),
         images: allWebImages,
         imagesMobile: allMobileImages,
         logo: logoUrl,
@@ -636,6 +670,19 @@ class _EditProjectState extends State<EditProject> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildTextField(
+                  controller: _titleController,
+                  label: 'Título',
+                  icon: Icons.star,
+                  maxLength: 100,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'El título es requerido';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+                _buildTextField(
                   controller: _nameController,
                   label: 'Nombre del Proyecto',
                   icon: Icons.title,
@@ -646,6 +693,103 @@ class _EditProjectState extends State<EditProject> {
                     }
                     return null;
                   },
+                ),
+                const SizedBox(height: 20),
+                // Clasificación
+                DropdownButtonFormField<String>(
+                  value: _selectedClassification,
+                  decoration: InputDecoration(
+                    labelText: 'Clasificación',
+                    prefixIcon: const Icon(Icons.category),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  items: _classifications.map((classification) {
+                    return DropdownMenuItem<String>(
+                      value: classification,
+                      child: Text(classification),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedClassification = value;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'La clasificación es requerida';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+                // Fecha de inicio
+                InkWell(
+                  onTap: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: _startDate ?? DateTime.now(),
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime.now(),
+                    );
+                    if (date != null) {
+                      setState(() {
+                        _startDate = date;
+                      });
+                    }
+                  },
+                  child: InputDecorator(
+                    decoration: InputDecoration(
+                      labelText: 'Fecha de Inicio',
+                      prefixIcon: const Icon(Icons.calendar_today),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      _startDate == null
+                          ? 'Selecciona la fecha de inicio'
+                          : '${_startDate!.day}/${_startDate!.month}/${_startDate!.year}',
+                      style: TextStyle(
+                        color: _startDate == null ? Colors.grey : Colors.black,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Fecha de culminación
+                InkWell(
+                  onTap: () async {
+                    final date = await showDatePicker(
+                      context: context,
+                      initialDate: _endDate ?? DateTime.now(),
+                      firstDate: _startDate ?? DateTime(2000),
+                      lastDate: DateTime.now().add(const Duration(days: 365 * 10)),
+                    );
+                    if (date != null) {
+                      setState(() {
+                        _endDate = date;
+                      });
+                    }
+                  },
+                  child: InputDecorator(
+                    decoration: InputDecoration(
+                      labelText: 'Fecha de Culminación',
+                      prefixIcon: const Icon(Icons.event_available),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      _endDate == null
+                          ? 'Selecciona la fecha de culminación'
+                          : '${_endDate!.day}/${_endDate!.month}/${_endDate!.year}',
+                      style: TextStyle(
+                        color: _endDate == null ? Colors.grey : Colors.black,
+                      ),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 20),
                 _buildTextField(
@@ -729,6 +873,19 @@ class _EditProjectState extends State<EditProject> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildTextField(
+          controller: _titleController,
+          label: 'Título',
+          icon: Icons.star,
+          maxLength: 100,
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'El título es requerido';
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 20),
+        _buildTextField(
           controller: _nameController,
           label: 'Nombre del Proyecto',
           icon: Icons.title,
@@ -739,6 +896,103 @@ class _EditProjectState extends State<EditProject> {
             }
             return null;
           },
+        ),
+        const SizedBox(height: 20),
+        // Clasificación
+        DropdownButtonFormField<String>(
+          value: _selectedClassification,
+          decoration: InputDecoration(
+            labelText: 'Clasificación',
+            prefixIcon: const Icon(Icons.category),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          items: _classifications.map((classification) {
+            return DropdownMenuItem<String>(
+              value: classification,
+              child: Text(classification),
+            );
+          }).toList(),
+          onChanged: (value) {
+            setState(() {
+              _selectedClassification = value;
+            });
+          },
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'La clasificación es requerida';
+            }
+            return null;
+          },
+        ),
+        const SizedBox(height: 20),
+        // Fecha de inicio
+        InkWell(
+          onTap: () async {
+            final date = await showDatePicker(
+              context: context,
+              initialDate: _startDate ?? DateTime.now(),
+              firstDate: DateTime(2000),
+              lastDate: DateTime.now(),
+            );
+            if (date != null) {
+              setState(() {
+                _startDate = date;
+              });
+            }
+          },
+          child: InputDecorator(
+            decoration: InputDecoration(
+              labelText: 'Fecha de Inicio',
+              prefixIcon: const Icon(Icons.calendar_today),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              _startDate == null
+                  ? 'Selecciona la fecha de inicio'
+                  : '${_startDate!.day}/${_startDate!.month}/${_startDate!.year}',
+              style: TextStyle(
+                color: _startDate == null ? Colors.grey : Colors.black,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        // Fecha de culminación
+        InkWell(
+          onTap: () async {
+            final date = await showDatePicker(
+              context: context,
+              initialDate: _endDate ?? DateTime.now(),
+              firstDate: _startDate ?? DateTime(2000),
+              lastDate: DateTime.now().add(const Duration(days: 365 * 10)),
+            );
+            if (date != null) {
+              setState(() {
+                _endDate = date;
+              });
+            }
+          },
+          child: InputDecorator(
+            decoration: InputDecoration(
+              labelText: 'Fecha de Culminación',
+              prefixIcon: const Icon(Icons.event_available),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              _endDate == null
+                  ? 'Selecciona la fecha de culminación'
+                  : '${_endDate!.day}/${_endDate!.month}/${_endDate!.year}',
+              style: TextStyle(
+                color: _endDate == null ? Colors.grey : Colors.black,
+              ),
+            ),
+          ),
         ),
         const SizedBox(height: 20),
         _buildTextField(

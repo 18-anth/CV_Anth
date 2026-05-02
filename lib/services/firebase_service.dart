@@ -114,6 +114,10 @@ class FirebaseService {
     required String link,
     required List<String> images,
     required List<String> imagesMobile,
+    String? title,
+    String? classification,
+    String? startDate,
+    String? endDate,
     String? logo,
     String? id,
   }) async {
@@ -126,6 +130,10 @@ class FirebaseService {
       'imagesMobile': imagesMobile,
       'logo': logo ?? '',
       'timestamp': DateTime.now().toIso8601String(),
+      if (title != null && title.isNotEmpty) 'title': title,
+      if (classification != null && classification.isNotEmpty) 'classification': classification,
+      if (startDate != null && startDate.isNotEmpty) 'startDate': startDate,
+      if (endDate != null && endDate.isNotEmpty) 'endDate': endDate,
     };
 
     await _db.ref('Projects/$projectId').set(data);

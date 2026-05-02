@@ -159,10 +159,14 @@ class _ProjectDetailState extends State<ProjectDetail> {
       );
     }
 
+    final title = project?['title'] ?? '';
     final name = project?['name'] ?? 'Sin nombre';
     final description = project?['description'] ?? '';
     final link = project?['link'] ?? '';
     final logo = project?['logo'] as String?;
+    final classification = project?['classification'] as String?;
+    final startDate = project?['startDate'] as String?;
+    final endDate = project?['endDate'] as String?;
 
     final isMobile = MediaQuery.of(context).size.width < 600;
     final isWeb = MediaQuery.of(context).size.width >= 1024;
@@ -231,20 +235,112 @@ class _ProjectDetailState extends State<ProjectDetail> {
                 ),
         ),
         const SizedBox(height: 24),
-        Text(
-          name,
-          style: const TextStyle(
-            color: Color(0xFF050A30),
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
+        // Título (si existe)
+        if (title.isNotEmpty) ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              const Icon(Icons.star, color: Colors.amber, size: 32),
+              const SizedBox(width: 1),
+              Flexible(
+                child: Text(
+                  title,
+                  textAlign: TextAlign.right,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFF050A30),
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ),
-        const SizedBox(height: 16),
+          const SizedBox(height: 12),
+        ],
+
+        // Descripción
         Text(
           description,
           textAlign: TextAlign.justify,
           style: const TextStyle(color: Colors.grey, fontSize: 16, height: 1.5),
         ),
+        // Fechas (si existen)
+        if (startDate != null || endDate != null) ...[
+          Wrap(
+            alignment: WrapAlignment.end,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              if (startDate != null) ...[
+                const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
+                Text(
+                  _formatDate(startDate),
+                  style: const TextStyle(color: Colors.grey, fontSize: 14),
+                ),
+              ],
+              if (startDate != null && endDate != null)
+                const Text(
+                  '→',
+                  style: TextStyle(color: Colors.grey, fontSize: 14),
+                ),
+              if (endDate != null) ...[
+                const Icon(Icons.event_available, size: 16, color: Colors.grey),
+                Text(
+                  _formatDate(endDate),
+                  style: const TextStyle(color: Colors.grey, fontSize: 14),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 16),
+        ],
+        // Nombre del proyecto
+        Text(
+          name,
+          style: const TextStyle(
+            color: Color(0xFF050A30),
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 16),
+        // Clasificación (si existe)
+        if (classification != null && classification.isNotEmpty) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF050A30).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: const Color(0xFF050A30).withOpacity(0.3),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.category, size: 16, color: Color(0xFF050A30)),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    classification,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Color(0xFF050A30),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
       ],
     );
 
@@ -644,6 +740,29 @@ class _ProjectDetailState extends State<ProjectDetail> {
         ),
       ),
     );
+  }
+
+  String _formatDate(String dateString) {
+    try {
+      final date = DateTime.parse(dateString);
+      final months = [
+        'Enero',
+        'Febrero',
+        'Marzo',
+        'Abril',
+        'Mayo',
+        'Junio',
+        'Julio',
+        'Agosto',
+        'Septiembre',
+        'Octubre',
+        'Noviembre',
+        'Diciembre',
+      ];
+      return '${date.day} de ${months[date.month - 1]} de ${date.year}';
+    } catch (e) {
+      return dateString;
+    }
   }
 
   Widget _buildViewTab(String? viewType, IconData icon, String label) {
