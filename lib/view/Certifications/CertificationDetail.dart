@@ -86,26 +86,12 @@ class _CertificationDetailState extends State<CertificationDetail> {
         url.contains('docs.google.com');
 
     if (isPdf) {
-      // Para PDFs de Google Drive, convertir a formato /preview para visualización inline
-      String pdfUrl = url;
-      if (url.contains('drive.google.com') ||
-          url.contains('drive.usercontent.google.com')) {
-        // Extraer el ID del archivo
-        RegExp regExp = RegExp(r'(?:id=|/d/|/files/)([a-zA-Z0-9_-]+)');
-        Match? match = regExp.firstMatch(url);
-        if (match != null && match.groupCount > 0) {
-          String fileId = match.group(1)!;
-          // Usar formato /preview para visualizar inline
-          pdfUrl = 'https://drive.google.com/file/d/$fileId/preview';
-        }
-      }
-
       return SizedBox(
         height: 800,
         child: WebViewWidget(
           controller: WebViewController()
             ..setJavaScriptMode(JavaScriptMode.unrestricted)
-            ..loadRequest(Uri.parse(pdfUrl)),
+            ..loadRequest(Uri.parse(url)),
         ),
       );
     } else {
@@ -296,10 +282,14 @@ class _CertificationDetailState extends State<CertificationDetail> {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.network(
-                            platformLogoUrl,
+                            _fixGoogleDriveUrl(platformLogoUrl),
                             fit: BoxFit.contain,
                             errorBuilder: (context, error, stackTrace) {
-                              return const Icon(Icons.image, size: 40);
+                              return const Icon(
+                                Icons.school_rounded,
+                                size: 40,
+                                color: AppColors.grey,
+                              );
                             },
                           ),
                         ),
@@ -325,10 +315,14 @@ class _CertificationDetailState extends State<CertificationDetail> {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.network(
-                            institutionLogoUrl,
+                            _fixGoogleDriveUrl(institutionLogoUrl),
                             fit: BoxFit.contain,
                             errorBuilder: (context, error, stackTrace) {
-                              return const Icon(Icons.image, size: 40);
+                              return const Icon(
+                                Icons.account_balance,
+                                size: 40,
+                                color: AppColors.grey,
+                              );
                             },
                           ),
                         ),
