@@ -126,6 +126,7 @@ class GoogleDriveUploadService {
     required String projectId,
     required String type,
     required PlatformFile file,
+    String? subFolder,
   }) async {
     try {
       // Obtener token de acceso
@@ -152,6 +153,16 @@ class GoogleDriveUploadService {
         accessToken,
       );
 
+      // Si se especifica una subcarpeta, crearla dentro de la carpeta del proyecto
+      String targetFolderId = projectFolderId;
+      if (subFolder != null && subFolder.isNotEmpty) {
+        targetFolderId = await _findOrCreateFolder(
+          subFolder,
+          projectFolderId,
+          accessToken,
+        );
+      }
+
       // Preparar nombre del archivo
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final fileName = '${timestamp}_${file.name}';
@@ -159,7 +170,7 @@ class GoogleDriveUploadService {
       // Metadata del archivo
       final metadata = {
         'name': fileName,
-        'parents': [projectFolderId],
+        'parents': [targetFolderId],
         'mimeType': _getMimeType(file.name),
       };
 
@@ -228,6 +239,7 @@ class GoogleDriveUploadService {
     required String type,
     required List<PlatformFile> files,
     Function(int current, int total)? onProgress,
+    String? subFolder,
   }) async {
     final List<String> urls = [];
 
@@ -239,6 +251,7 @@ class GoogleDriveUploadService {
           projectId: projectId,
           type: type,
           file: file,
+          subFolder: subFolder,
         );
 
         urls.add(url);
@@ -274,6 +287,8 @@ class GoogleDriveUploadService {
         return AppConfig.googleDriveProjectsMobileFolderId;
       case 'web':
         return AppConfig.googleDriveProjectsWebFolderId;
+      case 'certification':
+        return AppConfig.googleDriveCertificationsFolderId;
       default:
         throw Exception('Tipo de carpeta no válido: $type');
     }
@@ -295,8 +310,10 @@ class GoogleDriveUploadService {
         return 'image/webp';
       case 'svg':
         return 'image/svg+xml';
+      case 'pdf':
+        return 'application/pdf';
       default:
-        return 'image/jpeg';
+        return 'application/octet-stream';
     }
   }
 }

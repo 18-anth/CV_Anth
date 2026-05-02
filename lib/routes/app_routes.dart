@@ -1,4 +1,3 @@
-import 'package:cv_anth/utils/Colors.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cv_anth/view/Home/Homescreen.dart';
@@ -9,6 +8,7 @@ import 'package:cv_anth/view/Project/UploadProject.dart';
 import 'package:cv_anth/view/Project/EditProject.dart';
 import 'package:cv_anth/view/Certifications/Certification.dart';
 import 'package:cv_anth/view/Certifications/CertificationDetail.dart';
+import 'package:cv_anth/view/Certifications/UploadCertification.dart';
 import 'package:cv_anth/view/About/AboutMe.dart';
 import 'package:cv_anth/view/Auth/LoginScreen.dart';
 import 'package:cv_anth/view/Legal/TermsScreen.dart';
@@ -188,20 +188,7 @@ final GoRouter appRouter = GoRouter(
       path: '/uploadcertification',
       name: 'uploadCertification',
       builder: (context, state) {
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Upload Certification | CV { Anth }'),
-            backgroundColor: AppColors.light,
-            foregroundColor: AppColors.light,
-            elevation: 0,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back),
-              onPressed: () => context.go('/certification'),
-            ),
-          ),
-          body: const Center(child: Text('Upload Certification Page')),
-          backgroundColor: AppColors.light,
-        );
+        return const UploadCertification();
       },
     ),
 

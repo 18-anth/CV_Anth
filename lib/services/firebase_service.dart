@@ -80,19 +80,24 @@ class FirebaseService {
   /// Si [id] no se proporciona, genera uno automáticamente.
   static Future<String> saveCertification({
     required String name,
-    required String driveFileId,
-    String? description,
-    String? imageUrl,
+    required String pdfUrl,
+    String? series,
+    String? link,
+    String? platformLogoUrl,
+    String? institutionLogoUrl,
     String? id,
   }) async {
     final certId = id ?? _generateId();
     final data = {
       'name': name,
-      'driveFileId': driveFileId,
-      if (description != null && description.isNotEmpty)
-        'description': description,
-      if (imageUrl != null && imageUrl.isNotEmpty) 'imageUrl': imageUrl,
-      'createdAt': DateTime.now().millisecondsSinceEpoch,
+      'pdfUrl': pdfUrl,
+      if (series != null && series.isNotEmpty) 'series': series,
+      if (link != null && link.isNotEmpty) 'link': link,
+      if (platformLogoUrl != null && platformLogoUrl.isNotEmpty)
+        'platformLogoUrl': platformLogoUrl,
+      if (institutionLogoUrl != null && institutionLogoUrl.isNotEmpty)
+        'institutionLogoUrl': institutionLogoUrl,
+      'timestamp': DateTime.now().toIso8601String(),
     };
 
     await _db.ref('Certifications/$certId').set(data);

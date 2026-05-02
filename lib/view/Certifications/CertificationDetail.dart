@@ -31,23 +31,24 @@ class _CertificationDetailState extends State<CertificationDetail> {
   void _loadCertification() {
     FirebaseService.fetchCertificationById(widget.certificationId)
         .then((data) {
-      if (data != null) {
-        setState(() {
-          certification = data;
-          isLoading = false;
+          if (data != null) {
+            setState(() {
+              certification = data;
+              isLoading = false;
+            });
+          } else {
+            setState(() {
+              errorMessage = 'Certificación no encontrada';
+              isLoading = false;
+            });
+          }
+        })
+        .catchError((error) {
+          setState(() {
+            errorMessage = 'Error al cargar: $error';
+            isLoading = false;
+          });
         });
-      } else {
-        setState(() {
-          errorMessage = 'Certificación no encontrada';
-          isLoading = false;
-        });
-      }
-    }).catchError((error) {
-      setState(() {
-        errorMessage = 'Error al cargar: $error';
-        isLoading = false;
-      });
-    });
   }
 
   Widget _buildPdfOrImageViewer(String url) {
@@ -57,7 +58,8 @@ class _CertificationDetailState extends State<CertificationDetail> {
       return buildWebPdfViewerWidget(url, viewId);
     }
 
-    final isPdf = url.toLowerCase().endsWith('.pdf') ||
+    final isPdf =
+        url.toLowerCase().endsWith('.pdf') ||
         url.contains('drive.google.com') ||
         url.contains('docs.google.com');
 
@@ -186,6 +188,11 @@ class _CertificationDetailState extends State<CertificationDetail> {
 
     final name = certification?['name'] ?? 'Sin nombre';
     final description = certification?['description'] ?? '';
+    final series = certification?['series'] as String? ?? '';
+    final link = certification?['link'] as String? ?? '';
+    final platformLogoUrl = certification?['platformLogoUrl'] as String? ?? '';
+    final institutionLogoUrl =
+        certification?['institutionLogoUrl'] as String? ?? '';
 
     // Resolución de la URL del PDF:
     // 1) Si el documento tiene 'pdfUrl' se usa directamente.
@@ -195,8 +202,8 @@ class _CertificationDetailState extends State<CertificationDetail> {
     final pdfUrl = rawPdfUrl.isNotEmpty
         ? rawPdfUrl
         : driveFileId.isNotEmpty
-            ? GoogleDriveService.previewUrl(driveFileId)
-            : '';
+        ? GoogleDriveService.previewUrl(driveFileId)
+        : '';
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F4F4),
@@ -213,6 +220,75 @@ class _CertificationDetailState extends State<CertificationDetail> {
       body: SingleChildScrollView(
         child: Column(
           children: [
+            // Logos (si existen)
+            if (platformLogoUrl.isNotEmpty || institutionLogoUrl.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 20,
+                  horizontal: 20,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (platformLogoUrl.isNotEmpty) ...[
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 4,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            platformLogoUrl,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(Icons.image, size: 40);
+                            },
+                          ),
+                        ),
+                      ),
+                      if (institutionLogoUrl.isNotEmpty)
+                        const SizedBox(width: 20),
+                    ],
+                    if (institutionLogoUrl.isNotEmpty)
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 4,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            institutionLogoUrl,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(Icons.image, size: 40);
+                            },
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+
             // Título
             Container(
               padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
@@ -227,6 +303,28 @@ class _CertificationDetailState extends State<CertificationDetail> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
+                  if (series.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.blue.shade200),
+                      ),
+                      child: Text(
+                        series,
+                        style: TextStyle(
+                          color: Colors.blue.shade700,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                   if (description.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     Text(
@@ -235,6 +333,30 @@ class _CertificationDetailState extends State<CertificationDetail> {
                       style: const TextStyle(
                         color: Color(0xFF666666),
                         fontSize: 16,
+                      ),
+                    ),
+                  ],
+                  if (link.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        final uri = Uri.parse(link);
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(
+                            uri,
+                            mode: LaunchMode.externalApplication,
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.link, size: 18),
+                      label: const Text('Ver Certificado en Línea'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0d0d0d),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
                       ),
                     ),
                   ],

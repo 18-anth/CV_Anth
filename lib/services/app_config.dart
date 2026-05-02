@@ -21,7 +21,7 @@ class AppConfig {
       EnvLoader.getRequired('REACT_APP_GOOGLE_CLIENT_ID');
   static String get googleDriveFolderId =>
       EnvLoader.getRequired('REACT_APP_GOOGLE_DRIVE_FOLDER_ID');
-  
+
   // Carpetas específicas para proyectos
   static String get googleDriveProjectsLogoFolderId =>
       EnvLoader.getRequired('REACT_APP_GOOGLE_DRIVE_PROJECTS_LOGO_FOLDER_ID');
@@ -29,6 +29,10 @@ class AppConfig {
       EnvLoader.getRequired('REACT_APP_GOOGLE_DRIVE_PROJECTS_MOBILE_FOLDER_ID');
   static String get googleDriveProjectsWebFolderId =>
       EnvLoader.getRequired('REACT_APP_GOOGLE_DRIVE_PROJECTS_WEB_FOLDER_ID');
+
+  // Carpeta específica para certificaciones
+  static String get googleDriveCertificationsFolderId =>
+      EnvLoader.getRequired('REACT_APP_GOOGLE_DRIVE_CERTIFICATIONS_FOLDER_ID');
 
   //  Validación de configuración
 

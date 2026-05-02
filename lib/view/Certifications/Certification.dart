@@ -11,12 +11,20 @@ class CertificationModel {
   final String name;
   final String description;
   final String? imageUrl;
+  final String? series;
+  final String? link;
+  final String? platformLogoUrl;
+  final String? institutionLogoUrl;
 
   CertificationModel({
     required this.id,
     required this.name,
     required this.description,
     this.imageUrl,
+    this.series,
+    this.link,
+    this.platformLogoUrl,
+    this.institutionLogoUrl,
   });
 
   factory CertificationModel.fromMap(Map<String, dynamic> data) {
@@ -25,6 +33,10 @@ class CertificationModel {
       name: data['name'] ?? 'Sin nombre',
       description: data['description'] ?? '',
       imageUrl: data['imageUrl'],
+      series: data['series'],
+      link: data['link'],
+      platformLogoUrl: data['platformLogoUrl'],
+      institutionLogoUrl: data['institutionLogoUrl'],
     );
   }
 }
@@ -407,30 +419,127 @@ class _CertificationCardState extends State<_CertificationCard>
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Container(
-                                      width: 48,
-                                      height: 48,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(12),
-                                        gradient: LinearGradient(
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                          colors: [
-                                            Colors.white.withOpacity(0.15),
-                                            Colors.white.withOpacity(0.05),
-                                          ],
+                                    // Logos o ícono
+                                    if (widget.cert.platformLogoUrl != null ||
+                                        widget.cert.institutionLogoUrl != null)
+                                      Row(
+                                        children: [
+                                          if (widget.cert.platformLogoUrl !=
+                                              null)
+                                            Container(
+                                              width: 48,
+                                              height: 48,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black
+                                                        .withOpacity(0.2),
+                                                    blurRadius: 4,
+                                                    spreadRadius: 1,
+                                                  ),
+                                                ],
+                                              ),
+                                              child: ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                                child: Image.network(
+                                                  widget.cert.platformLogoUrl!,
+                                                  fit: BoxFit.contain,
+                                                  errorBuilder:
+                                                      (
+                                                        context,
+                                                        error,
+                                                        stackTrace,
+                                                      ) {
+                                                        return Icon(
+                                                          Icons.school_rounded,
+                                                          color: Colors.grey,
+                                                          size: 24,
+                                                        );
+                                                      },
+                                                ),
+                                              ),
+                                            ),
+                                          if (widget.cert.platformLogoUrl !=
+                                                  null &&
+                                              widget.cert.institutionLogoUrl !=
+                                                  null)
+                                            const SizedBox(width: 8),
+                                          if (widget.cert.institutionLogoUrl !=
+                                              null)
+                                            Container(
+                                              width: 48,
+                                              height: 48,
+                                              decoration: BoxDecoration(
+                                                color: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                                boxShadow: [
+                                                  BoxShadow(
+                                                    color: Colors.black
+                                                        .withOpacity(0.2),
+                                                    blurRadius: 4,
+                                                    spreadRadius: 1,
+                                                  ),
+                                                ],
+                                              ),
+                                              child: ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                                child: Image.network(
+                                                  widget
+                                                      .cert
+                                                      .institutionLogoUrl!,
+                                                  fit: BoxFit.contain,
+                                                  errorBuilder:
+                                                      (
+                                                        context,
+                                                        error,
+                                                        stackTrace,
+                                                      ) {
+                                                        return Icon(
+                                                          Icons.school_rounded,
+                                                          color: Colors.grey,
+                                                          size: 24,
+                                                        );
+                                                      },
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      )
+                                    else
+                                      Container(
+                                        width: 48,
+                                        height: 48,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                            colors: [
+                                              Colors.white.withOpacity(0.15),
+                                              Colors.white.withOpacity(0.05),
+                                            ],
+                                          ),
+                                          border: Border.all(
+                                            color: Colors.white.withOpacity(
+                                              0.2,
+                                            ),
+                                            width: 0.5,
+                                          ),
                                         ),
-                                        border: Border.all(
-                                          color: Colors.white.withOpacity(0.2),
-                                          width: 0.5,
+                                        child: Icon(
+                                          Icons.school_rounded,
+                                          color: Colors.white.withOpacity(0.7),
+                                          size: 24,
                                         ),
                                       ),
-                                      child: Icon(
-                                        Icons.school_rounded,
-                                        color: Colors.white.withOpacity(0.7),
-                                        size: 24,
-                                      ),
-                                    ),
                                     const SizedBox(height: 20),
                                     Text(
                                       widget.cert.name,
@@ -444,6 +553,39 @@ class _CertificationCardState extends State<_CertificationCard>
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                     ),
+                                    if (widget.cert.series != null &&
+                                        widget.cert.series!.isNotEmpty) ...[
+                                      const SizedBox(height: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white.withOpacity(0.15),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          border: Border.all(
+                                            color: Colors.white.withOpacity(
+                                              0.3,
+                                            ),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          widget.cert.series!,
+                                          style: TextStyle(
+                                            color: Colors.white.withOpacity(
+                                              0.9,
+                                            ),
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
+                                            letterSpacing: 0.5,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                     const SizedBox(height: 12),
                                     if (widget.cert.description.isNotEmpty)
                                       Text(
