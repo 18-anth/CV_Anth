@@ -172,7 +172,7 @@ class _CertificationState extends State<Certification> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Colors.white.withOpacity(0.02)],
+                  colors: [Colors.transparent, AppColors.light.withOpacity(0.02)],
                 ),
               ),
               child: Column(
@@ -190,7 +190,7 @@ class _CertificationState extends State<Certification> {
                           child: Text(
                             'CERTIFICACIONES Y CURSOS',
                             style: TextStyle(
-                              color: Colors.white,
+                              color: AppColors.light,
                               fontSize: isMobile ? 24 : 32,
                               fontWeight: FontWeight.w300,
                               letterSpacing: 3,
@@ -208,9 +208,9 @@ class _CertificationState extends State<Certification> {
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  Colors.white.withOpacity(0),
-                                  Colors.white.withOpacity(0.6),
-                                  Colors.white.withOpacity(0),
+                                  AppColors.light.withOpacity(0),
+                                  AppColors.light.withOpacity(0.6),
+                                  AppColors.light.withOpacity(0),
                                 ],
                               ),
                               borderRadius: BorderRadius.circular(1),
@@ -228,14 +228,14 @@ class _CertificationState extends State<Certification> {
                       child: Column(
                         children: [
                           const CircularProgressIndicator(
-                            color: Colors.white54,
+                            color: AppColors.light,
                             strokeWidth: 2,
                           ),
                           const SizedBox(height: 24),
                           Text(
                             'Cargando certificaciones...',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.6),
+                              color: AppColors.light.withOpacity(0.6),
                               fontSize: 16,
                               letterSpacing: 1,
                             ),
@@ -261,7 +261,7 @@ class _CertificationState extends State<Certification> {
                       child: Text(
                         'No hay certificaciones disponibles.',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.5),
+                          color: AppColors.light.withOpacity(0.5),
                           fontSize: 16,
                           letterSpacing: 1,
                         ),
@@ -403,8 +403,8 @@ class _CertificationCardState extends State<_CertificationCard>
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     colors: [
-                                      Colors.white.withOpacity(0.3),
-                                      Colors.white.withOpacity(0.1),
+                                      AppColors.light.withOpacity(0.3),
+                                      AppColors.light.withOpacity(0.1),
                                     ],
                                   ),
                                 ),
@@ -430,12 +430,12 @@ class _CertificationCardState extends State<_CertificationCard>
                                               width: 48,
                                               height: 48,
                                               decoration: BoxDecoration(
-                                                color: Colors.white,
+                                                color: AppColors.light,
                                                 borderRadius:
                                                     BorderRadius.circular(8),
                                                 boxShadow: [
                                                   BoxShadow(
-                                                    color: Colors.black
+                                                    color: AppColors.grey
                                                         .withOpacity(0.2),
                                                     blurRadius: 4,
                                                     spreadRadius: 1,
@@ -454,9 +454,9 @@ class _CertificationCardState extends State<_CertificationCard>
                                                         error,
                                                         stackTrace,
                                                       ) {
-                                                        return Icon(
+                                                        return const Icon(
                                                           Icons.school_rounded,
-                                                          color: Colors.grey,
+                                                          color: AppColors.grey,
                                                           size: 24,
                                                         );
                                                       },
@@ -474,14 +474,13 @@ class _CertificationCardState extends State<_CertificationCard>
                                               width: 48,
                                               height: 48,
                                               decoration: BoxDecoration(
-                                                color: Colors.white,
+                                                color: AppColors.light,
                                                 borderRadius:
                                                     BorderRadius.circular(8),
                                                 boxShadow: [
                                                   BoxShadow(
-                                                    color: Colors.black
-                                                        .withOpacity(0.2),
-                                                    blurRadius: 4,
+                                                    color: AppColors.grey.withOpacity(0.3),
+                                                    blurRadius: 6,
                                                     spreadRadius: 1,
                                                   ),
                                                 ],
@@ -500,9 +499,9 @@ class _CertificationCardState extends State<_CertificationCard>
                                                         error,
                                                         stackTrace,
                                                       ) {
-                                                        return Icon(
+                                                        return const Icon(
                                                           Icons.school_rounded,
-                                                          color: Colors.grey,
+                                                          color: AppColors.grey,
                                                           size: 24,
                                                         );
                                                       },
@@ -523,12 +522,12 @@ class _CertificationCardState extends State<_CertificationCard>
                                             begin: Alignment.topLeft,
                                             end: Alignment.bottomRight,
                                             colors: [
-                                              Colors.white.withOpacity(0.15),
-                                              Colors.white.withOpacity(0.05),
+                                              AppColors.light.withOpacity(0.15),
+                                              AppColors.light.withOpacity(0.05),
                                             ],
                                           ),
                                           border: Border.all(
-                                            color: Colors.white.withOpacity(
+                                            color: AppColors.light.withOpacity(
                                               0.2,
                                             ),
                                             width: 0.5,
@@ -536,15 +535,15 @@ class _CertificationCardState extends State<_CertificationCard>
                                         ),
                                         child: Icon(
                                           Icons.school_rounded,
-                                          color: Colors.white.withOpacity(0.7),
+                                          color: AppColors.light.withOpacity(0.8),
                                           size: 24,
                                         ),
                                       ),
                                     const SizedBox(height: 20),
                                     Text(
                                       widget.cert.name,
-                                      style: TextStyle(
-                                        color: Colors.white,
+                                      style: const TextStyle(
+                                        color: AppColors.light,
                                         fontSize: 16,
                                         fontWeight: FontWeight.w500,
                                         letterSpacing: 0.5,
@@ -562,12 +561,12 @@ class _CertificationCardState extends State<_CertificationCard>
                                           vertical: 4,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.15),
+                                          color: AppColors.light.withOpacity(0.15),
                                           borderRadius: BorderRadius.circular(
                                             12,
                                           ),
                                           border: Border.all(
-                                            color: Colors.white.withOpacity(
+                                            color: AppColors.light.withOpacity(
                                               0.3,
                                             ),
                                             width: 1,
@@ -576,7 +575,7 @@ class _CertificationCardState extends State<_CertificationCard>
                                         child: Text(
                                           widget.cert.series!,
                                           style: TextStyle(
-                                            color: Colors.white.withOpacity(
+                                            color: AppColors.light.withOpacity(
                                               0.9,
                                             ),
                                             fontSize: 11,
@@ -591,7 +590,7 @@ class _CertificationCardState extends State<_CertificationCard>
                                       Text(
                                         widget.cert.description,
                                         style: TextStyle(
-                                          color: Colors.white.withOpacity(0.6),
+                                          color: AppColors.light.withOpacity(0.6),
                                           fontSize: 13,
                                           fontWeight: FontWeight.w400,
                                           letterSpacing: 0.3,
@@ -612,7 +611,7 @@ class _CertificationCardState extends State<_CertificationCard>
                                 decoration: BoxDecoration(
                                   border: Border(
                                     top: BorderSide(
-                                      color: Colors.white.withOpacity(0.08),
+                                      color: AppColors.light.withOpacity(0.08),
                                       width: 1,
                                     ),
                                   ),
@@ -625,7 +624,7 @@ class _CertificationCardState extends State<_CertificationCard>
                                       child: Text(
                                         'Ver detalles',
                                         style: TextStyle(
-                                          color: Colors.white.withOpacity(0.7),
+                                          color: AppColors.light.withOpacity(0.7),
                                           fontSize: 12,
                                           fontWeight: FontWeight.w500,
                                           letterSpacing: 1,
@@ -634,7 +633,7 @@ class _CertificationCardState extends State<_CertificationCard>
                                     ),
                                     Icon(
                                       Icons.arrow_forward_rounded,
-                                      color: Colors.white.withOpacity(0.6),
+                                      color: AppColors.light.withOpacity(0.6),
                                       size: 16,
                                     ),
                                   ],
