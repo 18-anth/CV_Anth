@@ -51,6 +51,28 @@ class _CertificationDetailState extends State<CertificationDetail> {
         });
   }
 
+  /// Convierte URLs de Google Drive al formato correcto que evita problemas de CORS
+  /// Usa lh3.googleusercontent.com que permite acceso directo sin CORS
+  String _fixGoogleDriveUrl(String url) {
+    if (url.isEmpty) return url;
+
+    // Si ya es el formato correcto (lh3.googleusercontent.com), devolverla sin cambios
+    if (url.contains('lh3.googleusercontent.com/d/')) {
+      return url;
+    }
+
+    // Extraer el ID del archivo de diferentes formatos de URLs de Google Drive
+    RegExp regExp = RegExp(r'(?:id=|/d/|/files/)([a-zA-Z0-9_-]+)');
+    Match? match = regExp.firstMatch(url);
+
+    if (match != null && match.groupCount > 0) {
+      String fileId = match.group(1)!;
+      return 'https://lh3.googleusercontent.com/d/$fileId';
+    }
+
+    return url;
+  }
+
   Widget _buildPdfOrImageViewer(String url) {
     // En web, el iframe del browser maneja tanto PDFs como imágenes sin CORS
     if (kIsWeb) {
@@ -406,6 +428,21 @@ class _CertificationDetailState extends State<CertificationDetail> {
               ),
 
             const SizedBox(height: 40),
+
+            // Galería de imágenes (si existen)
+            if (certification?['images'] != null &&
+                (certification!['images'] as List).isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: _buildImageGallerySection(
+                  title: 'Galería de Imágenes',
+                  icon: Icons.photo_library,
+                  color: const Color(0xFF050A30),
+                  images: certification!['images'] as List<dynamic>,
+                ),
+              ),
+
+            const SizedBox(height: 40),
           ],
         ),
       ),
@@ -414,6 +451,320 @@ class _CertificationDetailState extends State<CertificationDetail> {
         backgroundColor: const Color(0xFF040404),
         shape: const CircleBorder(),
         child: const Icon(Icons.arrow_back, color: Color(0xFFF4F4F4)),
+      ),
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // SECCIÓN DE GALERÍA DE IMÁGENES
+  // ══════════════════════════════════════════════════════════════
+
+  Widget _buildImageGallerySection({
+    required String title,
+    required IconData icon,
+    required Color color,
+    required List<dynamic> images,
+  }) {
+    if (images.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: Colors.grey[50],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[200]!, width: 1),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, size: 48, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            Text(
+              'No hay imágenes disponibles',
+              style: TextStyle(color: Colors.grey[600], fontSize: 16),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    final isTablet =
+        MediaQuery.of(context).size.width >= 600 &&
+        MediaQuery.of(context).size.width < 1024;
+
+    final crossAxisCount = isMobile ? 2 : (isTablet ? 3 : 4);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Encabezado de la sección
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 28),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
+                  ),
+                  Text(
+                    '${images.length} imagen${images.length != 1 ? 'es' : ''}',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+
+        // Grid de imágenes
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: crossAxisCount,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 1,
+          ),
+          itemCount: images.length,
+          itemBuilder: (context, index) {
+            final imageUrl = images[index].toString();
+            return _buildImageCard(imageUrl, index + 1);
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildImageCard(String imageUrl, int imageNumber) {
+    return GestureDetector(
+      onTap: () => _showImageDialog(imageUrl),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.network(
+                _fixGoogleDriveUrl(imageUrl),
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    color: Colors.grey[200],
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                                  loadingProgress.expectedTotalBytes!
+                            : null,
+                        strokeWidth: 3,
+                      ),
+                    ),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey[300],
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.broken_image,
+                          size: 48,
+                          color: Colors.grey[500],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Error al cargar',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+              // Overlay con número de imagen
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.6),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '#$imageNumber',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              // Overlay hover effect
+              Positioned.fill(
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => _showImageDialog(imageUrl),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withOpacity(0.3),
+                          ],
+                        ),
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.zoom_in,
+                          color: Colors.white,
+                          size: 32,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showImageDialog(String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: Stack(
+          children: [
+            // Imagen principal
+            Center(
+              child: Container(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.9,
+                  maxHeight: MediaQuery.of(context).size.height * 0.9,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.5),
+                      blurRadius: 20,
+                      spreadRadius: 5,
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.network(
+                    _fixGoogleDriveUrl(imageUrl),
+                    fit: BoxFit.contain,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        color: Colors.grey[900],
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                : null,
+                          ),
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey[900],
+                        padding: const EdgeInsets.all(32),
+                        child: const Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.broken_image,
+                                size: 64,
+                                color: Colors.white,
+                              ),
+                              SizedBox(height: 16),
+                              Text(
+                                'Error al cargar la imagen',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+            // Botón de cerrar
+            Positioned(
+              top: 40,
+              right: 40,
+              child: Material(
+                color: Colors.black.withOpacity(0.6),
+                borderRadius: BorderRadius.circular(50),
+                child: InkWell(
+                  onTap: () => Navigator.of(context).pop(),
+                  borderRadius: BorderRadius.circular(50),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
