@@ -1,131 +1,98 @@
+// ignore_for_file: avoid_web_libraries_in_flutter
+import 'dart:async';
 import 'dart:typed_data';
+import 'dart:html' as html;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' show File;
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:googleapis/drive/v3.dart' as drive;
-import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'app_config.dart';
+import 'google_auth_web.dart';
 
 /// 📤 Servicio para subir imágenes directamente a Google Drive
-/// usando Google Sign-In y Google Drive API
+/// Usa Google Identity Services (GIS) para autenticación web
+/// Implementación compatible con GitHub Pages
 class GoogleDriveUploadService {
-  // Singleton instances
-  static GoogleSignIn? _googleSignIn;
-  static drive.DriveApi? _driveApi;
-  static bool _isInitialized = false;
-
-  /// Inicializa Google Sign-In con los scopes necesarios (solo una vez)
-  static GoogleSignIn _getGoogleSignIn() {
-    if (_googleSignIn == null) {
-      if (_isInitialized) {
-        throw Exception('GoogleSignIn ya fue inicializado pero la instancia es nula');
-      }
-      
-      _googleSignIn = GoogleSignIn(
-        clientId: AppConfig.googleClientId,
-        scopes: [
-          drive.DriveApi.driveFileScope, // Permiso para crear/modificar archivos
-        ],
-      );
-      _isInitialized = true;
-      
-      if (kIsWeb) {
-        print('✅ GoogleSignIn inicializado para web');
-      }
-    }
-    return _googleSignIn!;
-  }
-
-  /// Autentica al usuario con Google (solo la primera vez)
-  static Future<void> _ensureAuthenticated() async {
-    try {
-      final googleSignIn = _getGoogleSignIn();
-
-      // Verificar si ya está autenticado
-      GoogleSignInAccount? account = googleSignIn.currentUser;
-
-      // Intentar autenticación silenciosa
-      if (account == null) {
-        account = await googleSignIn.signInSilently();
-      }
-
-      // Si no hay cuenta, solicitar autenticación interactiva
-      if (account == null) {
-        account = await googleSignIn.signIn();
-      }
-
-      if (account == null) {
-        throw Exception('AUTENTICACION_CANCELADA');
-      }
-
-      // Obtener cliente HTTP autenticado
-      final httpClient = await googleSignIn.authenticatedClient();
-      if (httpClient == null) {
-        throw Exception('No se pudo obtener cliente autenticado');
-      }
-
-      // Crear API de Drive
-      _driveApi = drive.DriveApi(httpClient);
-    } catch (e) {
-      if (e.toString().contains('popup_closed')) {
-        throw Exception('POPUP_CERRADO');
-      } else if (e.toString().contains('AUTENTICACION_CANCELADA')) {
-        rethrow;
-      } else {
-        throw Exception('Error de autenticación: $e');
-      }
-    }
-  }
+  static const String _driveApiUrl =
+      'https://www.googleapis.com/drive/v3/files';
+  static const String _uploadApiUrl =
+      'https://www.googleapis.com/upload/drive/v3/files';
+  static const String _driveViewUrl =
+      'https://drive.usercontent.google.com/download?id=';
 
   /// Busca o crea una carpeta en Google Drive
   static Future<String> _findOrCreateFolder(
     String folderName,
     String parentId,
+    String accessToken,
   ) async {
-    await _ensureAuthenticated();
-
     try {
       // Buscar carpeta existente
-      final query =
-          "name='$folderName' and '$parentId' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false";
-
-      final fileList = await _driveApi!.files.list(
-        q: query,
-        spaces: 'drive',
-        $fields: 'files(id, name)',
+      final query = Uri.encodeComponent(
+        "name='$folderName' and '$parentId' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false",
       );
 
-      if (fileList.files != null && fileList.files!.isNotEmpty) {
-        return fileList.files!.first.id!;
+      final searchUrl = Uri.parse(
+        '$_driveApiUrl?q=$query&spaces=drive&fields=files(id,name)',
+      );
+
+      final searchResponse = await http.get(
+        searchUrl,
+        headers: {'Authorization': 'Bearer $accessToken'},
+      );
+
+      if (searchResponse.statusCode == 200) {
+        final data = jsonDecode(searchResponse.body);
+        final files = data['files'] as List?;
+
+        if (files != null && files.isNotEmpty) {
+          return files.first['id'] as String;
+        }
       }
 
       // Crear carpeta si no existe
-      final folder = drive.File()
-        ..name = folderName
-        ..mimeType = 'application/vnd.google-apps.folder'
-        ..parents = [parentId];
+      final createResponse = await http.post(
+        Uri.parse(_driveApiUrl),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'name': folderName,
+          'mimeType': 'application/vnd.google-apps.folder',
+          'parents': [parentId],
+        }),
+      );
 
-      final createdFolder = await _driveApi!.files.create(folder);
+      if (createResponse.statusCode != 200 &&
+          createResponse.statusCode != 201) {
+        throw Exception('Error al crear carpeta: ${createResponse.body}');
+      }
+
+      final folderData = jsonDecode(createResponse.body);
+      final folderId = folderData['id'] as String;
 
       // Hacer la carpeta pública
-      final permission = drive.Permission()
-        ..role = 'reader'
-        ..type = 'anyone';
+      await http.post(
+        Uri.parse('$_driveApiUrl/$folderId/permissions'),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'type': 'anyone', 'role': 'reader'}),
+      );
 
-      await _driveApi!.permissions.create(permission, createdFolder.id!);
-
-      return createdFolder.id!;
+      return folderId;
     } catch (e) {
       throw Exception('Error al crear carpeta en Drive: $e');
     }
   }
 
   /// Pre-autentica al usuario antes de subir archivos
-  /// Útil para mostrar el popup de Google antes de comenzar el proceso
   static Future<bool> preAuthenticate() async {
     try {
-      await _ensureAuthenticated();
+      await GoogleAuthWeb.requestAccessToken();
       return true;
     } catch (e) {
       print('❌ Error en preAuthenticate: $e');
@@ -135,20 +102,14 @@ class GoogleDriveUploadService {
 
   /// Verifica si el usuario ya está autenticado
   static bool isAuthenticated() {
-    if (!_isInitialized || _googleSignIn == null) {
-      return false;
-    }
-    return _googleSignIn!.currentUser != null;
+    return GoogleAuthWeb.isAuthenticated();
   }
 
   /// Cierra la sesión de Google
   static Future<void> signOut() async {
     try {
-      if (_googleSignIn != null) {
-        await _googleSignIn!.signOut();
-        _driveApi = null;
-        print('✅ Sesión de Google cerrada');
-      }
+      GoogleAuthWeb.clearToken();
+      print('✅ Sesión de Google cerrada');
     } catch (e) {
       print('⚠️ Error al cerrar sesión de Google: $e');
     }
@@ -157,9 +118,6 @@ class GoogleDriveUploadService {
   /// Limpia todas las instancias (útil para reiniciar el servicio)
   static Future<void> dispose() async {
     await signOut();
-    _googleSignIn = null;
-    _driveApi = null;
-    _isInitialized = false;
     print('✅ Servicio de Google Drive limpiado');
   }
 
@@ -170,7 +128,8 @@ class GoogleDriveUploadService {
     required PlatformFile file,
   }) async {
     try {
-      await _ensureAuthenticated();
+      // Obtener token de acceso
+      final accessToken = await GoogleAuthWeb.getToken();
 
       // Obtener bytes del archivo
       Uint8List bytes;
@@ -186,42 +145,78 @@ class GoogleDriveUploadService {
       // Obtener carpeta raíz según el tipo
       final rootFolderId = _getRootFolderIdByType(type);
 
-      // Crear carpeta del proyecto dentro de la carpeta específica
+      // Crear carpeta del proyecto
       final projectFolderId = await _findOrCreateFolder(
         projectId,
         rootFolderId,
+        accessToken,
       );
 
-      // Preparar metadata del archivo
+      // Preparar nombre del archivo
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final fileName = '${timestamp}_${file.name}';
 
-      final driveFile = drive.File()
-        ..name = fileName
-        ..parents = [projectFolderId];
+      // Metadata del archivo
+      final metadata = {
+        'name': fileName,
+        'parents': [projectFolderId],
+        'mimeType': _getMimeType(file.name),
+      };
 
-      // Subir archivo
-      final media = drive.Media(
-        Stream.value(bytes.toList()),
-        bytes.length,
-        contentType: _getMimeType(file.name),
-      );
+      // Usar FormData (como en el código de React)
+      final formData = html.FormData();
 
-      final uploadedFile = await _driveApi!.files.create(
-        driveFile,
-        uploadMedia: media,
-        $fields: 'id, webViewLink, webContentLink',
-      );
+      // Agregar metadata como Blob
+      final metadataBlob = html.Blob([
+        jsonEncode(metadata),
+      ], 'application/json');
+      formData.appendBlob('metadata', metadataBlob);
+
+      // Agregar archivo como Blob
+      final fileBlob = html.Blob([bytes], _getMimeType(file.name));
+      formData.appendBlob('file', fileBlob, fileName);
+
+      // Subir archivo usando XMLHttpRequest (para poder usar FormData)
+      final uri = '$_uploadApiUrl?uploadType=multipart&fields=id';
+      final completer = Completer<String>();
+
+      final xhr = html.HttpRequest();
+      xhr.open('POST', uri);
+      xhr.setRequestHeader('Authorization', 'Bearer $accessToken');
+
+      xhr.onLoad.listen((e) {
+        if (xhr.status == 200 || xhr.status == 201) {
+          completer.complete(xhr.responseText!);
+        } else {
+          completer.completeError(
+            Exception('Error al subir archivo: ${xhr.responseText}'),
+          );
+        }
+      });
+
+      xhr.onError.listen((e) {
+        completer.completeError(Exception('Error de red al subir archivo'));
+      });
+
+      xhr.send(formData);
+
+      final responseText = await completer.future;
+      final response = jsonDecode(responseText);
+
+      final fileId = response['id'] as String;
 
       // Hacer el archivo público
-      final permission = drive.Permission()
-        ..role = 'reader'
-        ..type = 'anyone';
+      await http.post(
+        Uri.parse('$_driveApiUrl/$fileId/permissions'),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'type': 'anyone', 'role': 'reader'}),
+      );
 
-      await _driveApi!.permissions.create(permission, uploadedFile.id!);
-
-      // Retornar URL de descarga directa
-      return 'https://drive.google.com/uc?export=download&id=${uploadedFile.id}';
+      // Retornar URL pública directa (usando la constante como en React)
+      return '$_driveViewUrl$fileId';
     } catch (e) {
       throw Exception('Error al subir imagen a Google Drive: $e');
     }
