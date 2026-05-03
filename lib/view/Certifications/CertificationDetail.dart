@@ -8,7 +8,6 @@ import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../controllers/auth_controller.dart';
 import '../../services/firebase_service.dart';
-import '../../services/google_drive_service.dart';
 
 class CertificationDetail extends StatefulWidget {
   final String certificationId;
@@ -75,87 +74,46 @@ class _CertificationDetailState extends State<CertificationDetail> {
     return url;
   }
 
-  Widget _buildPdfOrImageViewer(String url) {
-    // En web, el iframe del browser maneja tanto PDFs como imágenes sin CORS
-    if (kIsWeb) {
-      final viewId = 'cert-iframe-${url.hashCode}';
-      return buildWebPdfViewerWidget(url, viewId);
+  /// Extrae el ID del archivo de Google Drive usando regex simple
+  String? _extractDriveFileId(String url) {
+    if (url.isEmpty) return null;
+    // Extrae file IDs de Google Drive (típicamente 25+ caracteres)
+    final regex = RegExp(r'[-\w]{25,}');
+    final match = regex.firstMatch(url);
+    return match?.group(0);
+  }
+
+  /// Construye la URL correcta para imágenes de Google Drive
+  /// Usa drive.google.com/uc?export=view que es estable y evita rate-limiting
+  String _buildDriveImageUrl(String url) {
+    final fileId = _extractDriveFileId(url);
+    if (fileId != null) {
+      return 'https://drive.google.com/uc?export=view&id=$fileId';
     }
+    return url; // Si no es Drive, devolver la URL original
+  }
 
-    final isPdf =
-        url.toLowerCase().endsWith('.pdf') ||
-        url.contains('drive.google.com') ||
-        url.contains('docs.google.com');
+  /// Renderiza SOLO PDFs (separado de imágenes)
+  Widget _buildPdfViewer(String url) {
+    if (kIsWeb) {
+      final viewId = 'pdf-view-${DateTime.now().millisecondsSinceEpoch}';
 
-    if (isPdf) {
+      // usar google docs viewer
+      final viewerUrl =
+          'https://docs.google.com/gview?embedded=true&url=${Uri.encodeComponent(url)}';
+
       return SizedBox(
-        height: 800,
+        height: 600,
+        child: buildWebPdfViewerWidget(viewerUrl, viewId),
+      );
+    } else {
+      return SizedBox(
+        height: 600,
         child: WebViewWidget(
           controller: WebViewController()
             ..setJavaScriptMode(JavaScriptMode.unrestricted)
             ..loadRequest(Uri.parse(url)),
         ),
-      );
-    } else {
-      // Es una imagen
-      return Image.network(
-        url,
-        fit: BoxFit.cover,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Container(
-            color: AppColors.light5,
-            height: 400,
-            child: Center(
-              child: CircularProgressIndicator(
-                color: AppColors.black,
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded /
-                          loadingProgress.expectedTotalBytes!
-                    : null,
-              ),
-            ),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) {
-          return Container(
-            color: AppColors.light5,
-            height: 400,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.error_outline,
-                    size: 48,
-                    color: AppColors.darkgrey,
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'No se pudo cargar la imagen',
-                    style: TextStyle(color: AppColors.darkgrey),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: () async {
-                      if (await canLaunchUrl(Uri.parse(url))) {
-                        await launchUrl(Uri.parse(url));
-                      }
-                    },
-                    icon: const Icon(Icons.open_in_new, color: AppColors.light),
-                    label: const Text(
-                      'Abrir en navegador',
-                      style: TextStyle(color: AppColors.light),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.black,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
       );
     }
   }
@@ -233,15 +191,13 @@ class _CertificationDetailState extends State<CertificationDetail> {
         certification?['institutionLogoUrl'] as String? ?? '';
 
     // Resolución de la URL del PDF:
-    // 1) Si el documento tiene 'pdfUrl' se usa directamente.
-    // 2) Si tiene 'driveFileId' se construye la URL de previsualización de Drive.
+    // 1) Si tiene 'driveFileId' se usa la URL de descarga directa de Drive.
+    // 2) Si el documento tiene 'pdfUrl' se usa como respaldo.
     final rawPdfUrl = certification?['pdfUrl'] as String? ?? '';
     final driveFileId = certification?['driveFileId'] as String? ?? '';
-    final pdfUrl = rawPdfUrl.isNotEmpty
-        ? rawPdfUrl
-        : driveFileId.isNotEmpty
-        ? GoogleDriveService.previewUrl(driveFileId)
-        : '';
+    final pdfUrl = driveFileId.isNotEmpty
+        ? 'https://drive.google.com/uc?export=download&id=$driveFileId'
+        : rawPdfUrl;
 
     return Scaffold(
       backgroundColor: AppColors.light,
@@ -268,158 +224,318 @@ class _CertificationDetailState extends State<CertificationDetail> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Logos (si existen)
-            if (platformLogoUrl.isNotEmpty || institutionLogoUrl.isNotEmpty)
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 20,
-                  horizontal: 20,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (platformLogoUrl.isNotEmpty) ...[
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.grey.withOpacity(0.3),
-                              blurRadius: 8,
-                              spreadRadius: 1,
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.network(
-                            _fixGoogleDriveUrl(platformLogoUrl),
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) {
-                              return const Icon(
-                                Icons.school_rounded,
-                                size: 40,
-                                color: AppColors.grey,
-                              );
-                            },
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Logos (si existen)
+                if (platformLogoUrl.isNotEmpty || institutionLogoUrl.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 30,
+                      horizontal: 20,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (platformLogoUrl.isNotEmpty) ...[
+                          Column(
+                            children: [
+                              Container(
+                                width: 90,
+                                height: 90,
+                                decoration: BoxDecoration(
+                                  color: AppColors.light,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.black.withOpacity(0.15),
+                                      blurRadius: 12,
+                                      spreadRadius: 2,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                  border: Border.all(
+                                    color: AppColors.grey.withOpacity(0.2),
+                                    width: 2,
+                                  ),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    _fixGoogleDriveUrl(platformLogoUrl),
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return const Icon(
+                                        Icons.school_rounded,
+                                        size: 45,
+                                        color: AppColors.grey,
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.black.withOpacity(0.08),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Text(
+                                  'Plataforma',
+                                  style: TextStyle(
+                                    color: AppColors.black,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ),
-                      if (institutionLogoUrl.isNotEmpty)
-                        const SizedBox(width: 20),
-                    ],
-                    if (institutionLogoUrl.isNotEmpty)
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.grey.withOpacity(0.3),
-                              blurRadius: 8,
-                              spreadRadius: 1,
-                            ),
-                          ],
-                        ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.network(
-                            _fixGoogleDriveUrl(institutionLogoUrl),
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) {
-                              return const Icon(
-                                Icons.account_balance,
-                                size: 40,
-                                color: AppColors.grey,
-                              );
-                            },
+                          if (institutionLogoUrl.isNotEmpty)
+                            const SizedBox(width: 30),
+                        ],
+                        if (institutionLogoUrl.isNotEmpty)
+                          Column(
+                            children: [
+                              Container(
+                                width: 90,
+                                height: 90,
+                                decoration: BoxDecoration(
+                                  color: AppColors.light,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.black.withOpacity(0.15),
+                                      blurRadius: 12,
+                                      spreadRadius: 2,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                  border: Border.all(
+                                    color: AppColors.grey.withOpacity(0.2),
+                                    width: 2,
+                                  ),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    _fixGoogleDriveUrl(institutionLogoUrl),
+                                    fit: BoxFit.contain,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return const Icon(
+                                        Icons.account_balance,
+                                        size: 45,
+                                        color: AppColors.grey,
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.black.withOpacity(0.08),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Text(
+                                  'Institución',
+                                  style: TextStyle(
+                                    color: AppColors.black,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-
-            // Título
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
-              child: Column(
-                children: [
-                  Text(
-                    name,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: AppColors.black,
-                      fontSize: 28,
-                      fontWeight: FontWeight.w600,
+                      ],
                     ),
                   ),
-                  if (series.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.light5,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppColors.grey, width: 1.5),
-                      ),
-                      child: Text(
-                        series,
-                        style: const TextStyle(
-                          color: AppColors.black,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                  if (description.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    Text(
-                      description,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: AppColors.darkgrey,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ],
-                  if (link.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    ElevatedButton.icon(
-                      onPressed: () async {
-                        final uri = Uri.parse(link);
-                        if (await canLaunchUrl(uri)) {
-                          await launchUrl(
-                            uri,
-                            mode: LaunchMode.externalApplication,
-                          );
-                        }
-                      },
-                      icon: const Icon(Icons.link, size: 18),
-                      label: const Text('Ver Certificado en Línea'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.black,
-                        foregroundColor: AppColors.light,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 12,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
 
+                // Título
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 40,
+                    horizontal: 30,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [AppColors.primary, AppColors.primary],
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.black.withOpacity(0.08),
+                        blurRadius: 20,
+                        spreadRadius: 2,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        name,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: AppColors.black,
+                          fontSize: 32,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
+                          height: 1.3,
+                          shadows: [
+                            Shadow(
+                              color: AppColors.grey.withOpacity(0.3),
+                              offset: const Offset(0, 2),
+                              blurRadius: 4,
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (series.isNotEmpty) ...[
+                        const SizedBox(height: 20),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppColors.black,
+                                AppColors.black.withOpacity(0.85),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(30),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.black.withOpacity(0.3),
+                                blurRadius: 12,
+                                spreadRadius: 1,
+                                offset: const Offset(0, 4),
+                              ),
+                              BoxShadow(
+                                color: AppColors.black.withOpacity(0.1),
+                                blurRadius: 6,
+                                spreadRadius: -2,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                            border: Border.all(
+                              color: AppColors.grey.withOpacity(0.2),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: AppColors.light,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: AppColors.light.withOpacity(0.5),
+                                      blurRadius: 4,
+                                      spreadRadius: 1,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                series,
+                                style: const TextStyle(
+                                  color: AppColors.light,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      if (description.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        Text(
+                          description,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: AppColors.darkgrey,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                      if (link.isNotEmpty) ...[
+                        const SizedBox(height: 24),
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.black.withOpacity(0.3),
+                                blurRadius: 16,
+                                spreadRadius: 2,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
+                          ),
+                          child: ElevatedButton.icon(
+                            onPressed: () async {
+                              final uri = Uri.parse(link);
+                              if (await canLaunchUrl(uri)) {
+                                await launchUrl(
+                                  uri,
+                                  mode: LaunchMode.externalApplication,
+                                );
+                              }
+                            },
+                            icon: const Icon(Icons.link_rounded, size: 22),
+                            label: const Text(
+                              'Ver Certificado en Línea',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.black,
+                              foregroundColor: AppColors.light,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 32,
+                                vertical: 18,
+                              ),
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
             // PDF/Imagen Viewer
             if (pdfUrl.isNotEmpty)
               Container(
@@ -439,7 +555,7 @@ class _CertificationDetailState extends State<CertificationDetail> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: _buildPdfOrImageViewer(pdfUrl),
+                  child: _buildPdfViewer(pdfUrl),
                 ),
               )
             else
@@ -531,40 +647,80 @@ class _CertificationDetailState extends State<CertificationDetail> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Encabezado de la sección
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [color.withOpacity(0.08), color.withOpacity(0.03)],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: color.withOpacity(0.15), width: 2),
+            boxShadow: [
+              BoxShadow(
                 color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
+                blurRadius: 12,
+                spreadRadius: 2,
+                offset: const Offset(0, 4),
               ),
-              child: Icon(icon, color: color, size: 28),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: color,
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withOpacity(0.4),
+                      blurRadius: 8,
+                      spreadRadius: 1,
                     ),
-                  ),
-                  Text(
-                    '${images.length} imagen${images.length != 1 ? 'es' : ''}',
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: AppColors.darkgrey,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
+                child: Icon(icon, color: AppColors.light, size: 32),
               ),
-            ),
-          ],
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w800,
+                        color: color,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${images.length} imagen${images.length != 1 ? 'es' : ''}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: color,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 24),
 
@@ -574,8 +730,8 @@ class _CertificationDetailState extends State<CertificationDetail> {
           physics: const NeverScrollableScrollPhysics(),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
+            mainAxisSpacing: 16,
+            crossAxisSpacing: 16,
             childAspectRatio: 1,
           ),
           itemCount: images.length,
@@ -593,22 +749,30 @@ class _CertificationDetailState extends State<CertificationDetail> {
       onTap: () => _showImageDialog(imageUrl),
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: AppColors.grey.withOpacity(0.3),
-              blurRadius: 12,
+              color: AppColors.black.withOpacity(0.2),
+              blurRadius: 16,
               spreadRadius: 2,
+              offset: const Offset(0, 4),
+            ),
+            BoxShadow(
+              color: AppColors.black.withOpacity(0.1),
+              blurRadius: 8,
+              spreadRadius: -2,
+              offset: const Offset(0, 2),
             ),
           ],
+          border: Border.all(color: AppColors.grey.withOpacity(0.15), width: 2),
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           child: Stack(
             fit: StackFit.expand,
             children: [
               Image.network(
-                _fixGoogleDriveUrl(imageUrl),
+                _buildDriveImageUrl(imageUrl),
                 fit: BoxFit.cover,
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) return child;
@@ -652,23 +816,40 @@ class _CertificationDetailState extends State<CertificationDetail> {
               ),
               // Overlay con número de imagen
               Positioned(
-                top: 8,
-                right: 8,
+                top: 10,
+                right: 10,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
+                    horizontal: 12,
+                    vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.black.withOpacity(0.7),
-                    borderRadius: BorderRadius.circular(12),
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.black.withOpacity(0.9),
+                        AppColors.black.withOpacity(0.8),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.black.withOpacity(0.4),
+                        blurRadius: 8,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                    border: Border.all(
+                      color: AppColors.light.withOpacity(0.2),
+                      width: 1,
+                    ),
                   ),
                   child: Text(
                     '#$imageNumber',
                     style: const TextStyle(
                       color: AppColors.light,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ),
@@ -679,24 +860,40 @@ class _CertificationDetailState extends State<CertificationDetail> {
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () => _showImageDialog(imageUrl),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
+                    splashColor: AppColors.black.withOpacity(0.3),
+                    highlightColor: AppColors.black.withOpacity(0.2),
                     child: Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(16),
                         gradient: LinearGradient(
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
                             Colors.transparent,
-                            AppColors.black.withOpacity(0.3),
+                            AppColors.black.withOpacity(0.4),
                           ],
                         ),
                       ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.zoom_in,
-                          color: AppColors.light,
-                          size: 32,
+                      child: Center(
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppColors.black.withOpacity(0.7),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.black.withOpacity(0.5),
+                                blurRadius: 12,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.zoom_in_rounded,
+                            color: AppColors.light,
+                            size: 36,
+                          ),
                         ),
                       ),
                     ),
@@ -737,7 +934,7 @@ class _CertificationDetailState extends State<CertificationDetail> {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
                   child: Image.network(
-                    _fixGoogleDriveUrl(imageUrl),
+                    _buildDriveImageUrl(imageUrl),
                     fit: BoxFit.contain,
                     loadingBuilder: (context, child, loadingProgress) {
                       if (loadingProgress == null) return child;
