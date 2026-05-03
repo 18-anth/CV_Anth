@@ -3,8 +3,10 @@ import 'package:cv_anth/utils/web_pdf_viewer.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../controllers/auth_controller.dart';
 import '../../services/firebase_service.dart';
 import '../../services/google_drive_service.dart';
 
@@ -160,6 +162,8 @@ class _CertificationDetailState extends State<CertificationDetail> {
 
   @override
   Widget build(BuildContext context) {
+    final authController = context.watch<AuthController>();
+
     if (isLoading) {
       return Scaffold(
         backgroundColor: AppColors.light,
@@ -250,6 +254,16 @@ class _CertificationDetailState extends State<CertificationDetail> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.go('/certification'),
         ),
+        actions: [
+          // Botón de edición (solo visible si está autenticado)
+          if (authController.isAuthenticated)
+            IconButton(
+              icon: const Icon(Icons.edit),
+              tooltip: 'Editar certificación',
+              onPressed: () =>
+                  context.go('/certification/${widget.certificationId}/edit'),
+            ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(

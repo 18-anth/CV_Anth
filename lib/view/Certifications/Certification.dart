@@ -172,7 +172,10 @@ class _CertificationState extends State<Certification> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, AppColors.light.withOpacity(0.02)],
+                  colors: [
+                    Colors.transparent,
+                    AppColors.light.withOpacity(0.02),
+                  ],
                 ),
               ),
               child: Column(
@@ -339,6 +342,27 @@ class _CertificationCardState extends State<_CertificationCard>
     super.dispose();
   }
 
+  /// Convierte URLs de Google Drive al formato correcto que evita problemas de CORS
+  String _fixGoogleDriveUrl(String url) {
+    if (url.isEmpty) return url;
+
+    // Si ya es el formato correcto (lh3.googleusercontent.com), devolverla sin cambios
+    if (url.contains('lh3.googleusercontent.com/d/')) {
+      return url;
+    }
+
+    // Extraer el ID del archivo de diferentes formatos de URLs de Google Drive
+    RegExp regExp = RegExp(r'(?:id=|/d/|/files/)([a-zA-Z0-9_-]+)');
+    Match? match = regExp.firstMatch(url);
+
+    if (match != null && match.groupCount > 0) {
+      String fileId = match.group(1)!;
+      return 'https://lh3.googleusercontent.com/d/$fileId';
+    }
+
+    return url;
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -446,8 +470,36 @@ class _CertificationCardState extends State<_CertificationCard>
                                                 borderRadius:
                                                     BorderRadius.circular(8),
                                                 child: Image.network(
-                                                  widget.cert.platformLogoUrl!,
+                                                  _fixGoogleDriveUrl(
+                                                    widget
+                                                        .cert
+                                                        .platformLogoUrl!,
+                                                  ),
                                                   fit: BoxFit.contain,
+                                                  loadingBuilder:
+                                                      (
+                                                        context,
+                                                        child,
+                                                        loadingProgress,
+                                                      ) {
+                                                        if (loadingProgress ==
+                                                            null)
+                                                          return child;
+                                                        return Center(
+                                                          child: SizedBox(
+                                                            width: 20,
+                                                            height: 20,
+                                                            child:
+                                                                CircularProgressIndicator(
+                                                                  strokeWidth:
+                                                                      2,
+                                                                  color:
+                                                                      AppColors
+                                                                          .grey,
+                                                                ),
+                                                          ),
+                                                        );
+                                                      },
                                                   errorBuilder:
                                                       (
                                                         context,
@@ -479,7 +531,8 @@ class _CertificationCardState extends State<_CertificationCard>
                                                     BorderRadius.circular(8),
                                                 boxShadow: [
                                                   BoxShadow(
-                                                    color: AppColors.grey.withOpacity(0.3),
+                                                    color: AppColors.grey
+                                                        .withOpacity(0.3),
                                                     blurRadius: 6,
                                                     spreadRadius: 1,
                                                   ),
@@ -489,10 +542,36 @@ class _CertificationCardState extends State<_CertificationCard>
                                                 borderRadius:
                                                     BorderRadius.circular(8),
                                                 child: Image.network(
-                                                  widget
-                                                      .cert
-                                                      .institutionLogoUrl!,
+                                                  _fixGoogleDriveUrl(
+                                                    widget
+                                                        .cert
+                                                        .institutionLogoUrl!,
+                                                  ),
                                                   fit: BoxFit.contain,
+                                                  loadingBuilder:
+                                                      (
+                                                        context,
+                                                        child,
+                                                        loadingProgress,
+                                                      ) {
+                                                        if (loadingProgress ==
+                                                            null)
+                                                          return child;
+                                                        return Center(
+                                                          child: SizedBox(
+                                                            width: 20,
+                                                            height: 20,
+                                                            child:
+                                                                CircularProgressIndicator(
+                                                                  strokeWidth:
+                                                                      2,
+                                                                  color:
+                                                                      AppColors
+                                                                          .grey,
+                                                                ),
+                                                          ),
+                                                        );
+                                                      },
                                                   errorBuilder:
                                                       (
                                                         context,
@@ -535,7 +614,9 @@ class _CertificationCardState extends State<_CertificationCard>
                                         ),
                                         child: Icon(
                                           Icons.school_rounded,
-                                          color: AppColors.light.withOpacity(0.8),
+                                          color: AppColors.light.withOpacity(
+                                            0.8,
+                                          ),
                                           size: 24,
                                         ),
                                       ),
@@ -561,7 +642,9 @@ class _CertificationCardState extends State<_CertificationCard>
                                           vertical: 4,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: AppColors.light.withOpacity(0.15),
+                                          color: AppColors.light.withOpacity(
+                                            0.15,
+                                          ),
                                           borderRadius: BorderRadius.circular(
                                             12,
                                           ),
@@ -590,7 +673,9 @@ class _CertificationCardState extends State<_CertificationCard>
                                       Text(
                                         widget.cert.description,
                                         style: TextStyle(
-                                          color: AppColors.light.withOpacity(0.6),
+                                          color: AppColors.light.withOpacity(
+                                            0.6,
+                                          ),
                                           fontSize: 13,
                                           fontWeight: FontWeight.w400,
                                           letterSpacing: 0.3,
@@ -624,7 +709,9 @@ class _CertificationCardState extends State<_CertificationCard>
                                       child: Text(
                                         'Ver detalles',
                                         style: TextStyle(
-                                          color: AppColors.light.withOpacity(0.7),
+                                          color: AppColors.light.withOpacity(
+                                            0.7,
+                                          ),
                                           fontSize: 12,
                                           fontWeight: FontWeight.w500,
                                           letterSpacing: 1,

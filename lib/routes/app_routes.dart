@@ -9,6 +9,7 @@ import 'package:cv_anth/view/Project/EditProject.dart';
 import 'package:cv_anth/view/Certifications/Certification.dart';
 import 'package:cv_anth/view/Certifications/CertificationDetail.dart';
 import 'package:cv_anth/view/Certifications/UploadCertification.dart';
+import 'package:cv_anth/view/Certifications/EditCertification.dart';
 import 'package:cv_anth/view/About/AboutMe.dart';
 import 'package:cv_anth/view/Auth/LoginScreen.dart';
 import 'package:cv_anth/view/Legal/TermsScreen.dart';
@@ -24,6 +25,7 @@ class RoutePaths {
   static const String aboutMe = '/aboutme';
   static const String certification = '/certification';
   static const String certificationDetail = '/certification/:id';
+  static const String editCertification = '/certification/:id/edit';
   static const String contact = '/contact';
   static const String uploadCertification = '/uploadcertification';
   static const String uploadProject = '/uploadproject';
@@ -63,6 +65,10 @@ class AppNavigator {
 
   static void goToCertificationDetail(BuildContext context, String id) {
     context.go('/certification/$id');
+  }
+
+  static void goToEditCertification(BuildContext context, String id) {
+    context.go('/certification/$id/edit');
   }
 
   static void goToContact(BuildContext context) {
@@ -180,6 +186,16 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) {
         final String certId = state.pathParameters['id']!;
         return CertificationDetail(certificationId: certId);
+      },
+    ),
+
+    // Edit Certification Route
+    GoRoute(
+      path: '/certification/:id/edit',
+      name: 'editCertification',
+      builder: (context, state) {
+        final String certId = state.pathParameters['id']!;
+        return EditCertification(certificationId: certId);
       },
     ),
 
