@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:file_picker/file_picker.dart';
 import '../../controllers/auth_controller.dart';
-import '../../services/firebase_service.dart';
-import '../../services/google_drive_upload_service.dart';
+import '../../controllers/edit_certification_controller.dart';
+import '../../widgets/EditCertification/edit_uploading_widget.dart';
+import '../../widgets/EditCertification/edit_pdf_selector.dart';
+import '../../widgets/EditCertification/edit_logo_selector.dart';
+import '../../widgets/EditCertification/edit_user_info_banner.dart';
+import '../../widgets/EditCertification/edit_auth_dialog.dart';
 
 class EditCertification extends StatefulWidget {
   final String certificationId;
@@ -21,30 +24,18 @@ class _EditCertificationState extends State<EditCertification> {
   final _seriesController = TextEditingController();
   final _linkController = TextEditingController();
 
-  PlatformFile? _pdfFile;
-  PlatformFile? _platformLogo;
-  PlatformFile? _institutionLogo;
-
-  bool _isLoading = true;
-  bool _isUploading = false;
-  double _uploadProgress = 0.0;
-  String _uploadStatus = '';
-
-  // URLs actuales de la certificación
-  String? _currentPdfUrl;
-  String? _currentPlatformLogoUrl;
-  String? _currentInstitutionLogoUrl;
-
-  Map<String, dynamic>? _certification;
+  late final EditCertificationController _controller;
 
   @override
   void initState() {
     super.initState();
+    _controller = EditCertificationController();
     _loadCertification();
   }
 
   @override
   void dispose() {
+    _controller.dispose();
     _nameController.dispose();
     _seriesController.dispose();
     _linkController.dispose();
@@ -53,340 +44,45 @@ class _EditCertificationState extends State<EditCertification> {
 
   Future<void> _loadCertification() async {
     try {
-      final data =
-          await FirebaseService.fetchCertificationById(widget.certificationId);
-      if (data == null) {
-        if (!mounted) return;
+      await _controller.loadCertification(widget.certificationId);
+      if (!mounted) return;
+      if (_controller.certification == null) {
         _showError('Certificación no encontrada');
         context.go('/certification');
         return;
       }
-
-      setState(() {
-        _certification = data;
-        _nameController.text = data['name'] ?? '';
-        _seriesController.text = data['series'] ?? '';
-        _linkController.text = data['link'] ?? '';
-        _currentPdfUrl = data['pdfUrl'];
-        _currentPlatformLogoUrl = data['platformLogoUrl'];
-        _currentInstitutionLogoUrl = data['institutionLogoUrl'];
-        _isLoading = false;
-      });
+      final data = _controller.certification!;
+      _nameController.text = data['name'] ?? '';
+      _seriesController.text = data['series'] ?? '';
+      _linkController.text = data['link'] ?? '';
     } catch (e) {
       debugPrint('Error cargando certificación: $e');
       if (!mounted) return;
       _showError('Error al cargar la certificación: $e');
-      setState(() => _isLoading = false);
     }
-  }
-
-  // ══════════════════════════════════════════════════════════════
-  // MÉTODOS PARA SELECCIONAR ARCHIVOS
-  // ══════════════════════════════════════════════════════════════
-
-  Future<void> _pickPdf() async {
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf'],
-        allowMultiple: false,
-      );
-
-      if (result != null && result.files.isNotEmpty) {
-        setState(() {
-          _pdfFile = result.files.first;
-        });
-      }
-    } catch (e) {
-      _showError('Error al seleccionar PDF: $e');
-    }
-  }
-
-  void _removePdf() {
-    setState(() {
-      _pdfFile = null;
-    });
-  }
-
-  Future<void> _pickPlatformLogo() async {
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.image,
-        allowMultiple: false,
-      );
-
-      if (result != null && result.files.isNotEmpty) {
-        setState(() {
-          _platformLogo = result.files.first;
-        });
-      }
-    } catch (e) {
-      _showError('Error al seleccionar logo de plataforma: $e');
-    }
-  }
-
-  void _removePlatformLogo() {
-    setState(() {
-      _platformLogo = null;
-      _currentPlatformLogoUrl = null;
-    });
-  }
-
-  Future<void> _pickInstitutionLogo() async {
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.image,
-        allowMultiple: false,
-      );
-
-      if (result != null && result.files.isNotEmpty) {
-        setState(() {
-          _institutionLogo = result.files.first;
-        });
-      }
-    } catch (e) {
-      _showError('Error al seleccionar logo de institución: $e');
-    }
-  }
-
-  void _removeInstitutionLogo() {
-    setState(() {
-      _institutionLogo = null;
-      _currentInstitutionLogoUrl = null;
-    });
-  }
-
-  // ══════════════════════════════════════════════════════════════
-  // DIÁLOGO DE INSTRUCCIONES DE AUTENTICACIÓN
-  // ══════════════════════════════════════════════════════════════
-
-  Future<bool> _showAuthInstructions() async {
-    return await showDialog<bool>(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => AlertDialog(
-            title: const Row(
-              children: [
-                Icon(Icons.info_outline, color: Colors.blue),
-                SizedBox(width: 8),
-                Text('Autorización de Google Drive'),
-              ],
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Para actualizar archivos en Google Drive:',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                const SizedBox(height: 16),
-                _buildInstructionStep('1',
-                    'Se abrirá una ventana emergente de Google para autenticación'),
-                _buildInstructionStep('2',
-                    'Selecciona tu cuenta de Google (@gmail.com)'),
-                _buildInstructionStep(
-                    '3', 'Presiona "Continuar" cuando se te pida autorización'),
-                _buildInstructionStep(
-                    '4', 'Acepta los permisos de Google Drive'),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.shade50,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.orange.shade200),
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.warning_amber, color: Colors.orange),
-                      SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          '⚠️ NO cierres la ventana emergente hasta completar la autorización',
-                          style: TextStyle(fontSize: 13),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancelar'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                ),
-                child: const Text('Continuar'),
-              ),
-            ],
-          ),
-        ) ??
-        false;
-  }
-
-  Widget _buildInstructionStep(String number, String text) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: Colors.blue,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Center(
-              child: Text(
-                number,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 14))),
-        ],
-      ),
-    );
   }
 
   // ══════════════════════════════════════════════════════════════
   // MÉTODO PARA ACTUALIZAR LA CERTIFICACIÓN
   // ══════════════════════════════════════════════════════════════
 
-  Future<void> _updateCertification() async {
-    // Validar formulario
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+  Future<void> _handleUpdate() async {
+    if (!_formKey.currentState!.validate()) return;
 
-    // Validar que haya un PDF (nuevo o existente)
-    if (_pdfFile == null && _currentPdfUrl == null) {
+    if (_controller.pdfFile == null && _controller.currentPdfUrl == null) {
       _showError('Debes tener un archivo PDF');
       return;
     }
 
-    setState(() {
-      _isUploading = true;
-      _uploadProgress = 0.0;
-      _uploadStatus = 'Preparando actualización...';
-    });
-
     try {
-      String pdfUrl = _currentPdfUrl ?? '';
-      String? platformLogoUrl = _currentPlatformLogoUrl;
-      String? institutionLogoUrl = _currentInstitutionLogoUrl;
-
-      // Si hay nuevos archivos, autenticar y subir
-      if (_pdfFile != null || _platformLogo != null || _institutionLogo != null) {
-        // 1. Mostrar instrucciones antes de autenticar
-        if (!mounted) return;
-        final shouldContinue = await _showAuthInstructions();
-        if (!shouldContinue) {
-          setState(() => _isUploading = false);
-          return;
-        }
-
-        // 2. Pre-autenticar con Google Drive
-        setState(() => _uploadStatus = 'Autenticando con Google Drive...');
-        final authenticated = await GoogleDriveUploadService.preAuthenticate();
-
-        if (!authenticated) {
-          throw Exception('AUTENTICACION_CANCELADA');
-        }
-
-        // 3. Subir nuevo PDF si se seleccionó uno
-        if (_pdfFile != null) {
-          setState(() {
-            _uploadProgress = 0.2;
-            _uploadStatus = 'Subiendo nuevo PDF a Google Drive...';
-          });
-
-          pdfUrl = await GoogleDriveUploadService.uploadImage(
-            projectId: widget.certificationId,
-            type: 'pdf',
-            file: _pdfFile!,
-            subFolder: 'pdf',
-          );
-
-          setState(() {
-            _uploadProgress = 0.4;
-            _uploadStatus = 'PDF actualizado correctamente';
-          });
-        }
-
-        // 4. Subir nuevo logo de plataforma si se seleccionó
-        if (_platformLogo != null) {
-          setState(() {
-            _uploadProgress = 0.5;
-            _uploadStatus = 'Subiendo logo de plataforma...';
-          });
-
-          platformLogoUrl = await GoogleDriveUploadService.uploadImage(
-            projectId: widget.certificationId,
-            type: 'platform_logo',
-            file: _platformLogo!,
-            subFolder: 'logos',
-          );
-
-          setState(() => _uploadProgress = 0.7);
-        }
-
-        // 5. Subir nuevo logo de institución si se seleccionó
-        if (_institutionLogo != null) {
-          setState(() {
-            _uploadProgress = 0.75;
-            _uploadStatus = 'Subiendo logo de institución...';
-          });
-
-          institutionLogoUrl = await GoogleDriveUploadService.uploadImage(
-            projectId: widget.certificationId,
-            type: 'institution_logo',
-            file: _institutionLogo!,
-            subFolder: 'logos',
-          );
-
-          setState(() => _uploadProgress = 0.9);
-        }
-      }
-
-      // 6. Actualizar en Firebase
-      setState(() {
-        _uploadProgress = 0.95;
-        _uploadStatus = 'Actualizando certificación en base de datos...';
-      });
-
-      await FirebaseService.saveCertification(
-        id: widget.certificationId,
+      await _controller.updateCertification(
+        certificationId: widget.certificationId,
         name: _nameController.text.trim(),
-        pdfUrl: pdfUrl,
-        series: _seriesController.text.trim().isNotEmpty
-            ? _seriesController.text.trim()
-            : null,
-        link: _linkController.text.trim().isNotEmpty
-            ? _linkController.text.trim()
-            : null,
-        platformLogoUrl: platformLogoUrl,
-        institutionLogoUrl: institutionLogoUrl,
+        series: _seriesController.text.trim(),
+        link: _linkController.text.trim(),
+        showAuthInstructions: () => showAuthInstructionsDialog(context),
       );
 
-      setState(() {
-        _uploadProgress = 1.0;
-        _uploadStatus = '¡Certificación actualizada exitosamente!';
-      });
-
-      // Mostrar mensaje de éxito
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -395,36 +91,26 @@ class _EditCertificationState extends State<EditCertification> {
         ),
       );
 
-      // Esperar un momento y regresar al detalle
       await Future.delayed(const Duration(seconds: 2));
       if (!mounted) return;
       context.go('/certification/${widget.certificationId}');
     } catch (e) {
-      setState(() {
-        _isUploading = false;
-        _uploadProgress = 0.0;
-      });
-
-      // Mensajes de error más amigables
-      String errorMessage;
-      final errorStr = e.toString();
-
-      if (errorStr.contains('POPUP_CERRADO') ||
-          errorStr.contains('popup_closed_by_user')) {
-        errorMessage =
-            'La ventana de autenticación fue cerrada. Por favor, inténtalo nuevamente y no cierres la ventana hasta completar el proceso.';
-      } else if (errorStr.contains('AUTENTICACION_CANCELADA')) {
-        errorMessage = 'Autenticación cancelada por el usuario.';
-      } else if (errorStr.contains('NetworkError') ||
-          errorStr.contains('network')) {
-        errorMessage =
-            'Error de conexión. Verifica tu internet e inténtalo nuevamente.';
-      } else {
-        errorMessage = 'Error al actualizar: ${e.toString()}';
-      }
-
-      _showError(errorMessage);
+      _controller.resetUpload();
+      _showError(_getErrorMessage(e.toString()));
     }
+  }
+
+  String _getErrorMessage(String errorStr) {
+    if (errorStr.contains('POPUP_CERRADO') ||
+        errorStr.contains('popup_closed_by_user')) {
+      return 'La ventana de autenticación fue cerrada. Por favor, inténtalo nuevamente y no cierres la ventana hasta completar el proceso.';
+    } else if (errorStr.contains('AUTENTICACION_CANCELADA')) {
+      return 'Autenticación cancelada por el usuario.';
+    } else if (errorStr.contains('NetworkError') ||
+        errorStr.contains('network')) {
+      return 'Error de conexión. Verifica tu internet e inténtalo nuevamente.';
+    }
+    return 'Error al actualizar: $errorStr';
   }
 
   void _showError(String message) {
@@ -452,8 +138,8 @@ class _EditCertificationState extends State<EditCertification> {
         backgroundColor: Colors.white,
         appBar: AppBar(
           title: const Text('Editar Certificación'),
-          backgroundColor: const Color(0xFF0d0d0d),
-          foregroundColor: Colors.white,
+          backgroundColor: Colors.white,
+          foregroundColor: const Color(0xFF0d0d0d),
         ),
         body: Center(
           child: Column(
@@ -477,67 +163,46 @@ class _EditCertificationState extends State<EditCertification> {
       );
     }
 
-    if (_isLoading) {
-      return Scaffold(
-        backgroundColor: Colors.white,
-        appBar: AppBar(
-          title: const Text('Editar Certificación'),
-          backgroundColor: const Color(0xFF0d0d0d),
-          foregroundColor: Colors.white,
-        ),
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
+    return ListenableBuilder(
+      listenable: _controller,
+      builder: (context, _) {
+        if (_controller.isLoading) {
+          return Scaffold(
+            backgroundColor: Colors.white,
+            appBar: AppBar(
+              title: const Text('Editar Certificación'),
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF0d0d0d),
+            ),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: _buildAppBar(),
-      body: _isUploading ? _buildUploadingWidget() : _buildForm(isMobile),
+        return Scaffold(
+          backgroundColor: Colors.white,
+          appBar: _buildAppBar(),
+          body: _controller.isUploading
+              ? EditUploadingWidget(
+                  uploadStatus: _controller.uploadStatus,
+                  uploadProgress: _controller.uploadProgress,
+                )
+              : _buildForm(isMobile),
+        );
+      },
     );
   }
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       title: const Text('Editar Certificación'),
-      backgroundColor: const Color(0xFF0d0d0d),
-      foregroundColor: Colors.white,
+      backgroundColor: Colors.white,
+      foregroundColor: const Color(0xFF0d0d0d),
       elevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
-        onPressed: _isUploading
+        onPressed: _controller.isUploading
             ? null
             : () => context.go('/certification/${widget.certificationId}'),
-      ),
-    );
-  }
-
-  Widget _buildUploadingWidget() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 24),
-            Text(
-              _uploadStatus,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            LinearProgressIndicator(
-              value: _uploadProgress,
-              backgroundColor: Colors.grey.shade200,
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '${(_uploadProgress * 100).toStringAsFixed(0)}%',
-              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -554,7 +219,10 @@ class _EditCertificationState extends State<EditCertification> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Información del usuario
-                _buildUserInfo(),
+                EditUserInfoBanner(
+                  certificationName:
+                      _controller.certification?['name'] ?? 'Sin nombre',
+                ),
                 const SizedBox(height: 24),
 
                 // Título
@@ -569,10 +237,7 @@ class _EditCertificationState extends State<EditCertification> {
                 const SizedBox(height: 8),
                 Text(
                   'Modifica los campos que desees actualizar',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                 ),
                 const SizedBox(height: 32),
 
@@ -624,34 +289,39 @@ class _EditCertificationState extends State<EditCertification> {
                 const SizedBox(height: 32),
 
                 // Selector de PDF
-                _buildPdfSelector(),
+                EditPdfSelector(
+                  pdfFile: _controller.pdfFile,
+                  currentPdfUrl: _controller.currentPdfUrl,
+                  onPick: _controller.pickPdf,
+                  onRemove: _controller.removePdf,
+                ),
                 const SizedBox(height: 24),
 
                 // Selector de logo de plataforma
-                _buildLogoSelector(
+                EditLogoSelector(
                   title: 'Logo de Plataforma',
                   subtitle: 'Logo de la plataforma (Ej: Udemy, Coursera)',
-                  file: _platformLogo,
-                  currentUrl: _currentPlatformLogoUrl,
-                  onPick: _pickPlatformLogo,
-                  onRemove: _removePlatformLogo,
+                  file: _controller.platformLogo,
+                  currentUrl: _controller.currentPlatformLogoUrl,
+                  onPick: _controller.pickPlatformLogo,
+                  onRemove: _controller.removePlatformLogo,
                 ),
                 const SizedBox(height: 24),
 
                 // Selector de logo de institución
-                _buildLogoSelector(
+                EditLogoSelector(
                   title: 'Logo de Institución',
                   subtitle: 'Logo de la institución emisora',
-                  file: _institutionLogo,
-                  currentUrl: _currentInstitutionLogoUrl,
-                  onPick: _pickInstitutionLogo,
-                  onRemove: _removeInstitutionLogo,
+                  file: _controller.institutionLogo,
+                  currentUrl: _controller.currentInstitutionLogoUrl,
+                  onPick: _controller.pickInstitutionLogo,
+                  onRemove: _controller.removeInstitutionLogo,
                 ),
                 const SizedBox(height: 32),
 
                 // Botón Actualizar
                 ElevatedButton(
-                  onPressed: _updateCertification,
+                  onPressed: _handleUpdate,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF0d0d0d),
                     foregroundColor: Colors.white,
@@ -685,342 +355,6 @@ class _EditCertificationState extends State<EditCertification> {
     );
   }
 
-  Widget _buildUserInfo() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xFF0d0d0d),
-            const Color(0xFF0d0d0d).withOpacity(0.8),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(Icons.edit, color: Colors.white, size: 28),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Modo de Edición',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Editando certificación: ${_certification?['name'] ?? 'Sin nombre'}',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: 13,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPdfSelector() {
-    final hasCurrentPdf = _currentPdfUrl != null && _currentPdfUrl!.isNotEmpty;
-    final hasNewPdf = _pdfFile != null;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.picture_as_pdf, color: Colors.red),
-              const SizedBox(width: 8),
-              const Text(
-                'Archivo PDF del Certificado',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          
-          // Mostrar PDF actual si existe
-          if (hasCurrentPdf && !hasNewPdf) ...[
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.green.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.green.shade200),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.green.shade700),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'PDF actual',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                        SizedBox(height: 4),
-                        Text(
-                          'Ya tienes un PDF cargado. Puedes dejarlo o subir uno nuevo.',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-          ],
-
-          // Mostrar nuevo PDF si se seleccionó
-          if (hasNewPdf) ...[
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue.shade200),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.picture_as_pdf, color: Colors.blue.shade700),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _pdfFile!.name,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _formatFileSize(_pdfFile!.size),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.red),
-                    onPressed: _removePdf,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-          ],
-
-          // Botón para seleccionar/cambiar PDF
-          OutlinedButton.icon(
-            onPressed: _pickPdf,
-            icon: Icon(hasNewPdf ? Icons.refresh : Icons.upload_file),
-            label: Text(hasNewPdf ? 'Cambiar PDF' : (hasCurrentPdf ? 'Subir nuevo PDF' : 'Seleccionar PDF')),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF0d0d0d),
-              side: const BorderSide(color: Color(0xFF0d0d0d)),
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLogoSelector({
-    required String title,
-    required String subtitle,
-    required PlatformFile? file,
-    required String? currentUrl,
-    required VoidCallback onPick,
-    required VoidCallback onRemove,
-  }) {
-    final hasCurrentLogo = currentUrl != null && currentUrl.isNotEmpty;
-    final hasNewLogo = file != null;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.image, color: Colors.blue),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      subtitle,
-                      style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Mostrar logo actual
-          if (hasCurrentLogo && !hasNewLogo) ...[
-            Container(
-              height: 100,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-              child: Stack(
-                children: [
-                  Center(
-                    child: Image.network(
-                      currentUrl,
-                      height: 80,
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => const Icon(
-                        Icons.broken_image,
-                        size: 40,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 4,
-                    right: 4,
-                    child: IconButton(
-                      icon: const Icon(Icons.close, color: Colors.red),
-                      onPressed: onRemove,
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        padding: const EdgeInsets.all(4),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Logo actual',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-            ),
-            const SizedBox(height: 12),
-          ],
-
-          // Mostrar nuevo logo
-          if (hasNewLogo) ...[
-            Container(
-              height: 100,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.blue.shade300),
-              ),
-              child: Stack(
-                children: [
-                  Center(
-                    child: file.bytes != null
-                        ? Image.memory(
-                            file.bytes!,
-                            height: 80,
-                            fit: BoxFit.contain,
-                          )
-                        : const Icon(Icons.image, size: 40),
-                  ),
-                  Positioned(
-                    top: 4,
-                    right: 4,
-                    child: IconButton(
-                      icon: const Icon(Icons.close, color: Colors.red),
-                      onPressed: onRemove,
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        padding: const EdgeInsets.all(4),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Nuevo logo: ${file.name}',
-              style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-            ),
-            const SizedBox(height: 12),
-          ],
-
-          // Botón para seleccionar/cambiar logo
-          OutlinedButton.icon(
-            onPressed: onPick,
-            icon: Icon(hasNewLogo ? Icons.refresh : Icons.upload),
-            label: Text(hasNewLogo
-                ? 'Cambiar Logo'
-                : (hasCurrentLogo ? 'Subir nuevo logo' : 'Seleccionar Logo')),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF0d0d0d),
-              side: const BorderSide(color: Color(0xFF0d0d0d)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   InputDecoration _inputDecoration({
     required String label,
     required String hint,
@@ -1050,11 +384,5 @@ class _EditCertificationState extends State<EditCertification> {
       filled: true,
       fillColor: Colors.grey.shade50,
     );
-  }
-
-  String _formatFileSize(int bytes) {
-    if (bytes < 1024) return '$bytes B';
-    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
-    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 }

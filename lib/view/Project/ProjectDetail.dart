@@ -3,9 +3,13 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../Components/iphone_webview.dart';
 import '../../Components/device_frame.dart';
-import '../../services/firebase_service.dart';
 import '../../controllers/auth_controller.dart';
+import '../../controllers/project_detail_controller.dart';
 import '../../utils/Colors.dart';
+import '../../widgets/ProjectDetail/project_detail_image_gallery.dart';
+import '../../widgets/ProjectDetail/project_detail_technologies.dart';
+import '../../widgets/ProjectDetail/project_detail_info_slider.dart';
+import '../../widgets/ProjectDetail/project_detail_view_tab.dart';
 
 class ProjectDetail extends StatefulWidget {
   final String projectId;
@@ -17,90 +21,20 @@ class ProjectDetail extends StatefulWidget {
 }
 
 class _ProjectDetailState extends State<ProjectDetail> {
-  Map<String, dynamic>? project;
-  bool isLoading = true;
-  String? errorMessage;
-  String? selectedView;
-  Map<String, List<String>> _technologiesMap = {};
-  late PageController _infoPageController;
-  int _currentInfoIndex = 0;
+  late final ProjectDetailController _controller;
 
   @override
   void initState() {
     super.initState();
-    _infoPageController = PageController();
-    _loadTechnologies();
-    _loadProject();
+    _controller = ProjectDetailController();
+    _controller.loadTechnologies();
+    _controller.loadProject(widget.projectId);
   }
 
   @override
   void dispose() {
-    _infoPageController.dispose();
+    _controller.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadTechnologies() async {
-    try {
-      final technologies = await FirebaseService.fetchTechnologies();
-      if (!mounted) return;
-      setState(() {
-        _technologiesMap = technologies;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      // No mostrar error al usuario, solo usar mapa vacío
-      setState(() {
-        _technologiesMap = {};
-      });
-    }
-  }
-
-  Future<void> _loadProject() async {
-    try {
-      final data = await FirebaseService.fetchProjectById(widget.projectId);
-      if (!mounted) return;
-      setState(() {
-        project = data;
-        errorMessage = data == null ? 'Proyecto no encontrado' : null;
-        isLoading = false;
-      });
-    } catch (error) {
-      if (!mounted) return;
-      setState(() {
-        errorMessage = 'Error al cargar: $error';
-        isLoading = false;
-      });
-    }
-  }
-
-  /// Convierte URLs de Google Drive al formato correcto que evita problemas de CORS
-  /// Usa lh3.googleusercontent.com que permite acceso directo sin CORS
-  String _fixGoogleDriveUrl(String url) {
-    if (url.isEmpty) return url;
-
-    // Si ya es el formato correcto (lh3.googleusercontent.com), devolverla sin cambios
-    if (url.contains('lh3.googleusercontent.com/d/')) {
-      return url;
-    }
-
-    // Extraer el ID del archivo de diferentes formatos de URLs de Google Drive
-    // Soporta:
-    // - https://drive.usercontent.google.com/download?id=FILE_ID
-    // - https://drive.google.com/uc?export=view&id=FILE_ID
-    // - https://drive.google.com/file/d/FILE_ID/view
-    // - https://www.googleapis.com/drive/v3/files/FILE_ID
-    RegExp regExp = RegExp(r'(?:id=|/d/|/files/)([a-zA-Z0-9_-]+)');
-    Match? match = regExp.firstMatch(url);
-
-    if (match != null && match.groupCount > 0) {
-      String fileId = match.group(1)!;
-      // Convertir al formato que funciona sin CORS
-      // lh3.googleusercontent.com sirve contenido directamente sin redirecciones
-      return 'https://lh3.googleusercontent.com/d/$fileId';
-    }
-
-    // Si no es una URL de Google Drive, devolverla sin cambios
-    return url;
   }
 
   double _getPreviewWidth(String? view) {
@@ -131,1306 +65,456 @@ class _ProjectDetailState extends State<ProjectDetail> {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
-      return Scaffold(
-        backgroundColor: Colors.white,
-        appBar: AppBar(
-          title: const Text('Detalles del Proyecto'),
-          backgroundColor: Colors.white,
-          foregroundColor: const Color(0xFF0d0d0d),
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.go('/project'),
-          ),
-        ),
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    if (errorMessage != null) {
-      return Scaffold(
-        backgroundColor: Colors.white,
-        appBar: AppBar(
-          title: const Text('Detalles del Proyecto'),
-          backgroundColor: Colors.white,
-          foregroundColor: const Color(0xFF0d0d0d),
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.go('/project'),
-          ),
-        ),
-        body: Center(
-          child: Text(
-            errorMessage ?? 'Error desconocido',
-            style: const TextStyle(color: Colors.red, fontSize: 16),
-          ),
-        ),
-      );
-    }
-
-    if (project == null) {
-      return Scaffold(
-        backgroundColor: Colors.white,
-        appBar: AppBar(
-          title: const Text('Detalles del Proyecto'),
-          backgroundColor: Colors.white,
-          foregroundColor: const Color(0xFF0d0d0d),
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.go('/project'),
-          ),
-        ),
-        body: const Center(child: Text('No hay datos disponibles')),
-      );
-    }
-
-    final title = project?['title'] ?? '';
-    final name = project?['name'] ?? 'Sin nombre';
-    final description = project?['description'] ?? '';
-    final link = project?['link'] ?? '';
-    final logo = project?['logo'] as String?;
-    final classification = project?['classification'] as String?;
-    final startDate = project?['startDate'] as String?;
-    final endDate = project?['endDate'] as String?;
-    final technologies = project?['technologies'] as List<dynamic>?;
-    final problemSolved = project?['problemSolved'] as String?;
-    final difficulties = project?['difficulties'] as String?;
-    final testimonials = project?['testimonials'] as String?;
-    final responsibilities = project?['responsibilities'] as String?;
-
-    final isMobile = MediaQuery.of(context).size.width < 600;
-    final isWeb = MediaQuery.of(context).size.width >= 1024;
-
-    // ── Columna izquierda: título y descripción ──
-    final titleColumn = Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      mainAxisAlignment: MainAxisAlignment.end,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Logo del proyecto
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(40),
-          ),
-          child: (logo != null && logo.isNotEmpty)
-              ? ClipRRect(
-                  borderRadius: BorderRadius.circular(40),
-                  child: Image.network(
-                    _fixGoogleDriveUrl(logo),
-                    width: 500,
-                    height: 500,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        width: 500,
-                        height: 500,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF050A30),
-                          borderRadius: BorderRadius.circular(40),
-                        ),
-                        child: const Icon(
-                          Icons.code,
-                          color: Colors.white,
-                          size: 40,
-                        ),
-                      );
-                    },
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Container(
-                        width: 500,
-                        height: 500,
-                        alignment: Alignment.center,
-                        child: CircularProgressIndicator(
-                          value: loadingProgress.expectedTotalBytes != null
-                              ? loadingProgress.cumulativeBytesLoaded /
-                                    loadingProgress.expectedTotalBytes!
-                              : null,
-                          color: const Color(0xFF050A30),
-                        ),
-                      );
-                    },
-                  ),
-                )
-              : Container(
-                  width: 500,
-                  height: 500,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF050A30),
-                    borderRadius: BorderRadius.circular(40),
-                  ),
-                  child: const Icon(Icons.code, color: Colors.white, size: 40),
-                ),
-        ),
-        const SizedBox(height: 24),
-        // Título (si existe)
-        if (title.isNotEmpty) ...[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              const Icon(Icons.star, color: Colors.amber, size: 32),
-              const SizedBox(width: 1),
-              Flexible(
-                child: Text(
-                  title,
-                  textAlign: TextAlign.right,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Color(0xFF050A30),
-                    fontSize: 24,
-                    fontWeight: FontWeight.w600,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-        ],
-
-        // Descripción
-        Text(
-          description,
-          textAlign: TextAlign.justify,
-          style: const TextStyle(color: Colors.grey, fontSize: 16, height: 1.5),
-        ),
-        // Fechas (si existen)
-        if (startDate != null || endDate != null) ...[
-          Wrap(
-            alignment: WrapAlignment.end,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              if (startDate != null) ...[
-                const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
-                Text(
-                  _formatDate(startDate),
-                  style: const TextStyle(color: Colors.grey, fontSize: 14),
-                ),
-              ],
-              if (startDate != null && endDate != null)
-                const Text(
-                  '→',
-                  style: TextStyle(color: Colors.grey, fontSize: 14),
-                ),
-              if (endDate != null) ...[
-                const Icon(Icons.event_available, size: 16, color: Colors.grey),
-                Text(
-                  _formatDate(endDate),
-                  style: const TextStyle(color: Colors.grey, fontSize: 14),
-                ),
-              ],
-            ],
-          ),
-          const SizedBox(height: 16),
-        ],
-        // Nombre del proyecto
-        Text(
-          name,
-          style: const TextStyle(
-            color: Color(0xFF050A30),
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 16),
-        // Clasificación (si existe)
-        if (classification != null && classification.isNotEmpty) ...[
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFF050A30).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: const Color(0xFF050A30).withOpacity(0.3),
-                width: 1,
+    return ListenableBuilder(
+      listenable: _controller,
+      builder: (context, _) {
+        if (_controller.isLoading) {
+          return Scaffold(
+            backgroundColor: Colors.white,
+            appBar: AppBar(
+              title: const Text('Detalles del Proyecto'),
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF0d0d0d),
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => context.go('/project'),
               ),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.category, size: 16, color: Color(0xFF050A30)),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    classification,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Color(0xFF050A30),
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-        ],
-        // Tecnologías (si existen)
-        if (technologies != null && technologies.isNotEmpty) ...[
-          _buildTechnologiesSection(technologies),
-          const SizedBox(height: 16),
-        ],
-      ],
-    );
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
 
-    // ── Columna derecha: tabs + preview ──
-    final previewColumn = link.isNotEmpty
-        ? Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    _buildViewTab('iphone', Icons.phone_iphone, 'iPhone'),
-                    _buildViewTab('android', Icons.phone_android, 'Android'),
-                    _buildViewTab('tablet', Icons.tablet_mac, 'Tablet'),
-                    _buildViewTab(null, Icons.devices_other, 'Auto'),
-                  ],
-                ),
+        if (_controller.errorMessage != null) {
+          return Scaffold(
+            backgroundColor: Colors.white,
+            appBar: AppBar(
+              title: const Text('Detalles del Proyecto'),
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF0d0d0d),
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => context.go('/project'),
               ),
-              const SizedBox(height: 24),
-              // Preview container
-              Center(
-                child: SizedBox(
-                  width: _getPreviewWidth(selectedView),
-                  height: isMobile ? 640 : 820,
-                  child: selectedView == null
-                      ? IphoneWebView(link: link)
-                      : DeviceFrame(
-                          deviceType: selectedView == 'iphone'
-                              ? DeviceType.iphone
-                              : selectedView == 'android'
-                              ? DeviceType.android
-                              : DeviceType.tablet,
-                          child: IphoneWebView(link: link),
-                        ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              _buildInfoSlider(
-                problemSolved: problemSolved,
-                difficulties: difficulties,
-                testimonials: testimonials,
-                responsibilities: responsibilities,
-              ),
-            ],
-          )
-        : Container(
-            padding: const EdgeInsets.all(40),
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(8),
             ),
-            child: const Center(
+            body: Center(
               child: Text(
-                'No hay enlace disponible para este proyecto',
-                style: TextStyle(color: Colors.grey),
+                _controller.errorMessage ?? 'Error desconocido',
+                style: const TextStyle(color: Colors.red, fontSize: 16),
               ),
             ),
           );
+        }
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text('Detalles del Proyecto'),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF0d0d0d),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/project'),
-        ),
-        actions: [
-          // Botón de editar (solo visible si está autenticado)
-          Consumer<AuthController>(
-            builder: (context, auth, child) {
-              if (!auth.isAuthenticated) {
-                return const SizedBox.shrink();
-              }
-              return IconButton(
-                icon: const Icon(Icons.edit),
-                tooltip: 'Editar Proyecto',
-                onPressed: () =>
-                    context.go('/project/${widget.projectId}/edit'),
-              );
-            },
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Contenido principal (título + preview)
-              isWeb
-                  ? Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        // Columna izquierda
-                        Expanded(flex: 2, child: titleColumn),
-                        // Columna derecha
-                        Expanded(flex: 3, child: previewColumn),
-                      ],
-                    )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 30),
-                          child: titleColumn,
-                        ),
-                        previewColumn,
-                        const SizedBox(height: 40),
-                      ],
-                    ),
-
-              // Secciones de imágenes
-              const SizedBox(height: 60),
-              _buildImageGallerySection(
-                title: 'Imágenes Web',
-                icon: Icons.computer,
-                color: Colors.blue,
-                images: project?['images'] as List<dynamic>? ?? [],
-              ),
-              const SizedBox(height: 40),
-              _buildImageGallerySection(
-                title: 'Imágenes Mobile',
-                icon: Icons.phone_android,
-                color: Colors.green,
-                images: project?['imagesMobile'] as List<dynamic>? ?? [],
-              ),
-              const SizedBox(height: 40),
-            ],
-          ),
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.go('/project'),
-        backgroundColor: const Color(0xFF040404),
-        shape: const CircleBorder(),
-        child: const Icon(Icons.arrow_back, color: Color(0xFFF4F4F4)),
-      ),
-    );
-  }
-
-  // ══════════════════════════════════════════════════════════════
-  // SECCIÓN DE GALERÍA DE IMÁGENES
-  // ══════════════════════════════════════════════════════════════
-
-  Widget _buildImageGallerySection({
-    required String title,
-    required IconData icon,
-    required Color color,
-    required List<dynamic> images,
-  }) {
-    if (images.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(32),
-        decoration: BoxDecoration(
-          color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!, width: 1),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, size: 48, color: Colors.grey[300]),
-            const SizedBox(height: 12),
-            Text(
-              'No hay imágenes $title',
-              style: TextStyle(
-                color: Colors.grey[500],
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
+        if (_controller.project == null) {
+          return Scaffold(
+            backgroundColor: Colors.white,
+            appBar: AppBar(
+              title: const Text('Detalles del Proyecto'),
+              backgroundColor: Colors.white,
+              foregroundColor: const Color(0xFF0d0d0d),
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => context.go('/project'),
               ),
             ),
-          ],
-        ),
-      );
-    }
+            body: const Center(child: Text('No hay datos disponibles')),
+          );
+        }
 
-    final isMobile = MediaQuery.of(context).size.width < 600;
-    final isTablet =
-        MediaQuery.of(context).size.width >= 600 &&
-        MediaQuery.of(context).size.width < 1024;
+        final project = _controller.project!;
+        final title = project['title'] ?? '';
+        final name = project['name'] ?? 'Sin nombre';
+        final description = project['description'] ?? '';
+        final link = project['link'] ?? '';
+        final logo = project['logo'] as String?;
+        final classification = project['classification'] as String?;
+        final startDate = project['startDate'] as String?;
+        final endDate = project['endDate'] as String?;
+        final technologies = project['technologies'] as List<dynamic>?;
+        final problemSolved = project['problemSolved'] as String?;
+        final difficulties = project['difficulties'] as String?;
+        final testimonials = project['testimonials'] as String?;
+        final responsibilities = project['responsibilities'] as String?;
 
-    final crossAxisCount = isMobile ? 2 : (isTablet ? 3 : 4);
+        final isMobile = MediaQuery.of(context).size.width < 600;
+        final isWeb = MediaQuery.of(context).size.width >= 1024;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Encabezado de la sección
-        Row(
+        // ── Columna izquierda: título y descripción ──
+        final titleColumn = Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisAlignment: MainAxisAlignment.end,
+          mainAxisSize: MainAxisSize.min,
           children: [
+            // Logo del proyecto
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(40),
               ),
-              child: Icon(icon, color: color, size: 28),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF050A30),
+              child: (logo != null && logo.isNotEmpty)
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(40),
+                      child: Image.network(
+                        _controller.fixGoogleDriveUrl(logo),
+                        width: 500,
+                        height: 500,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: 500,
+                            height: 500,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF050A30),
+                              borderRadius: BorderRadius.circular(40),
+                            ),
+                            child: const Icon(
+                              Icons.code,
+                              color: Colors.white,
+                              size: 40,
+                            ),
+                          );
+                        },
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            width: 500,
+                            height: 500,
+                            alignment: Alignment.center,
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                  : null,
+                              color: const Color(0xFF050A30),
+                            ),
+                          );
+                        },
+                      ),
+                    )
+                  : Container(
+                      width: 500,
+                      height: 500,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF050A30),
+                        borderRadius: BorderRadius.circular(40),
+                      ),
+                      child: const Icon(
+                        Icons.code,
+                        color: Colors.white,
+                        size: 40,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${images.length} ${images.length == 1 ? 'imagen' : 'imágenes'}',
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 24),
+            // Título (si existe)
+            if (title.isNotEmpty) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  const Icon(Icons.star, color: Colors.amber, size: 32),
+                  const SizedBox(width: 1),
+                  Flexible(
+                    child: Text(
+                      title,
+                      textAlign: TextAlign.right,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF050A30),
+                        fontSize: 24,
+                        fontWeight: FontWeight.w600,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
                   ),
                 ],
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 24),
+              const SizedBox(height: 12),
+            ],
 
-        // Grid de imágenes
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            childAspectRatio: 1,
-          ),
-          itemCount: images.length,
-          itemBuilder: (context, index) {
-            final imageUrl = images[index] as String;
-            return _buildImageCard(imageUrl, index + 1);
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildImageCard(String imageUrl, int imageNumber) {
-    return GestureDetector(
-      onTap: () => _showImageDialog(imageUrl),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
+            // Descripción
+            Text(
+              description,
+              textAlign: TextAlign.justify,
+              style: const TextStyle(
+                color: Colors.grey,
+                fontSize: 16,
+                height: 1.5,
+              ),
             ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              Image.network(
-                _fixGoogleDriveUrl(imageUrl),
-                fit: BoxFit.cover,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Container(
-                    color: Colors.grey[200],
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        value: loadingProgress.expectedTotalBytes != null
-                            ? loadingProgress.cumulativeBytesLoaded /
-                                  loadingProgress.expectedTotalBytes!
-                            : null,
-                      ),
-                    ),
-                  );
-                },
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Colors.grey[300],
-                    child: const Icon(
-                      Icons.broken_image,
-                      size: 48,
+            // Fechas (si existen)
+            if (startDate != null || endDate != null) ...[
+              Wrap(
+                alignment: WrapAlignment.end,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  if (startDate != null) ...[
+                    const Icon(
+                      Icons.calendar_today,
+                      size: 16,
                       color: Colors.grey,
                     ),
-                  );
-                },
-              ),
-              // Overlay con número de imagen
-              Positioned(
-                top: 8,
-                left: 8,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.6),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    '#$imageNumber',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-              // Overlay hover effect
-              Positioned.fill(
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () => _showImageDialog(imageUrl),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.transparent,
-                            Colors.black.withOpacity(0.3),
-                          ],
-                        ),
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.zoom_in,
-                          color: Colors.white,
-                          size: 32,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showImageDialog(String imageUrl) {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Stack(
-          children: [
-            // Imagen ampliada
-            Center(
-              child: InteractiveViewer(
-                minScale: 0.5,
-                maxScale: 4.0,
-                child: Image.network(
-                  _fixGoogleDriveUrl(imageUrl),
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      padding: const EdgeInsets.all(40),
-                      child: const Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 64,
-                            color: Colors.white,
-                          ),
-                          SizedBox(height: 16),
-                          Text(
-                            'Error al cargar la imagen',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-            // Botón cerrar
-            Positioned(
-              top: 16,
-              right: 16,
-              child: IconButton(
-                icon: const Icon(Icons.close, color: Colors.white, size: 32),
-                onPressed: () => Navigator.of(context).pop(),
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.black.withOpacity(0.5),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _formatDate(String dateString) {
-    try {
-      final date = DateTime.parse(dateString);
-      final months = [
-        'Enero',
-        'Febrero',
-        'Marzo',
-        'Abril',
-        'Mayo',
-        'Junio',
-        'Julio',
-        'Agosto',
-        'Septiembre',
-        'Octubre',
-        'Noviembre',
-        'Diciembre',
-      ];
-      return '${date.day} de ${months[date.month - 1]} de ${date.year}';
-    } catch (e) {
-      return dateString;
-    }
-  }
-
-  Widget _buildViewTab(String? viewType, IconData icon, String label) {
-    final isSelected = selectedView == viewType;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () => setState(() => selectedView = viewType),
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: isSelected ? const Color(0xFF050A30) : Colors.grey[300]!,
-                width: isSelected ? 2 : 1,
-              ),
-              borderRadius: BorderRadius.circular(8),
-              color: isSelected
-                  ? const Color(0xFF050A30).withOpacity(0.1)
-                  : Colors.transparent,
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  icon,
-                  color: isSelected
-                      ? const Color(0xFF050A30)
-                      : Colors.grey[600],
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: isSelected
-                        ? const Color(0xFF050A30)
-                        : Colors.grey[600],
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // ══════════════════════════════════════════════════════════════
-  // SECCIÓN DE TECNOLOGÍAS ORGANIZADAS
-  // ══════════════════════════════════════════════════════════════
-
-  // Iconos para cada categoría
-  static const Map<String, IconData> _categoryIcons = {
-    'Lenguajes de Programación': Icons.code,
-    'Frontend': Icons.web,
-    'Backend': Icons.storage,
-    'Bases de Datos': Icons.storage_rounded,
-    'Cloud & DevOps': Icons.cloud,
-    'Metodologías': Icons.track_changes,
-    'Arquitectura': Icons.account_tree,
-    'Control de Versiones': Icons.source,
-    'Testing': Icons.bug_report,
-    'Inteligencia Artificial': Icons.psychology,
-    'Otros': Icons.extension,
-  };
-
-  // Organiza las tecnologías por categorías
-  Map<String, List<String>> _categorizeTechnologies(
-    List<dynamic> technologies,
-  ) {
-    final categorized = <String, List<String>>{};
-    final techSet = technologies.map((e) => e.toString()).toSet();
-
-    _technologiesMap.forEach((category, categoryTechs) {
-      final matchingTechs = categoryTechs
-          .where((tech) => techSet.contains(tech))
-          .toList();
-      if (matchingTechs.isNotEmpty) {
-        categorized[category] = matchingTechs;
-      }
-    });
-
-    return categorized;
-  }
-
-  Widget _buildTechnologiesSection(List<dynamic> technologies) {
-    final categorized = _categorizeTechnologies(technologies);
-
-    if (categorized.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.light5,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.grey, width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Encabezado principal
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.black,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.black.withOpacity(0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
+                    Text(
+                      _controller.formatDate(startDate),
+                      style: const TextStyle(color: Colors.grey, fontSize: 14),
                     ),
                   ],
-                ),
-                child: const Icon(
-                  Icons.settings_suggest,
-                  color: Colors.white,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                  if (startDate != null && endDate != null)
                     const Text(
-                      'Stack Tecnológico',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.black,
-                        letterSpacing: -0.5,
-                      ),
+                      '→',
+                      style: TextStyle(color: Colors.grey, fontSize: 14),
+                    ),
+                  if (endDate != null) ...[
+                    const Icon(
+                      Icons.event_available,
+                      size: 16,
+                      color: Colors.grey,
                     ),
                     Text(
-                      '${technologies.length} tecnologías utilizadas',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.darkgrey,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      _controller.formatDate(endDate),
+                      style: const TextStyle(color: Colors.grey, fontSize: 14),
                     ),
                   ],
-                ),
+                ],
               ),
+              const SizedBox(height: 16),
             ],
-          ),
-          const SizedBox(height: 20),
-
-          // Categorías con sus tecnologías en dos columnas (siempre)
-          () {
-            final categories = categorized.entries.toList();
-            final mid = (categories.length / 2).ceil();
-            final leftCategories = categories.sublist(0, mid);
-            final rightCategories = categories.sublist(mid);
-
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    children: leftCategories.map((entry) {
-                      return _buildCategoryWidget(entry.key, entry.value);
-                    }).toList(),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    children: rightCategories.map((entry) {
-                      return _buildCategoryWidget(entry.key, entry.value);
-                    }).toList(),
-                  ),
-                ),
-              ],
-            );
-          }(),
-        ],
-      ),
-    );
-  }
-
-  // Construye el widget de una categoría individual
-  Widget _buildCategoryWidget(String category, List<String> techs) {
-    final icon = _categoryIcons[category] ?? Icons.code;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Encabezado de categoría
-          Row(
-            children: [
-              Icon(icon, size: 18, color: AppColors.black),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  category,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.black,
-                    letterSpacing: 0.3,
-                  ),
-                ),
+            // Nombre del proyecto
+            Text(
+              name,
+              style: const TextStyle(
+                color: Color(0xFF050A30),
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
               ),
+            ),
+            const SizedBox(height: 16),
+            // Clasificación (si existe)
+            if (classification != null && classification.isNotEmpty) ...[
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppColors.grey,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  '${techs.length}',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.black,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          // Tecnologías de la categoría
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            alignment: WrapAlignment.start,
-            children: techs.map((tech) {
-              return Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
+                  horizontal: 16,
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.black,
+                  color: const Color(0xFF050A30).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.black.withOpacity(0.15),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
+                  border: Border.all(
+                    color: const Color(0xFF050A30).withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.category,
+                      size: 16,
+                      color: Color(0xFF050A30),
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        classification,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFF050A30),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ),
                   ],
                 ),
-                child: Text(
-                  tech,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.2,
+              ),
+              const SizedBox(height: 16),
+            ],
+            // Tecnologías (si existen)
+            if (technologies != null && technologies.isNotEmpty) ...[
+              ProjectDetailTechnologies(
+                technologies: technologies,
+                categorized: _controller.categorizeTechnologies(technologies),
+                categoryIcons: ProjectDetailController.categoryIcons,
+              ),
+              const SizedBox(height: 16),
+            ],
+          ],
+        );
+
+        // ── Columna derecha: tabs + preview ──
+        final previewColumn = link.isNotEmpty
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        ProjectDetailViewTab(
+                          viewType: 'iphone',
+                          selectedView: _controller.selectedView,
+                          icon: Icons.phone_iphone,
+                          label: 'iPhone',
+                          onTap: _controller.setSelectedView,
+                        ),
+                        ProjectDetailViewTab(
+                          viewType: 'android',
+                          selectedView: _controller.selectedView,
+                          icon: Icons.phone_android,
+                          label: 'Android',
+                          onTap: _controller.setSelectedView,
+                        ),
+                        ProjectDetailViewTab(
+                          viewType: 'tablet',
+                          selectedView: _controller.selectedView,
+                          icon: Icons.tablet_mac,
+                          label: 'Tablet',
+                          onTap: _controller.setSelectedView,
+                        ),
+                        ProjectDetailViewTab(
+                          viewType: null,
+                          selectedView: _controller.selectedView,
+                          icon: Icons.devices_other,
+                          label: 'Auto',
+                          onTap: _controller.setSelectedView,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  // Preview container
+                  Center(
+                    child: SizedBox(
+                      width: _getPreviewWidth(_controller.selectedView),
+                      height: isMobile ? 640 : 820,
+                      child: _controller.selectedView == null
+                          ? IphoneWebView(link: link)
+                          : DeviceFrame(
+                              deviceType: _controller.selectedView == 'iphone'
+                                  ? DeviceType.iphone
+                                  : _controller.selectedView == 'android'
+                                  ? DeviceType.android
+                                  : DeviceType.tablet,
+                              child: IphoneWebView(link: link),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ProjectDetailInfoSlider(
+                    problemSolved: problemSolved,
+                    difficulties: difficulties,
+                    testimonials: testimonials,
+                    responsibilities: responsibilities,
+                  ),
+                ],
+              )
+            : Container(
+                padding: const EdgeInsets.all(40),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Center(
+                  child: Text(
+                    'No hay enlace disponible para este proyecto',
+                    style: TextStyle(color: Colors.grey),
                   ),
                 ),
               );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
 
-  // ══════════════════════════════════════════════════════════════
-  // SECCIÓN DE INFORMACIÓN ADICIONAL CON SLIDER
-  // ══════════════════════════════════════════════════════════════
-
-  Widget _buildInfoSlider({
-    String? problemSolved,
-    String? difficulties,
-    String? testimonials,
-    String? responsibilities,
-  }) {
-    // Crear lista de secciones disponibles
-    final List<Map<String, dynamic>> infoSections = [];
-
-    if (problemSolved != null && problemSolved.isNotEmpty) {
-      infoSections.add({
-        'title': 'Problema que resuelve',
-        'icon': Icons.lightbulb_outline,
-        'content': problemSolved,
-        'color': AppColors.black,
-        'gradient': [AppColors.black, AppColors.blackOption],
-      });
-    }
-
-    if (difficulties != null && difficulties.isNotEmpty) {
-      infoSections.add({
-        'title': 'Dificultades y soluciones',
-        'icon': Icons.engineering,
-        'content': difficulties,
-        'color': AppColors.black,
-        'gradient': [AppColors.black, AppColors.blackOption],
-      });
-    }
-
-    if (testimonials != null && testimonials.isNotEmpty) {
-      infoSections.add({
-        'title': 'Testimonios o feedback',
-        'icon': Icons.rate_review,
-        'content': testimonials,
-        'color': AppColors.black,
-        'gradient': [AppColors.black, AppColors.blackOption],
-      });
-    }
-
-    if (responsibilities != null && responsibilities.isNotEmpty) {
-      infoSections.add({
-        'title': 'Responsabilidades',
-        'icon': Icons.assignment_ind,
-        'content': responsibilities,
-        'color': AppColors.black,
-        'gradient': [AppColors.black, AppColors.blackOption],
-      });
-    }
-
-    if (infoSections.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    final isMobile = MediaQuery.of(context).size.width < 600;
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: AppColors.light5,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.grey.withOpacity(0.3), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.black.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Encabezado con título y contador
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  'Información del Proyecto',
-                  style: TextStyle(
-                    fontSize: isMobile ? 20 : 24,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.black,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.black,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  '${_currentInfoIndex + 1}/${infoSections.length}',
-                  style: const TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+        return Scaffold(
+          backgroundColor: Colors.white,
+          appBar: AppBar(
+            title: const Text('Detalles del Proyecto'),
+            backgroundColor: Colors.white,
+            foregroundColor: const Color(0xFF0d0d0d),
+            elevation: 0,
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => context.go('/project'),
+            ),
+            actions: [
+              // Botón de editar (solo visible si está autenticado)
+              Consumer<AuthController>(
+                builder: (context, auth, child) {
+                  if (!auth.isAuthenticated) {
+                    return const SizedBox.shrink();
+                  }
+                  return IconButton(
+                    icon: const Icon(Icons.edit),
+                    tooltip: 'Editar Proyecto',
+                    onPressed: () =>
+                        context.go('/project/${widget.projectId}/edit'),
+                  );
+                },
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          body: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Contenido principal (título + preview)
+                  isWeb
+                      ? Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            // Columna izquierda
+                            Expanded(flex: 2, child: titleColumn),
+                            // Columna derecha
+                            Expanded(flex: 3, child: previewColumn),
+                          ],
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 30),
+                              child: titleColumn,
+                            ),
+                            previewColumn,
+                            const SizedBox(height: 40),
+                          ],
+                        ),
 
-          // PageView con las secciones
-          SizedBox(
-            height: isMobile ? 280 : 250,
-            child: PageView.builder(
-              controller: _infoPageController,
-              onPageChanged: (index) {
-                setState(() {
-                  _currentInfoIndex = index;
-                });
-              },
-              itemCount: infoSections.length,
-              itemBuilder: (context, index) {
-                final section = infoSections[index];
-                return _buildInfoSlide(
-                  title: section['title'],
-                  icon: section['icon'],
-                  content: section['content'],
-                  color: section['color'],
-                  gradient: section['gradient'],
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: 24),
-
-          // Controles de navegación
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Botón Anterior
-              _buildNavigationButton(
-                icon: Icons.arrow_back_ios_rounded,
-                onPressed: _currentInfoIndex > 0
-                    ? () {
-                        _infoPageController.previousPage(
-                          duration: const Duration(milliseconds: 400),
-                          curve: Curves.easeInOut,
-                        );
-                      }
-                    : null,
-                isEnabled: _currentInfoIndex > 0,
-              ),
-
-              // Indicadores de página (dots)
-              Expanded(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                    infoSections.length,
-                    (index) => _buildPageIndicator(
-                      isActive: index == _currentInfoIndex,
-                      color: AppColors.black,
-                    ),
+                  // Secciones de imágenes
+                  const SizedBox(height: 60),
+                  ProjectDetailImageGallery(
+                    title: 'Imágenes Web',
+                    icon: Icons.computer,
+                    color: Colors.blue,
+                    images: project['images'] as List<dynamic>? ?? [],
+                    fixUrl: _controller.fixGoogleDriveUrl,
                   ),
-                ),
-              ),
-
-              // Botón Siguiente
-              _buildNavigationButton(
-                icon: Icons.arrow_forward_ios_rounded,
-                onPressed: _currentInfoIndex < infoSections.length - 1
-                    ? () {
-                        _infoPageController.nextPage(
-                          duration: const Duration(milliseconds: 400),
-                          curve: Curves.easeInOut,
-                        );
-                      }
-                    : null,
-                isEnabled: _currentInfoIndex < infoSections.length - 1,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoSlide({
-    required String title,
-    required IconData icon,
-    required String content,
-    required Color color,
-    required List<Color> gradient,
-  }) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.white, AppColors.light5],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.grey.withOpacity(0.4), width: 2),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.black.withOpacity(0.08),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Encabezado con icono y título
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: gradient,
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.black.withOpacity(0.2),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+                  const SizedBox(height: 40),
+                  ProjectDetailImageGallery(
+                    title: 'Imágenes Mobile',
+                    icon: Icons.phone_android,
+                    color: Colors.green,
+                    images: project['imagesMobile'] as List<dynamic>? ?? [],
+                    fixUrl: _controller.fixGoogleDriveUrl,
                   ),
-                  child: Icon(icon, color: Colors.white, size: 28),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      color: AppColors.black,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Contenido
-            Text(
-              content,
-              style: TextStyle(
-                color: AppColors.darkgrey,
-                fontSize: 15,
-                height: 1.6,
-                letterSpacing: 0.2,
+                  const SizedBox(height: 40),
+                ],
               ),
-              textAlign: TextAlign.justify,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavigationButton({
-    required IconData icon,
-    required VoidCallback? onPressed,
-    required bool isEnabled,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: isEnabled
-            ? LinearGradient(
-                colors: [AppColors.black, AppColors.black.withOpacity(0.8)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              )
-            : null,
-        color: isEnabled ? null : AppColors.grey.withOpacity(0.3),
-        boxShadow: isEnabled
-            ? [
-                BoxShadow(
-                  color: AppColors.black.withOpacity(0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ]
-            : [],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(30),
-          child: Container(
-            width: 50,
-            height: 50,
-            alignment: Alignment.center,
-            child: Icon(
-              icon,
-              color: isEnabled ? AppColors.primary : AppColors.darkgrey,
-              size: 20,
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPageIndicator({required bool isActive, required Color color}) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      width: isActive ? 32 : 8,
-      height: 8,
-      decoration: BoxDecoration(
-        color: isActive ? color : AppColors.grey.withOpacity(0.4),
-        borderRadius: BorderRadius.circular(4),
-        boxShadow: isActive
-            ? [
-                BoxShadow(
-                  color: color.withOpacity(0.4),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ]
-            : [],
-      ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () => context.go('/project'),
+            backgroundColor: const Color(0xFF040404),
+            shape: const CircleBorder(),
+            child: const Icon(Icons.arrow_back, color: Color(0xFFF4F4F4)),
+          ),
+        );
+      },
     );
   }
 }
