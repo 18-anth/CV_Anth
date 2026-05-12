@@ -17,16 +17,33 @@
   <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible" />
-  <link rel="icon" href="%PUBLIC_URL%/Icon.png" />
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#ffffff" />
   <meta name="description"
     content="Currículum Vitae de un Ingeniero en Sistemas de Información con experiencia en desarrollo web y gestión de proyectos." />
   <meta name="keywords" content="Ingeniero en Sistemas, CV, Desarrollo Web, Gestión de Proyectos" />
   <!-- <meta name="google-site-verification" content="wefKK-hfPTaCXUg6mlIUkR84c2lbuB-iUcjNBuRzBdo" /> -->
   <meta name="google-site-verification" content="2k7xB7qhv9p6n5jT3Cs_zLNMBpeP9OL30UMWzTTleRw" />
 
-  <meta flt-viewport="" name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <!-- iOS meta tags & icons -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="apple-mobile-web-app-title" content="CV { ANTH }" />
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>CV { ANTH }</title>
+  <link rel="manifest" href="manifest.json" />
+
+  <!-- 🔐 Google Sign-In para Flutter Web -->
+  <meta name="google-signin-client_id" content="13135437716-in66mnai5c70lemcigrkg8dtvud1m3kr.apps.googleusercontent.com">
+  <script src="https://accounts.google.com/gsi/client"></script>
+
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+  <script src="flutter_bootstrap.js" async></script>
 
   <!-- Open Canonical -->
   <link rel="canonical" href="https://18-anth.github.io/CV_Anth_/#/privacy/" />
@@ -38,22 +55,7 @@
   <meta property="og:url" content="https://18-anth.github.io/CV_Anth_/#/privacy/" />
   <meta property="og:type" content="website" />
 
-  <!-- iOS meta tags & icons -->
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-  <meta name="apple-mobile-web-app-title" content="CV { ANTH }" />
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
-
-  <!-- 🔐 Google Sign-In para Flutter Web -->
-  <meta name="google-signin-client_id" content="13135437716-in66mnai5c70lemcigrkg8dtvud1m3kr.apps.googleusercontent.com">
-  <script src="https://accounts.google.com/gsi/client"></script>
-  <title>CV { ANTH }</title>
-  <link rel="manifest" href="manifest.json" />
-  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
-  <script src="flutter_bootstrap.js" async></script>
 </header>
 
 <body>
@@ -70,6 +72,7 @@
     </ul>
     <p>Visítanos: <a href="https://18-anth.github.io/CV_Anth_/PrivacyPolicy/">CV { ANTH }</a></p>
   </div>
+  <script src="flutter_bootstrap.js" async></script>
   <script>
     // Registrar Service Worker para notificaciones en segundo plano
     if ('serviceWorker' in navigator) {
