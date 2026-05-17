@@ -19,10 +19,9 @@ class GoogleDriveService {
   static String previewUrl(String fileId) =>
       'https://drive.google.com/file/d/$fileId/preview';
 
-  /// URL de descarga directa con API key (útil para imágenes / descarga).
+  /// URL de descarga/visualización directa compatible con CORS en Flutter Web.
   static String downloadUrl(String fileId) {
-    final apiKey = AppConfig.googleApiKey;
-    return '$_baseUrl/files/$fileId?alt=media&key=$apiKey';
+    return 'https://drive.usercontent.google.com/download?id=$fileId';
   }
 
   // ─── Legacy: búsqueda por nombre (mantener por compatibilidad) ──────────────
@@ -41,7 +40,9 @@ class GoogleDriveService {
 
     final response = await http.get(uri);
     if (response.statusCode != 200) {
-      throw Exception('Drive: error al listar archivos (${response.statusCode})');
+      throw Exception(
+        'Drive: error al listar archivos (${response.statusCode})',
+      );
     }
 
     final json = jsonDecode(response.body) as Map<String, dynamic>;
@@ -82,4 +83,3 @@ class GoogleDriveService {
     return files;
   }
 }
-

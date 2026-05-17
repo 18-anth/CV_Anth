@@ -74,7 +74,9 @@ class _ProjectState extends State<Project> {
         cardsData = data.map((e) => ProjectCard.fromMap(e)).toList();
         isLoading = false;
       });
-    } catch (e) {
+    } catch (e, st) {
+      print('❌ Error al cargar proyectos: $e');
+      print('📍 StackTrace: $st');
       if (!mounted) return;
       setState(() {
         isLoading = false;
@@ -87,19 +89,19 @@ class _ProjectState extends State<Project> {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year.toString().substring(2)}';
   }
 
-  /// Convierte URLs de Google Drive al formato con API key que funciona correctamente
-  /// para leer archivos públicos sin problemas de CORS en Flutter Web.
+  /// Convierte URLs de Google Drive al formato usercontent que evita CORS en Flutter Web.
   String _fixGoogleDriveUrl(String url) {
     if (url.isEmpty) return url;
 
-    if (url.contains('alt=media')) return url;
+    // Ya está en el formato correcto (usercontent)
+    if (url.contains('drive.usercontent.google.com')) return url;
 
     final regExp = RegExp(r'(?:id=|/d/|/files/)([a-zA-Z0-9_-]+)');
     final match = regExp.firstMatch(url);
 
     if (match != null && match.groupCount > 0) {
       final fileId = match.group(1)!;
-      return GoogleDriveService.downloadUrl(fileId);
+      return 'https://drive.usercontent.google.com/download?id=$fileId';
     }
 
     return url;
