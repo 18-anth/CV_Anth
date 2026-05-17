@@ -21,7 +21,8 @@ class GoogleDriveService {
 
   /// URL de descarga/visualización directa compatible con CORS en Flutter Web.
   static String downloadUrl(String fileId) {
-    return 'https://drive.usercontent.google.com/download?id=$fileId';
+    final apiKey = AppConfig.googleApiKey;
+    return '$_baseUrl/files/$fileId?alt=media&key=$apiKey';
   }
 
   // ─── Legacy: búsqueda por nombre (mantener por compatibilidad) ──────────────

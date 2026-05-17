@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../models/RobotModel.dart';
 import '../../services/firebase_service.dart';
-import '../../services/google_drive_service.dart';
 import '../../controllers/auth_controller.dart';
 
 class ProjectCard {
@@ -74,9 +73,7 @@ class _ProjectState extends State<Project> {
         cardsData = data.map((e) => ProjectCard.fromMap(e)).toList();
         isLoading = false;
       });
-    } catch (e, st) {
-      print('❌ Error al cargar proyectos: $e');
-      print('📍 StackTrace: $st');
+    } catch (e) {
       if (!mounted) return;
       setState(() {
         isLoading = false;
