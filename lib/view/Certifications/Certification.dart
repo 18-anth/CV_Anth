@@ -1,8 +1,8 @@
 import 'package:cv_anth/utils/Colors.dart';
 import 'package:flutter/material.dart';
-import 'dart:ui' as ui;
 import 'package:animate_do/animate_do.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../models/BookModel.dart';
 import '../../services/firebase_service.dart';
 
@@ -193,7 +193,7 @@ class _CertificationState extends State<Certification> {
                           child: Text(
                             'CERTIFICACIONES Y CURSOS',
                             style: TextStyle(
-                              color: AppColors.light,
+                              color: AppColors.black,
                               fontSize: isMobile ? 24 : 32,
                               fontWeight: FontWeight.w300,
                               letterSpacing: 3,
@@ -276,25 +276,34 @@ class _CertificationState extends State<Certification> {
                         horizontal: isMobile ? 16 : 40,
                         vertical: 20,
                       ),
-                      child: Wrap(
-                        spacing: isMobile ? 16 : 28,
-                        runSpacing: isMobile ? 20 : 32,
-                        alignment: WrapAlignment.center,
-                        children: List.generate(certifications.length, (index) {
-                          final displayIndex = order[index];
-                          final cert = certifications[displayIndex];
-                          final itemWidth = isMobile
-                              ? double.infinity
-                              : isTablet
-                              ? (MediaQuery.of(context).size.width - 96) / 2
-                              : (MediaQuery.of(context).size.width - 128) / 3;
-
-                          return _CertificationCard(
-                            cert: cert,
-                            itemWidth: itemWidth,
-                            animationDelay: Duration(milliseconds: index * 100),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final columns = isMobile ? 1 : 2;
+                          const spacing = 20.0;
+                          final cardWidth =
+                              (constraints.maxWidth - spacing * (columns - 1)) /
+                              columns;
+                          return Wrap(
+                            spacing: spacing,
+                            runSpacing: spacing,
+                            children: List.generate(certifications.length, (
+                              index,
+                            ) {
+                              final displayIndex = order[index];
+                              final cert = certifications[displayIndex];
+                              return SizedBox(
+                                width: cardWidth,
+                                child: _CertificationCard(
+                                  cert: cert,
+                                  isMobile: isMobile,
+                                  animationDelay: Duration(
+                                    milliseconds: index * 120,
+                                  ),
+                                ),
+                              );
+                            }),
                           );
-                        }),
+                        },
                       ),
                     ),
                   const SizedBox(height: 60),
@@ -310,12 +319,12 @@ class _CertificationState extends State<Certification> {
 
 class _CertificationCard extends StatefulWidget {
   final CertificationModel cert;
-  final double itemWidth;
+  final bool isMobile;
   final Duration animationDelay;
 
   const _CertificationCard({
     required this.cert,
-    required this.itemWidth,
+    required this.isMobile,
     required this.animationDelay,
   });
 
@@ -326,12 +335,13 @@ class _CertificationCard extends StatefulWidget {
 class _CertificationCardState extends State<_CertificationCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _hoverController;
+  bool _isHovered = false;
 
   @override
   void initState() {
     super.initState();
     _hoverController = AnimationController(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 250),
       vsync: this,
     );
   }
@@ -342,401 +352,319 @@ class _CertificationCardState extends State<_CertificationCard>
     super.dispose();
   }
 
-  /// Convierte URLs de Google Drive al formato correcto que evita problemas de CORS
   String _fixGoogleDriveUrl(String url) {
     if (url.isEmpty) return url;
-
-    // Si ya es el formato correcto (lh3.googleusercontent.com), devolverla sin cambios
-    if (url.contains('lh3.googleusercontent.com/d/')) {
-      return url;
-    }
-
-    // Extraer el ID del archivo de diferentes formatos de URLs de Google Drive
-    RegExp regExp = RegExp(r'(?:id=|/d/|/files/)([a-zA-Z0-9_-]+)');
-    Match? match = regExp.firstMatch(url);
-
+    if (url.contains('lh3.googleusercontent.com/d/')) return url;
+    final regExp = RegExp(r'(?:id=|/d/|/files/)([a-zA-Z0-9_-]+)');
+    final match = regExp.firstMatch(url);
     if (match != null && match.groupCount > 0) {
-      String fileId = match.group(1)!;
-      return 'https://lh3.googleusercontent.com/d/$fileId';
+      return 'https://lh3.googleusercontent.com/d/${match.group(1)!}';
     }
-
     return url;
+  }
+
+  Future<void> _launchLink(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri != null && await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: widget.itemWidth,
-      child: FadeInUp(
-        delay: widget.animationDelay,
-        duration: const Duration(milliseconds: 800),
-        child: MouseRegion(
-          onEnter: (_) => _hoverController.forward(),
-          onExit: (_) => _hoverController.reverse(),
-          child: AnimatedBuilder(
-            animation: _hoverController,
-            builder: (context, child) {
-              final scale = 1.0 + (_hoverController.value * 0.03);
-              final translateY = -(_hoverController.value * 8);
-              return Transform.translate(
-                offset: Offset(0, translateY),
-                child: Transform.scale(
-                  scale: scale,
-                  child: GestureDetector(
-                    onTap: () => context.go('/certification/${widget.cert.id}'),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            Colors.black.withOpacity(0.8),
-                            Colors.black.withOpacity(0.8),
-                          ],
-                        ),
-                        border: Border.all(
-                          color: Colors.black.withOpacity(0.1),
-                          width: 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 24,
-                            spreadRadius: 0,
-                          ),
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.3),
-                            blurRadius: 16,
-                            spreadRadius: 0,
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: BackdropFilter(
-                          filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: double.infinity,
-                                height: 4,
+    final imageWidth = widget.isMobile ? 120.0 : 200.0;
+    final cardHeight = widget.isMobile ? 180.0 : 210.0;
+
+    return FadeInUp(
+      delay: widget.animationDelay,
+      duration: const Duration(milliseconds: 700),
+      child: MouseRegion(
+        onEnter: (_) {
+          setState(() => _isHovered = true);
+          _hoverController.forward();
+        },
+        onExit: (_) {
+          setState(() => _isHovered = false);
+          _hoverController.reverse();
+        },
+        child: AnimatedBuilder(
+          animation: _hoverController,
+          builder: (context, child) => Transform.translate(
+            offset: Offset(0, -(_hoverController.value * 6)),
+            child: child,
+          ),
+          child: GestureDetector(
+            onTap: () => context.go('/certification/${widget.cert.id}'),
+            child: IntrinsicHeight(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                constraints: BoxConstraints(minHeight: cardHeight),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.82),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppColors.light.withOpacity(
+                      _isHovered ? 0.15 : 0.06,
+                    ),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(_isHovered ? 0.5 : 0.3),
+                      blurRadius: _isHovered ? 32 : 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+
+                    children: [
+                      // ── Imagen izquierda ──
+                      SizedBox(
+                        width: imageWidth,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          alignment: Alignment.center,
+                          children: [
+                            widget.cert.imageUrl != null &&
+                                    widget.cert.imageUrl!.isNotEmpty
+                                ? Image.network(
+                                    _fixGoogleDriveUrl(widget.cert.imageUrl!),
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) =>
+                                        _PlaceholderImage(
+                                          isMobile: widget.isMobile,
+                                        ),
+                                  )
+                                : _PlaceholderImage(isMobile: widget.isMobile),
+                            // Degradado derecho para fusión suave con el fondo oscuro
+                            Positioned.fill(
+                              child: DecoratedBox(
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
+                                    begin: Alignment.centerLeft,
+                                    end: Alignment.centerRight,
                                     colors: [
-                                      AppColors.light.withOpacity(0.3),
-                                      AppColors.light.withOpacity(0.1),
+                                      Colors.transparent,
+                                      Colors.black.withOpacity(0.55),
                                     ],
                                   ),
                                 ),
                               ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 28,
-                                  vertical: 32,
-                                ),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // Logos o ícono
-                                    if (widget.cert.platformLogoUrl != null ||
-                                        widget.cert.institutionLogoUrl != null)
-                                      Row(
-                                        children: [
-                                          if (widget.cert.platformLogoUrl !=
-                                              null)
-                                            Container(
-                                              width: 48,
-                                              height: 48,
-                                              decoration: BoxDecoration(
-                                                color: AppColors.light,
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: AppColors.grey
-                                                        .withOpacity(0.2),
-                                                    blurRadius: 4,
-                                                    spreadRadius: 1,
-                                                  ),
-                                                ],
-                                              ),
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                                child: Image.network(
-                                                  _fixGoogleDriveUrl(
-                                                    widget
-                                                        .cert
-                                                        .platformLogoUrl!,
-                                                  ),
-                                                  fit: BoxFit.contain,
-                                                  loadingBuilder:
-                                                      (
-                                                        context,
-                                                        child,
-                                                        loadingProgress,
-                                                      ) {
-                                                        if (loadingProgress ==
-                                                            null)
-                                                          return child;
-                                                        return Center(
-                                                          child: SizedBox(
-                                                            width: 20,
-                                                            height: 20,
-                                                            child:
-                                                                CircularProgressIndicator(
-                                                                  strokeWidth:
-                                                                      2,
-                                                                  color:
-                                                                      AppColors
-                                                                          .grey,
-                                                                ),
-                                                          ),
-                                                        );
-                                                      },
-                                                  errorBuilder:
-                                                      (
-                                                        context,
-                                                        error,
-                                                        stackTrace,
-                                                      ) {
-                                                        return const Icon(
-                                                          Icons.school_rounded,
-                                                          color: AppColors.grey,
-                                                          size: 24,
-                                                        );
-                                                      },
-                                                ),
-                                              ),
-                                            ),
-                                          if (widget.cert.platformLogoUrl !=
-                                                  null &&
-                                              widget.cert.institutionLogoUrl !=
-                                                  null)
-                                            const SizedBox(width: 8),
-                                          if (widget.cert.institutionLogoUrl !=
-                                              null)
-                                            Container(
-                                              width: 48,
-                                              height: 48,
-                                              decoration: BoxDecoration(
-                                                color: AppColors.light,
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: AppColors.grey
-                                                        .withOpacity(0.3),
-                                                    blurRadius: 6,
-                                                    spreadRadius: 1,
-                                                  ),
-                                                ],
-                                              ),
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                                child: Image.network(
-                                                  _fixGoogleDriveUrl(
-                                                    widget
-                                                        .cert
-                                                        .institutionLogoUrl!,
-                                                  ),
-                                                  fit: BoxFit.contain,
-                                                  loadingBuilder:
-                                                      (
-                                                        context,
-                                                        child,
-                                                        loadingProgress,
-                                                      ) {
-                                                        if (loadingProgress ==
-                                                            null)
-                                                          return child;
-                                                        return Center(
-                                                          child: SizedBox(
-                                                            width: 20,
-                                                            height: 20,
-                                                            child:
-                                                                CircularProgressIndicator(
-                                                                  strokeWidth:
-                                                                      2,
-                                                                  color:
-                                                                      AppColors
-                                                                          .grey,
-                                                                ),
-                                                          ),
-                                                        );
-                                                      },
-                                                  errorBuilder:
-                                                      (
-                                                        context,
-                                                        error,
-                                                        stackTrace,
-                                                      ) {
-                                                        return const Icon(
-                                                          Icons.school_rounded,
-                                                          color: AppColors.grey,
-                                                          size: 24,
-                                                        );
-                                                      },
-                                                ),
-                                              ),
-                                            ),
-                                        ],
-                                      )
-                                    else
-                                      Container(
-                                        width: 48,
-                                        height: 48,
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                          gradient: LinearGradient(
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                            colors: [
-                                              AppColors.light.withOpacity(0.15),
-                                              AppColors.light.withOpacity(0.05),
-                                            ],
-                                          ),
-                                          border: Border.all(
-                                            color: AppColors.light.withOpacity(
-                                              0.2,
-                                            ),
-                                            width: 0.5,
-                                          ),
-                                        ),
-                                        child: Icon(
-                                          Icons.school_rounded,
-                                          color: AppColors.light.withOpacity(
-                                            0.8,
-                                          ),
-                                          size: 24,
+                            ),
+                            // Logos en columna en la parte inferior de la imagen
+                            Positioned(
+                              bottom: 8,
+                              left: 0,
+                              right: 0,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (widget.cert.platformLogoUrl != null &&
+                                      widget.cert.platformLogoUrl!.isNotEmpty)
+                                    _SmallLogo(
+                                      url: _fixGoogleDriveUrl(
+                                        widget.cert.platformLogoUrl!,
+                                      ),
+                                    ),
+                                  if (widget.cert.institutionLogoUrl != null &&
+                                      widget
+                                          .cert
+                                          .institutionLogoUrl!
+                                          .isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 6),
+                                      child: _SmallLogo(
+                                        url: _fixGoogleDriveUrl(
+                                          widget.cert.institutionLogoUrl!,
                                         ),
                                       ),
-                                    const SizedBox(height: 20),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // ── Contenido derecho ──
+                      Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: widget.isMobile ? 14 : 24,
+                            vertical: widget.isMobile ? 14 : 20,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              // Series + nombre + descripción
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    widget.cert.name,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: AppColors.light,
+                                      fontSize: widget.isMobile ? 14 : 19,
+                                      fontWeight: FontWeight.w800,
+                                      height: 1.2,
+                                      letterSpacing: 0.3,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  if (widget.cert.series != null &&
+                                      widget.cert.series!.isNotEmpty)
                                     Text(
-                                      widget.cert.name,
-                                      style: const TextStyle(
-                                        color: AppColors.light,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w500,
-                                        letterSpacing: 0.5,
-                                        height: 1.4,
+                                      widget.cert.series!.toUpperCase(),
+                                      style: TextStyle(
+                                        color: AppColors.light.withOpacity(
+                                          0.45,
+                                        ),
+                                        fontSize: widget.isMobile ? 9 : 10,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 2.5,
                                       ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    if (widget.cert.series != null &&
-                                        widget.cert.series!.isNotEmpty) ...[
-                                      const SizedBox(height: 8),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.light.withOpacity(
-                                            0.15,
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                          border: Border.all(
-                                            color: AppColors.light.withOpacity(
-                                              0.3,
-                                            ),
-                                            width: 1,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          widget.cert.series!,
-                                          style: TextStyle(
-                                            color: AppColors.light.withOpacity(
-                                              0.9,
-                                            ),
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w600,
-                                            letterSpacing: 0.5,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                    const SizedBox(height: 12),
-                                    if (widget.cert.description.isNotEmpty)
-                                      Text(
-                                        widget.cert.description,
-                                        style: TextStyle(
-                                          color: AppColors.light.withOpacity(
-                                            0.6,
-                                          ),
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w400,
-                                          letterSpacing: 0.3,
-                                          height: 1.5,
-                                        ),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 28,
-                                  vertical: 20,
-                                ),
-                                decoration: BoxDecoration(
-                                  border: Border(
-                                    top: BorderSide(
-                                      color: AppColors.light.withOpacity(0.08),
-                                      width: 1,
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    widget.cert.description,
+                                    maxLines: widget.isMobile ? 2 : 3,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: AppColors.light.withOpacity(0.55),
+                                      fontSize: widget.isMobile ? 11 : 13,
+                                      height: 1.5,
                                     ),
                                   ),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        'Ver detalles',
-                                        style: TextStyle(
-                                          color: AppColors.light.withOpacity(
-                                            0.7,
+                                ],
+                              ),
+
+                              // Botón alineado a la derecha
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child:
+                                    widget.cert.link != null &&
+                                        widget.cert.link!.isNotEmpty
+                                    ? GestureDetector(
+                                        onTap: () =>
+                                            _launchLink(widget.cert.link!),
+                                        child: Container(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: widget.isMobile
+                                                ? 10
+                                                : 16,
+                                            vertical: widget.isMobile ? 6 : 8,
                                           ),
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w500,
-                                          letterSpacing: 1,
+                                          decoration: BoxDecoration(
+                                            color: AppColors.light,
+                                            borderRadius: BorderRadius.circular(
+                                              50,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            'Certificado',
+                                            style: TextStyle(
+                                              color: AppColors.black,
+                                              fontSize: widget.isMobile
+                                                  ? 10
+                                                  : 12,
+                                              fontWeight: FontWeight.w800,
+                                              letterSpacing: 0.5,
+                                            ),
+                                          ),
+                                        ),
+                                      )
+                                    : GestureDetector(
+                                        onTap: () => context.go(
+                                          '/certification/${widget.cert.id}',
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(
+                                              'Ver detalles',
+                                              style: TextStyle(
+                                                color: AppColors.light
+                                                    .withOpacity(0.6),
+                                                fontSize: widget.isMobile
+                                                    ? 10
+                                                    : 12,
+                                                fontWeight: FontWeight.w500,
+                                                letterSpacing: 0.5,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Icon(
+                                              Icons.arrow_forward_rounded,
+                                              color: AppColors.light
+                                                  .withOpacity(0.5),
+                                              size: 14,
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                    ),
-                                    Icon(
-                                      Icons.arrow_forward_rounded,
-                                      color: AppColors.light.withOpacity(0.6),
-                                      size: 16,
-                                    ),
-                                  ],
-                                ),
                               ),
                             ],
                           ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
-              );
-            },
+              ),
+            ), // IntrinsicHeight
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SmallLogo extends StatelessWidget {
+  final String url;
+  const _SmallLogo({required this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white24),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.network(
+          url,
+          fit: BoxFit.contain,
+          errorBuilder: (_, __, ___) =>
+              const Icon(Icons.verified, size: 16, color: Colors.grey),
+        ),
+      ),
+    );
+  }
+}
+
+class _PlaceholderImage extends StatelessWidget {
+  final bool isMobile;
+  const _PlaceholderImage({required this.isMobile});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: AppColors.primary.withOpacity(0.3),
+      child: Icon(
+        Icons.menu_book_rounded,
+        size: isMobile ? 36 : 52,
+        color: AppColors.light.withOpacity(0.3),
       ),
     );
   }
