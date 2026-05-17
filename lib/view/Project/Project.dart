@@ -86,33 +86,20 @@ class _ProjectState extends State<Project> {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year.toString().substring(2)}';
   }
 
-  /// Convierte URLs de Google Drive al formato correcto que evita problemas de CORS
-  /// Usa lh3.googleusercontent.com que permite acceso directo sin CORS
+  /// Convierte URLs de Google Drive al formato thumbnail que funciona con CORS en Flutter Web.
   String _fixGoogleDriveUrl(String url) {
     if (url.isEmpty) return url;
 
-    // Si ya es el formato correcto (lh3.googleusercontent.com), devolverla sin cambios
-    if (url.contains('lh3.googleusercontent.com/d/')) {
-      return url;
-    }
+    if (url.contains('drive.google.com/thumbnail')) return url;
 
-    // Extraer el ID del archivo de diferentes formatos de URLs de Google Drive
-    // Soporta:
-    // - https://drive.usercontent.google.com/download?id=FILE_ID
-    // - https://drive.google.com/uc?export=view&id=FILE_ID
-    // - https://drive.google.com/file/d/FILE_ID/view
-    // - https://www.googleapis.com/drive/v3/files/FILE_ID
-    RegExp regExp = RegExp(r'(?:id=|/d/|/files/)([a-zA-Z0-9_-]+)');
-    Match? match = regExp.firstMatch(url);
+    final regExp = RegExp(r'(?:id=|/d/|/files/)([a-zA-Z0-9_-]+)');
+    final match = regExp.firstMatch(url);
 
     if (match != null && match.groupCount > 0) {
-      String fileId = match.group(1)!;
-      // Convertir al formato que funciona sin CORS
-      // lh3.googleusercontent.com sirve contenido directamente sin redirecciones
-      return 'https://lh3.googleusercontent.com/d/$fileId';
+      final fileId = match.group(1)!;
+      return 'https://drive.google.com/thumbnail?id=$fileId&sz=w1000';
     }
 
-    // Si no es una URL de Google Drive, devolverla sin cambios
     return url;
   }
 

@@ -354,11 +354,11 @@ class _CertificationCardState extends State<_CertificationCard>
 
   String _fixGoogleDriveUrl(String url) {
     if (url.isEmpty) return url;
-    if (url.contains('lh3.googleusercontent.com/d/')) return url;
+    if (url.contains('drive.google.com/thumbnail')) return url;
     final regExp = RegExp(r'(?:id=|/d/|/files/)([a-zA-Z0-9_-]+)');
     final match = regExp.firstMatch(url);
     if (match != null && match.groupCount > 0) {
-      return 'https://lh3.googleusercontent.com/d/${match.group(1)!}';
+      return 'https://drive.google.com/thumbnail?id=${match.group(1)!}&sz=w1000';
     }
     return url;
   }

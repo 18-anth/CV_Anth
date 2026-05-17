@@ -1,22 +1,17 @@
 /// Utilidades para manejar URLs de Google Drive
 class GoogleDriveUtils {
-  /// Convierte URLs de Google Drive al formato correcto que evita problemas de CORS
-  /// Usa lh3.googleusercontent.com que permite acceso directo sin CORS
+  /// Convierte URLs de Google Drive al formato thumbnail que funciona con CORS en Flutter Web.
   static String fixGoogleDriveUrl(String url) {
     if (url.isEmpty) return url;
 
-    // Si ya es el formato correcto (lh3.googleusercontent.com), devolverla sin cambios
-    if (url.contains('lh3.googleusercontent.com/d/')) {
-      return url;
-    }
+    if (url.contains('drive.google.com/thumbnail')) return url;
 
-    // Extraer el ID del archivo de diferentes formatos de URLs de Google Drive
-    RegExp regExp = RegExp(r'(?:id=|/d/|/files/)([a-zA-Z0-9_-]+)');
-    Match? match = regExp.firstMatch(url);
+    final regExp = RegExp(r'(?:id=|/d/|/files/)([a-zA-Z0-9_-]+)');
+    final match = regExp.firstMatch(url);
 
     if (match != null && match.groupCount > 0) {
-      String fileId = match.group(1)!;
-      return 'https://lh3.googleusercontent.com/d/$fileId';
+      final fileId = match.group(1)!;
+      return 'https://drive.google.com/thumbnail?id=$fileId&sz=w1000';
     }
 
     return url;

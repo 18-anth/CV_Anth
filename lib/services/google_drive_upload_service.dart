@@ -174,26 +174,40 @@ class GoogleDriveUploadService {
         'mimeType': _getMimeType(file.name),
       };
 
-      // Usar FormData (como en el código de React)
-      final formData = html.FormData();
+      // Construir el body como multipart/related (requerido por Drive API para
+      // respetar el campo "parents" y guardar en la carpeta correcta).
+      // FormData usa multipart/form-data que Drive ignora el campo parents.
+      const boundary = 'flutter_drive_boundary';
+      final metadataBytes = utf8.encode(jsonEncode(metadata));
+      final mimeType = _getMimeType(file.name);
 
-      // Agregar metadata como Blob
-      final metadataBlob = html.Blob([
-        jsonEncode(metadata),
-      ], 'application/json');
-      formData.appendBlob('metadata', metadataBlob);
+      final bodyParts = <int>[];
+      bodyParts.addAll(
+        utf8.encode(
+          '--$boundary\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n',
+        ),
+      );
+      bodyParts.addAll(metadataBytes);
+      bodyParts.addAll(utf8.encode('\r\n'));
+      bodyParts.addAll(
+        utf8.encode('--$boundary\r\nContent-Type: $mimeType\r\n\r\n'),
+      );
+      bodyParts.addAll(bytes);
+      bodyParts.addAll(utf8.encode('\r\n--$boundary--'));
 
-      // Agregar archivo como Blob
-      final fileBlob = html.Blob([bytes], _getMimeType(file.name));
-      formData.appendBlob('file', fileBlob, fileName);
+      final bodyUint8 = Uint8List.fromList(bodyParts);
 
-      // Subir archivo usando XMLHttpRequest (para poder usar FormData)
+      // Subir con XHR usando multipart/related
       final uri = '$_uploadApiUrl?uploadType=multipart&fields=id';
       final completer = Completer<String>();
 
       final xhr = html.HttpRequest();
       xhr.open('POST', uri);
       xhr.setRequestHeader('Authorization', 'Bearer $accessToken');
+      xhr.setRequestHeader(
+        'Content-Type',
+        'multipart/related; boundary=$boundary',
+      );
 
       xhr.onLoad.listen((e) {
         if (xhr.status == 200 || xhr.status == 201) {
@@ -209,7 +223,7 @@ class GoogleDriveUploadService {
         completer.completeError(Exception('Error de red al subir archivo'));
       });
 
-      xhr.send(formData);
+      xhr.send(bodyUint8);
 
       final responseText = await completer.future;
       final response = jsonDecode(responseText);
@@ -288,6 +302,9 @@ class GoogleDriveUploadService {
       case 'web':
         return AppConfig.googleDriveProjectsWebFolderId;
       case 'certification':
+      case 'pdf':
+      case 'platform_logo':
+      case 'institution_logo':
         return AppConfig.googleDriveCertificationsFolderId;
       default:
         throw Exception('Tipo de carpeta no válido: $type');

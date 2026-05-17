@@ -72,33 +72,32 @@ class ProjectDetailController extends ChangeNotifier {
   // UTILIDADES
   // ══════════════════════════════════════════════════════════════
 
-  /// Convierte URLs de Google Drive al formato correcto que evita problemas de CORS
-  /// Usa lh3.googleusercontent.com que permite acceso directo sin CORS
+  /// Convierte URLs de Google Drive al formato thumbnail que funciona con CORS en Flutter Web.
+  /// drive.google.com/thumbnail?id=FILE_ID&sz=w1000 es la URL más estable para imágenes públicas.
   String fixGoogleDriveUrl(String url) {
     if (url.isEmpty) return url;
 
-    // Si ya es el formato correcto (lh3.googleusercontent.com), devolverla sin cambios
-    if (url.contains('lh3.googleusercontent.com/d/')) {
+    // Si ya está en formato thumbnail, devolverla sin cambios
+    if (url.contains('drive.google.com/thumbnail')) {
       return url;
     }
 
-    // Extraer el ID del archivo de diferentes formatos de URLs de Google Drive
-    // Soporta:
+    // Extraer el ID del archivo de diferentes formatos de URLs de Google Drive:
     // - https://drive.usercontent.google.com/download?id=FILE_ID
     // - https://drive.google.com/uc?export=view&id=FILE_ID
     // - https://drive.google.com/file/d/FILE_ID/view
     // - https://www.googleapis.com/drive/v3/files/FILE_ID
+    // - https://lh3.googleusercontent.com/d/FILE_ID
     RegExp regExp = RegExp(r'(?:id=|/d/|/files/)([a-zA-Z0-9_-]+)');
     Match? match = regExp.firstMatch(url);
 
     if (match != null && match.groupCount > 0) {
-      String fileId = match.group(1)!;
-      // Convertir al formato que funciona sin CORS
-      // lh3.googleusercontent.com sirve contenido directamente sin redirecciones
-      return 'https://lh3.googleusercontent.com/d/$fileId';
+      final fileId = match.group(1)!;
+      // Usar el endpoint de thumbnail de Google Drive: funciona sin CORS,
+      // no requiere autenticación para archivos públicos y soporta sz= para tamaño.
+      return 'https://drive.google.com/thumbnail?id=$fileId&sz=w1000';
     }
 
-    // Si no es una URL de Google Drive, devolverla sin cambios
     return url;
   }
 
@@ -125,9 +124,7 @@ class ProjectDetailController extends ChangeNotifier {
     }
   }
 
-  Map<String, List<String>> categorizeTechnologies(
-    List<dynamic> technologies,
-  ) {
+  Map<String, List<String>> categorizeTechnologies(List<dynamic> technologies) {
     final categorized = <String, List<String>>{};
     final techSet = technologies.map((e) => e.toString()).toSet();
 
