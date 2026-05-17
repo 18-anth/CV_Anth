@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../models/RobotModel.dart';
 import '../../services/firebase_service.dart';
+import '../../services/google_drive_service.dart';
 import '../../controllers/auth_controller.dart';
 
 class ProjectCard {
@@ -86,18 +87,19 @@ class _ProjectState extends State<Project> {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year.toString().substring(2)}';
   }
 
-  /// Convierte URLs de Google Drive al formato thumbnail que funciona con CORS en Flutter Web.
+  /// Convierte URLs de Google Drive al formato con API key que funciona correctamente
+  /// para leer archivos públicos sin problemas de CORS en Flutter Web.
   String _fixGoogleDriveUrl(String url) {
     if (url.isEmpty) return url;
 
-    if (url.contains('drive.google.com/thumbnail')) return url;
+    if (url.contains('alt=media')) return url;
 
     final regExp = RegExp(r'(?:id=|/d/|/files/)([a-zA-Z0-9_-]+)');
     final match = regExp.firstMatch(url);
 
     if (match != null && match.groupCount > 0) {
       final fileId = match.group(1)!;
-      return 'https://drive.google.com/thumbnail?id=$fileId&sz=w1000';
+      return GoogleDriveService.downloadUrl(fileId);
     }
 
     return url;

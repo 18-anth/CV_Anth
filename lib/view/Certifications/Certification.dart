@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../models/BookModel.dart';
 import '../../services/firebase_service.dart';
+import '../../services/google_drive_service.dart';
 
 class CertificationModel {
   final String id;
@@ -354,11 +355,11 @@ class _CertificationCardState extends State<_CertificationCard>
 
   String _fixGoogleDriveUrl(String url) {
     if (url.isEmpty) return url;
-    if (url.contains('drive.google.com/thumbnail')) return url;
+    if (url.contains('alt=media')) return url;
     final regExp = RegExp(r'(?:id=|/d/|/files/)([a-zA-Z0-9_-]+)');
     final match = regExp.firstMatch(url);
     if (match != null && match.groupCount > 0) {
-      return 'https://drive.google.com/thumbnail?id=${match.group(1)!}&sz=w1000';
+      return GoogleDriveService.downloadUrl(match.group(1)!);
     }
     return url;
   }
