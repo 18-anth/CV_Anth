@@ -19,7 +19,7 @@ class GoogleDriveService {
   static String previewUrl(String fileId) =>
       'https://drive.google.com/file/d/$fileId/preview';
 
-  /// URL de descarga/visualización directa compatible con CORS en Flutter Web.
+  /// URL de descarga directa con API key (útil para imágenes / descarga).
   static String downloadUrl(String fileId) {
     final apiKey = AppConfig.googleApiKey;
     return '$_baseUrl/files/$fileId?alt=media&key=$apiKey';

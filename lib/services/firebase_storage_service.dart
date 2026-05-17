@@ -11,7 +11,7 @@ class FirebaseStorageService {
   static final FirebaseStorage _storage = FirebaseStorage.instance;
 
   /// Sube una imagen a Firebase Storage y retorna la URL de descarga
-  /// 
+  ///
   /// [bytes] - Bytes de la imagen (para Web)
   /// [file] - Archivo de la imagen (para Mobile)
   /// [folder] - Carpeta donde se guardará (ej: 'Project/Web', 'Project/Mobile')
@@ -56,7 +56,7 @@ class FirebaseStorageService {
   }
 
   /// Sube múltiples imágenes a Firebase Storage
-  /// 
+  ///
   /// [images] - Lista de imágenes (PlatformFile de file_picker)
   /// [folder] - Carpeta donde se guardarán
   /// [onProgress] - Callback para reportar progreso (opcional)
@@ -66,10 +66,10 @@ class FirebaseStorageService {
     Function(int current, int total)? onProgress,
   }) async {
     final List<String> urls = [];
-    
+
     for (int i = 0; i < images.length; i++) {
       final image = images[i];
-      
+
       // Generar nombre único
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final fileName = '${timestamp}_${image.name}';
@@ -93,7 +93,7 @@ class FirebaseStorageService {
       }
 
       urls.add(url);
-      
+
       // Reportar progreso
       if (onProgress != null) {
         onProgress(i + 1, images.length);
@@ -113,7 +113,7 @@ class FirebaseStorageService {
 
     for (int i = 0; i < images.length; i++) {
       final image = images[i];
-      
+
       // Generar nombre único
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final fileName = '${timestamp}_${image.name}';
