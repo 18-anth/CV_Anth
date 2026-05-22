@@ -8,16 +8,18 @@ Se ha implementado un sistema completo de autenticación que:
 ✅ **Protección de Rutas** - Solo usuarios autenticados pueden acceder al CV  
 ✅ **Gestión de Sesión** - Login, logout y manejo de estado global  
 ✅ **Interfaz Completa** - Acceso a todos los módulos (Home, Projects, Certifications, Contact, About)  
-✅ **Edición de Información** - Los usuarios autenticados pueden editar su perfil  
+✅ **Edición de Información** - Los usuarios autenticados pueden editar su perfil
 
 ## 🚀 Pasos para Ejecutar
 
 ### 1. Instalar Dependencias
+
 ```bash
 flutter pub get
 ```
 
 ### 2. Ejecutar la Aplicación
+
 ```bash
 flutter run
 ```
@@ -25,11 +27,13 @@ flutter run
 ## 🔑 Credenciales de Prueba
 
 ### Email
+
 ```
 admin@example.com
 ```
 
 ### Contraseña
+
 ```
 password123
 ```
@@ -68,17 +72,20 @@ lib/
 ## 🛠️ Funcionalidades Principales
 
 ### AuthController
+
 - `login(email, password)` - Autentica al usuario
 - `logout()` - Cierra la sesión
 - `isAuthenticated` - Estado de autenticación
 - `userEmail` - Email del usuario autenticado
 
 ### Validaciones
+
 - ✓ Email no vacío
 - ✓ Formato válido de email (@)
 - ✓ Contraseña mínimo 6 caracteres
 
 ### UI/UX
+
 - Interfaz responsiva (móvil y desktop)
 - Indicador de carga durante el login
 - Mensajes de error detallados
@@ -88,18 +95,21 @@ lib/
 ## 📝 Próximos Pasos (Opcional)
 
 ### Para implementar edición de perfil:
+
 1. Crear un `EditProfileScreen`
 2. Agregar formulario para editar información
 3. Guardar cambios en Firebase Database
 4. Mostrar datos guardados en las vistas correspondientes
 
 ### Para mejorar la seguridad:
+
 1. Integrar autenticación real con Firebase Authentication
 2. Implementar encriptación de contraseñas
 3. Agregar recuperación de contraseña
 4. Implementar verificación de email
 
 ### Para persistencia:
+
 1. Guardar token de sesión localmente
 2. Mantener sesión después de cerrar la app
 3. Implementar refresco de token automático
@@ -116,5 +126,6 @@ lib/
 **¡Listo para usar!** 🎉
 
 Ingresa con:
+
 - Email: `admin@example.com`
 - Contraseña: `password123`

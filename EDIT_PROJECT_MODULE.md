@@ -15,7 +15,9 @@ Módulo completo para **editar proyectos existentes** con todos sus campos e im�
 ### 1. Nueva Pantalla
 
 #### `/lib/view/Project/EditProject.dart` ⭐ NUEVO
+
 Pantalla completa de edición con:
+
 - Carga automática de datos del proyecto existente
 - Pre-visualización de imágenes existentes (desde URLs de Firebase)
 - Selector para agregar nuevas imágenes
@@ -29,7 +31,9 @@ Pantalla completa de edición con:
 ### 2. Rutas Actualizadas
 
 #### `/lib/routes/app_routes.dart`
+
 Cambios realizados:
+
 - ✅ Import: `import 'package:cv_anth/view/Project/EditProject.dart';`
 - ✅ Constante: `static const String editProject = '/project/:id/edit';`
 - ✅ Helper: `goToEditProject(BuildContext context, String id)`
@@ -38,7 +42,9 @@ Cambios realizados:
 ### 3. Integración en Detalle
 
 #### `/lib/view/Project/ProjectDetail.dart`
+
 Cambios realizados:
+
 - ✅ Imports: `provider` y `auth_controller`
 - ✅ Botón de editar en AppBar (actions)
 - ✅ Solo visible si el usuario está autenticado
@@ -48,6 +54,7 @@ Cambios realizados:
 ### 4. Servicios (Sin cambios necesarios)
 
 Los métodos existentes en `FirebaseService` ya soportan la edición:
+
 - `saveProject()` - Acepta un `id` opcional para actualizar
 - `fetchProjectById()` - Obtiene los datos del proyecto
 - `FirebaseStorageService.uploadMultipleImages()` - Sube nuevas imágenes
@@ -76,12 +83,14 @@ Los métodos existentes en `FirebaseService` ya soportan la edición:
 ## 🖼️ Gestión de Imágenes
 
 ### Imágenes Existentes
+
 - Se cargan desde Firebase Database (campo `images` y `imagesMobile`)
 - Se muestran usando `NetworkImage` (URLs completas)
 - Tienen botón X rojo para eliminarlas
 - Al eliminar, simplemente se quitan de la lista antes de guardar
 
 ### Imágenes Nuevas
+
 - Se seleccionan con `FilePicker`
 - Se muestran usando `Image.memory()` (web) o `Image.file()` (móvil)
 - Tienen borde verde para distinguirlas
@@ -90,6 +99,7 @@ Los métodos existentes en `FirebaseService` ya soportan la edición:
 - Se suben a Firebase Storage al guardar
 
 ### Al Actualizar
+
 1. Las **nuevas imágenes** se suben a Storage → obtienen URLs
 2. Las **URLs existentes no eliminadas** se conservan
 3. Se combinan ambas listas: `[...existentes, ...nuevas]`
@@ -100,12 +110,14 @@ Los métodos existentes en `FirebaseService` ya soportan la edición:
 ### Desde la UI
 
 #### Opción 1: Desde el Detalle del Proyecto
+
 1. **Inicia sesión** (si no lo has hecho)
 2. Ve a cualquier proyecto: `/project/{id}`
 3. Verás un **icono de lápiz** (✏️) en el AppBar (arriba a la derecha)
 4. Haz clic en el icono
 
 #### Opción 2: Programáticamente
+
 ```dart
 // Usando el helper
 AppNavigator.goToEditProject(context, projectId);
@@ -152,6 +164,7 @@ El módulo está **protegido con autenticación**:
 - ✅ Si intentas acceder sin autenticarte, verás mensaje de login
 
 ### Requisitos:
+
 1. Debes haber iniciado sesión con Email/Password
 2. Firebase Authentication debe estar habilitado
 
@@ -160,11 +173,13 @@ El módulo está **protegido con autenticación**:
 ### Diseño Visual
 
 #### Imágenes Existentes
+
 - Fondo gris claro
 - Sin borde especial
 - Botón X rojo para eliminar
 
 #### Imágenes Nuevas (Sin subir aún)
+
 - **Borde verde** (2px)
 - **Badge "NUEVA"** en verde en la esquina inferior izquierda
 - Botón X rojo para cancelar
@@ -249,6 +264,7 @@ if (auth.isAuthenticated) {
 ### Almacenamiento
 
 #### Firebase Realtime Database
+
 ```json
 {
   "Projects": {
@@ -257,20 +273,21 @@ if (auth.isAuthenticated) {
       "description": "Descripción actualizada...",
       "link": "https://example.com",
       "images": [
-        "https://storage.../existing1.jpg",  // Existente conservada
-        "https://storage.../new1.jpg"        // Nueva agregada
+        "https://storage.../existing1.jpg", // Existente conservada
+        "https://storage.../new1.jpg" // Nueva agregada
       ],
       "imagesMobile": [
         "https://storage.../existing_mobile1.jpg",
         "https://storage.../new_mobile1.jpg"
       ],
-      "timestamp": "2025-05-01T15:30:00.000Z"  // Se actualiza
+      "timestamp": "2025-05-01T15:30:00.000Z" // Se actualiza
     }
   }
 }
 ```
 
 #### Firebase Storage
+
 - Nuevas imágenes web → `/Project/Web/{timestamp}_{filename}`
 - Nuevas imágenes mobile → `/Project/Mobile/{timestamp}_{filename}`
 - Las imágenes eliminadas permanecen en Storage (no se borran automáticamente)
@@ -278,12 +295,14 @@ if (auth.isAuthenticated) {
 ### Métodos Principales
 
 #### `_loadProjectData()`
+
 - Carga el proyecto desde Firebase usando el `projectId`
 - Llena los controladores de texto
 - Carga las listas de imágenes existentes
 - Maneja errores (proyecto no encontrado)
 
 #### `_updateProject()`
+
 1. Valida formulario
 2. Valida que haya al menos 1 imagen
 3. Sube nuevas imágenes web con progreso
@@ -294,6 +313,7 @@ if (auth.isAuthenticated) {
 8. Navega de vuelta al detalle
 
 #### Métodos de Imágenes
+
 - `_pickNewWebImages()` - FilePicker para web
 - `_pickNewMobileImages()` - FilePicker para mobile
 - `_removeExistingWebImage(index)` - Elimina de lista existente
@@ -304,22 +324,27 @@ if (auth.isAuthenticated) {
 ## 🐛 Solución de Problemas
 
 ### Error: "Proyecto no encontrado"
+
 - **Causa**: El ID del proyecto no existe en Firebase
 - **Solución**: Verifica que el ID es correcto
 
 ### Error: "Debes tener al menos una imagen"
+
 - **Causa**: Eliminaste todas las imágenes (existentes y nuevas)
 - **Solución**: Deja al menos una imagen o agrega una nueva
 
 ### Error: "El link debe comenzar con http://"
+
 - **Causa**: El link no tiene protocolo
 - **Solución**: Agrega `https://` al inicio
 
 ### No puedo ver el botón de editar
+
 - **Causa**: No estás autenticado
 - **Solución**: Inicia sesión desde `/login`
 
 ### Las imágenes no se cargan
+
 - **Causa**: URLs rotas o permisos de Storage
 - **Solución**: Verifica las reglas de Firebase Storage y que las URLs sean válidas
 
@@ -336,15 +361,15 @@ if (auth.isAuthenticated) {
 
 ## 🔄 Diferencias con UploadProject
 
-| Característica | UploadProject | EditProject |
-|---------------|---------------|-------------|
-| **Propósito** | Crear nuevo | Actualizar existente |
-| **ID** | Se genera automáticamente | Se usa el existente |
-| **Datos iniciales** | Vacíos | Pre-cargados |
-| **Imágenes** | Solo nuevas | Existentes + nuevas |
-| **Botón guardar** | "GUARDAR PROYECTO" | "ACTUALIZAR PROYECTO" |
-| **Redirección** | `/project` | `/project/{id}` |
-| **Carga inicial** | No | Sí (fetchProjectById) |
+| Característica      | UploadProject             | EditProject           |
+| ------------------- | ------------------------- | --------------------- |
+| **Propósito**       | Crear nuevo               | Actualizar existente  |
+| **ID**              | Se genera automáticamente | Se usa el existente   |
+| **Datos iniciales** | Vacíos                    | Pre-cargados          |
+| **Imágenes**        | Solo nuevas               | Existentes + nuevas   |
+| **Botón guardar**   | "GUARDAR PROYECTO"        | "ACTUALIZAR PROYECTO" |
+| **Redirección**     | `/project`                | `/project/{id}`       |
+| **Carga inicial**   | No                        | Sí (fetchProjectById) |
 
 ## 📚 Recursos
 
