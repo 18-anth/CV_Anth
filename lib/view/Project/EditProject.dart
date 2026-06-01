@@ -578,7 +578,7 @@ class _EditProjectState extends State<EditProject> {
     // Verificar autenticación
     if (!authController.isAuthenticated) {
       return Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.primary,
         appBar: _buildAppBar(),
         body: Center(
           child: Column(
@@ -640,7 +640,7 @@ class _EditProjectState extends State<EditProject> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.primary,
       appBar: _buildAppBar(),
       body: _isUploading ? _buildUploadingWidget() : _buildForm(isMobile),
     );
@@ -653,8 +653,8 @@ class _EditProjectState extends State<EditProject> {
         style: TextStyle(fontWeight: FontWeight.bold),
       ),
       centerTitle: true,
-      backgroundColor: AppColors.black,
-      foregroundColor: AppColors.primary,
+      backgroundColor: AppColors.primary,
+      foregroundColor: AppColors.black,
       elevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
