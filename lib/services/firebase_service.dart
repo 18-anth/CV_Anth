@@ -213,7 +213,7 @@ class FirebaseService {
       } else if (value is Map) {
         // Si el valor es un mapa, convertir sus valores a una lista
         final items = <String>[];
-        (value as Map<dynamic, dynamic>).forEach((k, v) {
+        (value).forEach((k, v) {
           if (v != null) {
             items.add(v.toString());
           }
