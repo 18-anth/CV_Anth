@@ -169,9 +169,9 @@ class FirebaseService {
   // ───────────── TECHNOLOGIES ─────────────
 
   /// Retorna las tecnologías organizadas por categorías desde Firebase.
-  /// Convierte los nombres de las claves de Firebase a nombres legibles.
+  /// Lee del nodo 'Stack' y convierte los nombres de las claves a nombres legibles.
   static Future<Map<String, List<String>>> fetchTechnologies() async {
-    final snap = await _db.ref('technologies').get();
+    final snap = await _db.ref('Stack').get();
     if (!snap.exists || snap.value == null) return {};
 
     final raw = snap.value as Map<dynamic, dynamic>;
@@ -179,17 +179,27 @@ class FirebaseService {
 
     // Mapeo de nombres de claves en Firebase a nombres de categorías legibles
     final categoryNames = {
-      'programminglanguages': 'Lenguajes de Programación',
-      'frontend': 'Frontend',
-      'backend': 'Backend',
-      'basesDeDatos': 'Bases de Datos',
-      'cloudDevOps': 'Cloud & DevOps',
-      'metodologias': 'Metodologías',
-      'arquitectura': 'Arquitectura',
-      'controlDeVersiones': 'Control de Versiones',
-      'testing': 'Testing',
-      'inteligenciaArtificial': 'Inteligencia Artificial',
-      'otros': 'Otros',
+      'APIseIntegraciones': 'APIs e Integraciones',
+      'AnalisisModelado': 'Análisis y Modelado',
+      'Arquitectura': 'Arquitectura',
+      'AutenticacionSeguridad': 'Autenticación y Seguridad',
+      'Backend': 'Backend',
+      'BigData': 'Big Data',
+      'Cloud': 'Cloud',
+      'ControlDeVersiones': 'Control de Versiones',
+      'Data': 'Data',
+      'Despliegue': 'Despliegue',
+      'DevOps': 'DevOps',
+      'DiseñoUIUX': 'Diseño UI/UX',
+      'Frontend': 'Frontend',
+      'HerramientasDesarrollo': 'Herramientas de Desarrollo',
+      'IA': 'Inteligencia Artificial',
+      'Lenguajes': 'Lenguajes',
+      'Metodologias': 'Metodologías',
+      'Mobile': 'Mobile',
+      'MonitoreoObservabilidad': 'Monitoreo y Observabilidad',
+      'ORMs': 'ORMs',
+      'Testing': 'Testing',
     };
 
     raw.forEach((key, value) {
@@ -200,6 +210,17 @@ class FirebaseService {
         technologies[categoryName] = List<String>.from(
           value.map((e) => e.toString()),
         );
+      } else if (value is Map) {
+        // Si el valor es un mapa, convertir sus valores a una lista
+        final items = <String>[];
+        (value as Map<dynamic, dynamic>).forEach((k, v) {
+          if (v != null) {
+            items.add(v.toString());
+          }
+        });
+        if (items.isNotEmpty) {
+          technologies[categoryName] = items;
+        }
       }
     });
 
