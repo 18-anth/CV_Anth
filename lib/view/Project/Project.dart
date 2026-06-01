@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'package:cv_anth/utils/Colors.dart';
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
@@ -376,8 +378,9 @@ class _ProjectState extends State<Project> {
                                             );
                                           },
                                       loadingBuilder: (context, child, loadingProgress) {
-                                        if (loadingProgress == null)
+                                        if (loadingProgress == null) {
                                           return child;
+                                        }
                                         return Center(
                                           child: SizedBox(
                                             width: 20,
@@ -424,10 +427,9 @@ class _ProjectState extends State<Project> {
                       ),
                       const SizedBox(height: 14),
                       // Descripción
-                      Text(
+                      SelectableText(
                         card.description,
                         maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: Color(0xFF6B7280),
                           fontSize: 14,

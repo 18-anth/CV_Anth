@@ -4,10 +4,17 @@ import 'package:animate_do/animate_do.dart';
 
 class TechItem {
   final String name;
-  final IconData icon;
+  final IconData? icon;
+  final String? iconUrl;
   final Color color;
 
-  TechItem({required this.name, required this.icon, required this.color});
+  TechItem({
+    required this.name, 
+    this.icon, 
+    this.iconUrl, 
+    required this.color
+  }) : assert(icon != null || iconUrl != null, 
+         'Either icon or iconUrl must be provided');
 }
 
 class HomeTech extends StatefulWidget {
@@ -24,12 +31,12 @@ class _HomeTechState extends State<HomeTech> {
   final List<TechItem> techStack = [
     TechItem(
       name: 'React',
-      icon: Icons.flutter_dash,
-      color: const Color(0xFF61DBFB),
+      iconUrl: 'https://cdn-icons-png.flaticon.com/512/753/753244.png',
+      color: const Color(0xFF61DAFB),
     ),
     TechItem(
       name: 'Flutter',
-      icon: Icons.flutter_dash,
+      icon: Icons.flutter_dash_sharp,
       color: const Color(0xFF02569B),
     ),
     TechItem(name: 'Node.js', icon: Icons.dns, color: const Color(0xFF68A063)),
@@ -50,7 +57,7 @@ class _HomeTechState extends State<HomeTech> {
     ),
     TechItem(
       name: 'PostgreSQL',
-      icon: Icons.table_chart,
+      icon: Icons.dns,
       color: const Color(0xFF336791),
     ),
     TechItem(
@@ -142,12 +149,13 @@ class _HomeTechState extends State<HomeTech> {
   Widget _buildMobileCarousel() {
     final chunks = _chunkArray(techStack, 4);
     final screenWidth = MediaQuery.of(context).size.width;
+    final cardWidth = (screenWidth - 80) / 2; // 80 = padding total (20*2 + 12*2 + 16)
 
     return Column(
       children: [
         // Page View
         SizedBox(
-          height: 280,
+          height: 340,
           child: PageView(
             controller: _pageController,
             onPageChanged: (index) {
@@ -156,19 +164,16 @@ class _HomeTechState extends State<HomeTech> {
             children: chunks.map((group) {
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: SizedBox(
-                  height: 280,
-                  child: Wrap(
-                    alignment: WrapAlignment.center,
-                    spacing: 16,
-                    runSpacing: 16,
-                    children: group.map((tech) {
-                      return SizedBox(
-                        width: (screenWidth - 56) / 2,
-                        child: _buildTechCard(tech),
-                      );
-                    }).toList(),
-                  ),
+                child: GridView.count(
+                  crossAxisCount: 2,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: cardWidth / 150,
+                  children: group.map((tech) {
+                    return _buildTechCard(tech);
+                  }).toList(),
                 ),
               );
             }).toList(),
@@ -303,14 +308,16 @@ class _HomeTechState extends State<HomeTech> {
   }
 
   Widget _buildTechCard(TechItem tech) {
-    return _TechCardWidget(tech: tech);
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    return _TechCardWidget(tech: tech, isMobile: isMobile);
   }
 }
 
 class _TechCardWidget extends StatefulWidget {
   final TechItem tech;
+  final bool isMobile;
 
-  const _TechCardWidget({required this.tech});
+  const _TechCardWidget({required this.tech, this.isMobile = false});
 
   @override
   State<_TechCardWidget> createState() => _TechCardWidgetState();
@@ -388,9 +395,9 @@ class _TechCardWidgetState extends State<_TechCardWidget>
                   ),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 24,
-                    horizontal: 16,
+                  padding: EdgeInsets.symmetric(
+                    vertical: widget.isMobile ? 16 : 24,
+                    horizontal: widget.isMobile ? 12 : 16,
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -398,25 +405,39 @@ class _TechCardWidgetState extends State<_TechCardWidget>
                     children: [
                       // Icon with color background
                       Container(
-                        padding: const EdgeInsets.all(16),
+                        padding: EdgeInsets.all(widget.isMobile ? 12 : 16),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: widget.tech.color.withOpacity(0.1),
                         ),
-                        child: Icon(
-                          widget.tech.icon,
-                          size: 40,
-                          color: widget.tech.color,
-                        ),
+                        child: widget.tech.iconUrl != null
+                            ? Image.network(
+                                widget.tech.iconUrl!,
+                                width: widget.isMobile ? 32 : 40,
+                                height: widget.isMobile ? 32 : 40,
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Icon(
+                                    Icons.error_outline,
+                                    size: widget.isMobile ? 32 : 40,
+                                    color: widget.tech.color,
+                                  );
+                                },
+                              )
+                            : Icon(
+                                widget.tech.icon!,
+                                size: widget.isMobile ? 32 : 40,
+                                color: widget.tech.color,
+                              ),
                       ),
-                      const SizedBox(height: 16),
+                      SizedBox(height: widget.isMobile ? 12 : 16),
 
                       // Tech Name
                       Text(
                         widget.tech.name,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 16,
+                        style: TextStyle(
+                          fontSize: widget.isMobile ? 14 : 16,
                           fontWeight: FontWeight.w600,
                           color: Colors.black87,
                         ),

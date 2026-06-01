@@ -1,6 +1,7 @@
 import 'package:cv_anth/utils/Colors.dart';
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../models/ContactModel.dart';
 
 class ContactPage extends StatefulWidget {
@@ -46,10 +47,24 @@ class _ContactPageState extends State<ContactPage>
   }
 
   Future<void> _launchUrl(String url) async {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Abriendo: $url')));
-    // TODO: Implementar url_launcher cuando se agregue el paquete
+    try {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('No se puede abrir: $url')));
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error al abrir el enlace: $e')));
+      }
+    }
   }
 
   void _submitForm() {
@@ -179,28 +194,7 @@ class _ContactPageState extends State<ContactPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Etiqueta de sección
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: const Color(0xFF9c27b0).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: const Color(0xFF9c27b0).withOpacity(0.3),
-              ),
-            ),
-            child: const Text(
-              '// send_message()',
-              style: TextStyle(
-                color: Color(0xFF9c27b0),
-                fontSize: 12,
-                fontFamily: 'monospace',
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          const Text(
+          const SelectableText(
             '¿Tienes un proyecto\nen mente?',
             style: TextStyle(
               color: Color(0xFF050A30),
@@ -210,7 +204,7 @@ class _ContactPageState extends State<ContactPage>
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          const SelectableText(
             'Hablemos y construyamos algo increíble juntos.',
             style: TextStyle(color: Colors.grey, fontSize: 15, height: 1.5),
           ),
@@ -331,14 +325,14 @@ class _ContactPageState extends State<ContactPage>
         url: 'https://www.facebook.com/profile.php?id=100095502885829',
       ),
       _SocialData(
-        icon: Icons.photo_camera,
+        icon: 'https://cdn-icons-png.flaticon.com/512/15713/15713420.png',
         label: 'Instagram',
         handle: '@thony_cm_18',
         color: const Color(0xFFE1306C),
         url: 'https://www.instagram.com/thony_cm_18/',
       ),
       _SocialData(
-        icon: Icons.chat,
+        icon: 'https://cdn-icons-png.flaticon.com/512/4423/4423697.png',
         label: 'WhatsApp',
         handle: 'Enviar mensaje',
         color: const Color(0xFF25D366),
@@ -346,11 +340,11 @@ class _ContactPageState extends State<ContactPage>
             'https://api.whatsapp.com/qr/FNSLSZHWS3CFM1?autoload=1&app_absent=0',
       ),
       _SocialData(
-        icon: Icons.work_outline,
+        icon: 'https://cdn-icons-png.flaticon.com/512/3536/3536505.png',
         label: 'LinkedIn',
         handle: 'Anthony Córdova',
         color: const Color(0xFF0A66C2),
-        url: 'https://www.linkedin.com/in/anthony-c-a12928111/',
+        url: 'https://www.linkedin.com/in/anthony-c-a12928111',
       ),
     ];
 
@@ -359,27 +353,7 @@ class _ContactPageState extends State<ContactPage>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: const Color(0xFF050A30).withOpacity(0.07),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: const Color(0xFF050A30).withOpacity(0.15),
-              ),
-            ),
-            child: const Text(
-              '// social_links[]',
-              style: TextStyle(
-                color: Color(0xFF050A30),
-                fontSize: 12,
-                fontFamily: 'monospace',
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          const Text(
+          const SelectableText(
             'Conéctate\nconmigo',
             style: TextStyle(
               color: Color(0xFF050A30),
@@ -389,7 +363,7 @@ class _ContactPageState extends State<ContactPage>
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          const SelectableText(
             'También puedes encontrarme en estas plataformas.',
             style: TextStyle(color: Colors.grey, fontSize: 15, height: 1.5),
           ),
@@ -441,7 +415,9 @@ class _ContactPageState extends State<ContactPage>
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  border: Border.all(color: AppColors.blackOption.withOpacity(0.15)),
+                  border: Border.all(
+                    color: AppColors.blackOption.withOpacity(0.15),
+                  ),
                   borderRadius: BorderRadius.circular(20),
                   color: AppColors.blackOption.withOpacity(0.05),
                 ),
@@ -514,7 +490,7 @@ class _ContactPageState extends State<ContactPage>
 
 // ─── Modelo de datos para redes sociales ───
 class _SocialData {
-  final IconData icon;
+  final dynamic icon; // Puede ser IconData o String (URL)
   final String label;
   final String handle;
   final Color color;
@@ -589,11 +565,30 @@ class _SocialCardState extends State<_SocialCard> {
                     color: widget.data.color.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(
-                    widget.data.icon,
-                    color: widget.data.color,
-                    size: 22,
-                  ),
+                  child: widget.data.icon is IconData
+                      ? Icon(
+                          widget.data.icon,
+                          color: widget.data.color,
+                          size: 22,
+                        )
+                      : Center(
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              widget.data.icon,
+                              width: 24,
+                              height: 24,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Icon(
+                                  Icons.link,
+                                  color: widget.data.color,
+                                  size: 22,
+                                );
+                              },
+                            ),
+                          ),
+                        ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(

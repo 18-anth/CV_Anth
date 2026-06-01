@@ -253,7 +253,7 @@ class _AboutMeState extends State<AboutMe> {
                 ),
               ),
               const SizedBox(height: 20),
-              Text(
+              SelectableText(
                 "I'm passionate about technology. I love programming so much that it sometimes feels like an obsession. I enjoy solving problems, creating innovative solutions, and collaborating on projects that challenge my skills.",
                 style: TextStyle(
                   fontSize: 15,
@@ -626,7 +626,7 @@ class _AboutMeState extends State<AboutMe> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              SelectableText(
                 title,
                 style: TextStyle(
                   fontSize: 16,
@@ -636,7 +636,7 @@ class _AboutMeState extends State<AboutMe> {
                 ),
               ),
               const SizedBox(height: 6),
-              Text(
+              SelectableText(
                 subtitle,
                 style: TextStyle(
                   fontSize: 14,
@@ -646,7 +646,7 @@ class _AboutMeState extends State<AboutMe> {
                 ),
               ),
               const SizedBox(height: 6),
-              Text(
+              SelectableText(
                 period,
                 style: TextStyle(
                   fontSize: 13,

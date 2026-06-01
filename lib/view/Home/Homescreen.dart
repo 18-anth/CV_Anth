@@ -159,7 +159,7 @@ class _HomeScreenState extends State<HomeScreen>
                           FadeInUp(
                             delay: const Duration(milliseconds: 300),
                             duration: const Duration(milliseconds: 1200),
-                            child: Text(
+                            child: SelectableText(
                               'Hi! I\'m Anthony',
                               textAlign: TextAlign.center,
                               style: TextStyle(
@@ -176,7 +176,7 @@ class _HomeScreenState extends State<HomeScreen>
                           FadeInUp(
                             delay: const Duration(milliseconds: 600),
                             duration: const Duration(milliseconds: 1200),
-                            child: Text(
+                            child: SelectableText(
                               'Full Stack Software Developer',
                               textAlign: TextAlign.center,
                               style: TextStyle(
@@ -195,7 +195,7 @@ class _HomeScreenState extends State<HomeScreen>
                             duration: const Duration(milliseconds: 1200),
                             child: Container(
                               constraints: const BoxConstraints(maxWidth: 600),
-                              child: Text(
+                              child: SelectableText(
                                 'Passionate about building high-quality, scalable web applications. I specialize in modern JavaScript frameworks, cloud services, and software architecture. Always eager to learn, collaborate, and solve complex technical problems.',
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
@@ -230,7 +230,7 @@ class _HomeScreenState extends State<HomeScreen>
                         duration: const Duration(milliseconds: 1000),
                         child: Container(
                           constraints: const BoxConstraints(maxWidth: 600),
-                          child: Text(
+                          child: SelectableText(
                             '"Code is not just about solving problems, it\'s about crafting experiences."',
                             textAlign: TextAlign.center,
                             style: TextStyle(
@@ -258,7 +258,7 @@ class _HomeScreenState extends State<HomeScreen>
                       Flexible(
                         child: FadeInLeft(
                           duration: const Duration(milliseconds: 1000),
-                          child: Text(
+                          child: SelectableText(
                             '"Code is not just about solving problems, it\'s about crafting experiences."',
                             textAlign: TextAlign.center,
                             style: TextStyle(

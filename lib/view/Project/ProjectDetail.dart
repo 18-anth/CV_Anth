@@ -218,11 +218,10 @@ class _ProjectDetailState extends State<ProjectDetail> {
                   const Icon(Icons.star, color: Colors.amber, size: 32),
                   const SizedBox(width: 1),
                   Flexible(
-                    child: Text(
+                    child: SelectableText(
                       title,
                       textAlign: TextAlign.right,
                       maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: Color(0xFF050A30),
                         fontSize: 24,
@@ -237,7 +236,7 @@ class _ProjectDetailState extends State<ProjectDetail> {
             ],
 
             // Descripción
-            Text(
+            SelectableText(
               description,
               textAlign: TextAlign.justify,
               style: const TextStyle(
@@ -286,7 +285,7 @@ class _ProjectDetailState extends State<ProjectDetail> {
               const SizedBox(height: 16),
             ],
             // Nombre del proyecto
-            Text(
+            SelectableText(
               name,
               style: const TextStyle(
                 color: Color(0xFF050A30),

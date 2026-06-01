@@ -289,7 +289,7 @@ class _ProjectDetailInfoSliderState extends State<ProjectDetailInfoSlider> {
             const SizedBox(height: 16),
 
             // Contenido
-            Text(
+            SelectableText(
               content,
               style: TextStyle(
                 color: AppColors.darkgrey,

@@ -144,7 +144,7 @@ class CertificationHeader extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text(
+          SelectableText(
             name,
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -168,7 +168,7 @@ class CertificationHeader extends StatelessWidget {
           ],
           if (description.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Text(
+            SelectableText(
               description,
               textAlign: TextAlign.center,
               style: const TextStyle(color: AppColors.darkgrey, fontSize: 16),
@@ -226,7 +226,7 @@ class CertificationHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          Text(
+          SelectableText(
             series,
             style: const TextStyle(
               color: AppColors.light,
