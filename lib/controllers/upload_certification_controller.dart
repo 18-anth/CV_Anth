@@ -73,6 +73,7 @@ class UploadCertificationController extends ChangeNotifier {
     required String name,
     required String series,
     required String link,
+    required String classification,
     required Future<bool> Function() showAuthInstructions,
   }) async {
     isUploading = true;
@@ -158,6 +159,7 @@ class UploadCertificationController extends ChangeNotifier {
       link: link.isNotEmpty ? link : null,
       platformLogoUrl: platformLogoUrl,
       institutionLogoUrl: institutionLogoUrl,
+      classification: classification.isNotEmpty ? classification : null,
     );
 
     uploadProgress = 1.0;

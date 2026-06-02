@@ -74,6 +74,21 @@ class FirebaseService {
     return data;
   }
 
+  /// Retorna las categorías de certificaciones desde el nodo `certificationCategories`.
+  static Future<List<String>> fetchCertificationCategories() async {
+    final snap = await _db.ref('certificationCategories').get();
+    if (!snap.exists || snap.value == null) return [];
+    final categories = <String>[];
+    if (snap.value is List) {
+      final list = snap.value as List<dynamic>;
+      categories.addAll(list.whereType<String>());
+    } else if (snap.value is Map) {
+      final map = snap.value as Map<dynamic, dynamic>;
+      categories.addAll(map.values.whereType<String>());
+    }
+    return categories;
+  }
+
   // ───────────── WRITE OPERATIONS ─────────────
 
   /// Crea o actualiza una certificación en Firebase.
@@ -85,6 +100,7 @@ class FirebaseService {
     String? link,
     String? platformLogoUrl,
     String? institutionLogoUrl,
+    String? classification,
     String? id,
   }) async {
     final certId = id ?? _generateId();
@@ -97,6 +113,8 @@ class FirebaseService {
         'platformLogoUrl': platformLogoUrl,
       if (institutionLogoUrl != null && institutionLogoUrl.isNotEmpty)
         'institutionLogoUrl': institutionLogoUrl,
+      if (classification != null && classification.isNotEmpty)
+        'classification': classification,
       'timestamp': DateTime.now().toIso8601String(),
     };
 

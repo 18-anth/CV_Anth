@@ -102,6 +102,7 @@ class EditCertificationController extends ChangeNotifier {
     required String name,
     required String series,
     required String link,
+    required String classification,
     required Future<bool> Function() showAuthInstructions,
   }) async {
     isUploading = true;
@@ -196,6 +197,7 @@ class EditCertificationController extends ChangeNotifier {
       link: link.isNotEmpty ? link : null,
       platformLogoUrl: platformLogoUrl,
       institutionLogoUrl: institutionLogoUrl,
+      classification: classification.isNotEmpty ? classification : null,
     );
 
     uploadProgress = 1.0;

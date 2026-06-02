@@ -1,14 +1,15 @@
+import 'package:cv_anth/widgets/UploadCertification/upload_auth_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/upload_certification_controller.dart';
+import '../../services/firebase_service.dart';
 import '../../utils/Colors.dart';
 import '../../widgets/UploadCertification/upload_uploading_widget.dart';
 import '../../widgets/UploadCertification/upload_pdf_selector.dart';
 import '../../widgets/UploadCertification/upload_logo_selector.dart';
 import '../../widgets/UploadCertification/upload_user_info_banner.dart';
-import '../../widgets/UploadCertification/upload_auth_dialog.dart';
 
 class UploadCertification extends StatefulWidget {
   const UploadCertification({super.key});
@@ -24,6 +25,35 @@ class _UploadCertificationState extends State<UploadCertification> {
   final _linkController = TextEditingController();
 
   final _controller = UploadCertificationController();
+  List<String> availableCategories = [];
+  String? selectedCategory;
+  bool categoriesLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    try {
+      final categories = await FirebaseService.fetchCertificationCategories();
+      if (mounted) {
+        setState(() {
+          availableCategories = categories;
+          selectedCategory = categories.isNotEmpty ? categories.first : null;
+          categoriesLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error cargando categorías: $e');
+      if (mounted) {
+        setState(() {
+          categoriesLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -40,12 +70,17 @@ class _UploadCertificationState extends State<UploadCertification> {
       _showError('Por favor selecciona un archivo PDF');
       return;
     }
+    if (selectedCategory == null) {
+      _showError('Por favor selecciona una categoría');
+      return;
+    }
 
     try {
       await _controller.saveCertification(
         name: _nameController.text.trim(),
         series: _seriesController.text.trim(),
         link: _linkController.text.trim(),
+        classification: selectedCategory ?? '',
         showAuthInstructions: () => showUploadAuthInstructionsDialog(context),
       );
 
@@ -232,6 +267,59 @@ class _UploadCertificationState extends State<UploadCertification> {
                   ),
                   keyboardType: TextInputType.url,
                 ),
+                const SizedBox(height: 20),
+
+                // Campo: Categoría
+                if (categoriesLoading)
+                  const SizedBox(
+                    height: 48,
+                    child: Center(
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                  )
+                else if (availableCategories.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Text(
+                      'No hay categorías disponibles',
+                      style: TextStyle(
+                        color: Colors.red.shade400,
+                        fontSize: 14,
+                      ),
+                    ),
+                  )
+                else
+                  DropdownButtonFormField<String>(
+                    value: selectedCategory,
+                    decoration: _inputDecoration(
+                      label: 'Categoría de Certificación',
+                      hint: 'Selecciona una categoría',
+                      icon: Icons.category,
+                    ),
+                    items: availableCategories.map((category) {
+                      return DropdownMenuItem(
+                        value: category,
+                        child: Text(category),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          selectedCategory = value;
+                        });
+                      }
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'La categoría es requerida';
+                      }
+                      return null;
+                    },
+                  ),
                 const SizedBox(height: 30),
 
                 // Sección de logos

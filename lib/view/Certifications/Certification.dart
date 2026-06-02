@@ -16,6 +16,7 @@ class CertificationModel {
   final String? link;
   final String? platformLogoUrl;
   final String? institutionLogoUrl;
+  final String classification;
 
   CertificationModel({
     required this.id,
@@ -26,6 +27,7 @@ class CertificationModel {
     this.link,
     this.platformLogoUrl,
     this.institutionLogoUrl,
+    this.classification = '',
   });
 
   factory CertificationModel.fromMap(Map<String, dynamic> data) {
@@ -38,6 +40,7 @@ class CertificationModel {
       link: data['link'],
       platformLogoUrl: data['platformLogoUrl'],
       institutionLogoUrl: data['institutionLogoUrl'],
+      classification: data['classification']?.toString() ?? '',
     );
   }
 }
@@ -51,9 +54,12 @@ class Certification extends StatefulWidget {
 
 class _CertificationState extends State<Certification> {
   List<CertificationModel> certifications = [];
+  List<CertificationModel> filteredCertifications = [];
   List<int> order = [];
   bool isLoading = true;
   String? errorMessage;
+  List<String> availableCategories = [];
+  String selectedCategory = 'Todos';
 
   @override
   void initState() {
@@ -63,13 +69,19 @@ class _CertificationState extends State<Certification> {
 
   Future<void> _loadCertifications() async {
     try {
-      final data = await FirebaseService.fetchCertifications();
+      final [certData, catData] = await Future.wait<dynamic>([
+        FirebaseService.fetchCertifications(),
+        FirebaseService.fetchCertificationCategories(),
+      ]);
+      
       if (!mounted) return;
       setState(() {
-        certifications = data
+        certifications = (certData as List<Map<String, dynamic>>)
             .map((e) => CertificationModel.fromMap(e))
             .toList();
+        availableCategories = ['Todos', ...(catData as List<String>)];
         order = List.generate(certifications.length, (i) => i);
+        filteredCertifications = certifications;
         isLoading = false;
       });
     } catch (e) {
@@ -80,6 +92,23 @@ class _CertificationState extends State<Certification> {
         errorMessage = e.toString();
       });
     }
+  }
+
+  void _filterCertifications() {
+    if (selectedCategory == 'Todos') {
+      filteredCertifications = certifications;
+    } else {
+      filteredCertifications = certifications
+          .where((cert) => cert.classification == selectedCategory)
+          .toList();
+    }
+  }
+
+  void _selectCategory(String category) {
+    setState(() {
+      selectedCategory = category;
+      _filterCertifications();
+    });
   }
 
   @override
@@ -225,6 +254,75 @@ class _CertificationState extends State<Certification> {
                     ),
                   ),
 
+                  // Filtro de categorías
+                  if (!isLoading && certifications.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 20,
+                      ),
+                      child: FadeInUp(
+                        delay: const Duration(milliseconds: 300),
+                        duration: const Duration(milliseconds: 700),
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: List.generate(
+                              availableCategories.length,
+                              (index) {
+                                final category = availableCategories[index];
+                                final isSelected =
+                                    selectedCategory == category;
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
+                                  child: GestureDetector(
+                                    onTap: () =>
+                                        _selectCategory(category),
+                                    child: AnimatedContainer(
+                                      duration: const Duration(
+                                        milliseconds: 250,
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 8,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: isSelected
+                                            ? AppColors.light
+                                            : Colors.transparent,
+                                        border: Border.all(
+                                          color: AppColors.light
+                                              .withOpacity(
+                                            isSelected ? 1 : 0.4,
+                                          ),
+                                          width: 1.5,
+                                        ),
+                                        borderRadius:
+                                            BorderRadius.circular(20),
+                                      ),
+                                      child: Text(
+                                        category,
+                                        style: TextStyle(
+                                          color: isSelected
+                                              ? AppColors.primary
+                                              : AppColors.light,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          letterSpacing: 0.5,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
                   // Contenido de certificaciones
                   if (isLoading)
                     Padding(
@@ -259,11 +357,13 @@ class _CertificationState extends State<Certification> {
                         textAlign: TextAlign.center,
                       ),
                     )
-                  else if (certifications.isEmpty)
+                  else if (filteredCertifications.isEmpty)
                     Padding(
                       padding: const EdgeInsets.all(60),
                       child: Text(
-                        'No hay certificaciones disponibles.',
+                        selectedCategory == 'Todos'
+                            ? 'No hay certificaciones disponibles.'
+                            : 'No hay certificaciones en esta categoría.',
                         style: TextStyle(
                           color: AppColors.light.withOpacity(0.5),
                           fontSize: 16,
@@ -287,22 +387,22 @@ class _CertificationState extends State<Certification> {
                           return Wrap(
                             spacing: spacing,
                             runSpacing: spacing,
-                            children: List.generate(certifications.length, (
-                              index,
-                            ) {
-                              final displayIndex = order[index];
-                              final cert = certifications[displayIndex];
-                              return SizedBox(
-                                width: cardWidth,
-                                child: _CertificationCard(
-                                  cert: cert,
-                                  isMobile: isMobile,
-                                  animationDelay: Duration(
-                                    milliseconds: index * 120,
+                            children: List.generate(
+                              filteredCertifications.length,
+                              (index) {
+                                final cert = filteredCertifications[index];
+                                return SizedBox(
+                                  width: cardWidth,
+                                  child: _CertificationCard(
+                                    cert: cert,
+                                    isMobile: isMobile,
+                                    animationDelay: Duration(
+                                      milliseconds: index * 120,
+                                    ),
                                   ),
-                                ),
-                              );
-                            }),
+                                );
+                              },
+                            ),
                           );
                         },
                       ),

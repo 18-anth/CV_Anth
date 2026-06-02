@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../controllers/auth_controller.dart';
 import '../../controllers/edit_certification_controller.dart';
+import '../../services/firebase_service.dart';
 import '../../widgets/EditCertification/edit_uploading_widget.dart';
 import '../../widgets/EditCertification/edit_pdf_selector.dart';
 import '../../widgets/EditCertification/edit_logo_selector.dart';
@@ -25,12 +26,37 @@ class _EditCertificationState extends State<EditCertification> {
   final _linkController = TextEditingController();
 
   late final EditCertificationController _controller;
+  List<String> availableCategories = [];
+  String? selectedCategory;
+  bool categoriesLoading = true;
 
   @override
   void initState() {
     super.initState();
     _controller = EditCertificationController();
-    _loadCertification();
+    Future.wait([
+      _loadCertification(),
+      _loadCategories(),
+    ]);
+  }
+
+  Future<void> _loadCategories() async {
+    try {
+      final categories = await FirebaseService.fetchCertificationCategories();
+      if (mounted) {
+        setState(() {
+          availableCategories = categories;
+          categoriesLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error cargando categorías: $e');
+      if (mounted) {
+        setState(() {
+          categoriesLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -55,6 +81,9 @@ class _EditCertificationState extends State<EditCertification> {
       _nameController.text = data['name'] ?? '';
       _seriesController.text = data['series'] ?? '';
       _linkController.text = data['link'] ?? '';
+      setState(() {
+        selectedCategory = data['classification'] ?? availableCategories.firstOrNull;
+      });
     } catch (e) {
       debugPrint('Error cargando certificación: $e');
       if (!mounted) return;
@@ -74,12 +103,18 @@ class _EditCertificationState extends State<EditCertification> {
       return;
     }
 
+    if (selectedCategory == null) {
+      _showError('Por favor selecciona una categoría');
+      return;
+    }
+
     try {
       await _controller.updateCertification(
         certificationId: widget.certificationId,
         name: _nameController.text.trim(),
         series: _seriesController.text.trim(),
         link: _linkController.text.trim(),
+        classification: selectedCategory ?? '',
         showAuthInstructions: () => showAuthInstructionsDialog(context),
       );
 
@@ -286,6 +321,59 @@ class _EditCertificationState extends State<EditCertification> {
                     return null;
                   },
                 ),
+                const SizedBox(height: 20),
+
+                // Campo: Categoría
+                if (categoriesLoading)
+                  const SizedBox(
+                    height: 48,
+                    child: Center(
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                  )
+                else if (availableCategories.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Text(
+                      'No hay categorías disponibles',
+                      style: TextStyle(
+                        color: Colors.red.shade400,
+                        fontSize: 14,
+                      ),
+                    ),
+                  )
+                else
+                  DropdownButtonFormField<String>(
+                    value: selectedCategory,
+                    decoration: _inputDecoration(
+                      label: 'Categoría de Certificación',
+                      hint: 'Selecciona una categoría',
+                      icon: Icons.category,
+                    ),
+                    items: availableCategories.map((category) {
+                      return DropdownMenuItem(
+                        value: category,
+                        child: Text(category),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() {
+                          selectedCategory = value;
+                        });
+                      }
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'La categoría es requerida';
+                      }
+                      return null;
+                    },
+                  ),
                 const SizedBox(height: 32),
 
                 // Selector de PDF

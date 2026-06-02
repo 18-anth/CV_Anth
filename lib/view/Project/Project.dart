@@ -16,6 +16,7 @@ class ProjectCard {
   final String description;
   final int timestamp;
   final String? logo;
+  final String category;
 
   ProjectCard({
     required this.id,
@@ -23,6 +24,7 @@ class ProjectCard {
     required this.description,
     required this.timestamp,
     this.logo,
+    this.category = 'General',
   });
 
   factory ProjectCard.fromMap(Map<String, dynamic> data) {
@@ -46,6 +48,7 @@ class ProjectCard {
       description: data['description'] ?? '',
       timestamp: timestamp,
       logo: data['logo'] as String?,
+      category: data['classification']?.toString() ?? 'General',
     );
   }
 }
@@ -59,7 +62,10 @@ class Project extends StatefulWidget {
 
 class _ProjectState extends State<Project> {
   List<ProjectCard> cardsData = [];
+  List<ProjectCard> filteredCardsData = [];
   bool isLoading = true;
+  String selectedCategory = 'Todos';
+  Set<String> availableCategories = {'Todos'};
 
   @override
   void initState() {
@@ -71,8 +77,21 @@ class _ProjectState extends State<Project> {
     try {
       final data = await FirebaseService.fetchProjects();
       if (!mounted) return;
+
+      final cards = data.map((e) => ProjectCard.fromMap(e)).toList();
+
+      // Extraer categorías disponibles
+      final categories = <String>{'Todos'};
+      for (var card in cards) {
+        if (card.category.isNotEmpty) {
+          categories.add(card.category);
+        }
+      }
+
       setState(() {
-        cardsData = data.map((e) => ProjectCard.fromMap(e)).toList();
+        cardsData = cards;
+        availableCategories = categories;
+        _filterProjects();
         isLoading = false;
       });
     } catch (e) {
@@ -81,6 +100,23 @@ class _ProjectState extends State<Project> {
         isLoading = false;
       });
     }
+  }
+
+  void _filterProjects() {
+    if (selectedCategory == 'Todos') {
+      filteredCardsData = cardsData;
+    } else {
+      filteredCardsData = cardsData
+          .where((card) => card.category == selectedCategory)
+          .toList();
+    }
+  }
+
+  void _selectCategory(String category) {
+    setState(() {
+      selectedCategory = category;
+      _filterProjects();
+    });
   }
 
   String _formatDate(int timestamp) {
@@ -218,6 +254,10 @@ class _ProjectState extends State<Project> {
                 _buildAddProjectButton(),
                 const SizedBox(height: 20),
 
+                // Filtro de categorías
+                if (!isLoading && cardsData.isNotEmpty) _buildCategoryFilter(),
+                const SizedBox(height: 20),
+
                 // Grid de proyectos
                 isLoading
                     ? const CircularProgressIndicator()
@@ -226,6 +266,13 @@ class _ProjectState extends State<Project> {
                         height: 200,
                         child: Center(
                           child: Text('No hay proyectos disponibles'),
+                        ),
+                      )
+                    : filteredCardsData.isEmpty
+                    ? const SizedBox(
+                        height: 200,
+                        child: Center(
+                          child: Text('No hay proyectos en esta categoría'),
                         ),
                       )
                     : _buildProjectGrid(isMobile, isTablet),
@@ -260,11 +307,11 @@ class _ProjectState extends State<Project> {
                   crossAxisCount,
                   (_) => <Widget>[],
                 );
-                for (int i = 0; i < cardsData.length; i++) {
+                for (int i = 0; i < filteredCardsData.length; i++) {
                   columns[i % crossAxisCount].add(
                     Padding(
                       padding: const EdgeInsets.only(bottom: 16),
-                      child: _buildProjectCard(cardsData[i], i),
+                      child: _buildProjectCard(filteredCardsData[i], i),
                     ),
                   );
                 }
@@ -508,6 +555,89 @@ class _ProjectState extends State<Project> {
                 ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // FILTRO DE CATEGORÍAS
+  // ══════════════════════════════════════════════════════════════
+
+  Widget _buildCategoryFilter() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1400),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Categorías',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1A1A2E),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: availableCategories.toList().asMap().entries.map((
+                    entry,
+                  ) {
+                    final category = entry.value;
+                    final isSelected = category == selectedCategory;
+
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: FadeInLeft(
+                        delay: Duration(milliseconds: entry.key * 50),
+                        duration: const Duration(milliseconds: 300),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () => _selectCategory(category),
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? const Color(0xFF050A30)
+                                    : Colors.grey.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? const Color(0xFF050A30)
+                                      : Colors.grey.withOpacity(0.3),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Text(
+                                category,
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? Colors.white
+                                      : const Color(0xFF1A1A2E),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
           ),
         ),
       ),
