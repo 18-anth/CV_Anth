@@ -73,7 +73,7 @@ class _CertificationState extends State<Certification> {
         FirebaseService.fetchCertifications(),
         FirebaseService.fetchCertificationCategories(),
       ]);
-      
+
       if (!mounted) return;
       setState(() {
         certifications = (certData as List<Map<String, dynamic>>)
@@ -271,15 +271,13 @@ class _CertificationState extends State<Certification> {
                               availableCategories.length,
                               (index) {
                                 final category = availableCategories[index];
-                                final isSelected =
-                                    selectedCategory == category;
+                                final isSelected = selectedCategory == category;
                                 return Padding(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 8,
                                   ),
                                   child: GestureDetector(
-                                    onTap: () =>
-                                        _selectCategory(category),
+                                    onTap: () => _selectCategory(category),
                                     child: AnimatedContainer(
                                       duration: const Duration(
                                         milliseconds: 250,
@@ -290,27 +288,24 @@ class _CertificationState extends State<Certification> {
                                       ),
                                       decoration: BoxDecoration(
                                         color: isSelected
-                                            ? AppColors.light
-                                            : Colors.transparent,
+                                            ? const Color(0xFF050A30)
+                                            : Colors.grey.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(20),
                                         border: Border.all(
-                                          color: AppColors.light
-                                              .withOpacity(
-                                            isSelected ? 1 : 0.4,
-                                          ),
+                                          color: isSelected
+                                              ? const Color(0xFF050A30)
+                                              : Colors.grey.withOpacity(0.3),
                                           width: 1.5,
                                         ),
-                                        borderRadius:
-                                            BorderRadius.circular(20),
                                       ),
                                       child: Text(
                                         category,
                                         style: TextStyle(
                                           color: isSelected
-                                              ? AppColors.primary
-                                              : AppColors.light,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                          letterSpacing: 0.5,
+                                              ? Colors.white
+                                              : const Color(0xFF1A1A2E),
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                     ),
