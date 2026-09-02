@@ -16,6 +16,7 @@ class ProjectCard {
   final String description;
   final int timestamp;
   final String? logo;
+  final String? imageUrl;
   final String category;
 
   ProjectCard({
@@ -24,8 +25,34 @@ class ProjectCard {
     required this.description,
     required this.timestamp,
     this.logo,
+    this.imageUrl,
     this.category = 'General',
   });
+
+  static String? _pickFirstValidImage(Map<String, dynamic> data) {
+    final candidates = <String>[];
+
+    final logo = data['logo'];
+    if (logo is String && logo.trim().isNotEmpty) candidates.add(logo);
+
+    final webImages = data['images'];
+    if (webImages is List) {
+      for (final image in webImages) {
+        final value = image.toString();
+        if (value.trim().isNotEmpty) candidates.add(value);
+      }
+    }
+
+    final mobileImages = data['imagesMobile'];
+    if (mobileImages is List) {
+      for (final image in mobileImages) {
+        final value = image.toString();
+        if (value.trim().isNotEmpty) candidates.add(value);
+      }
+    }
+
+    return candidates.isNotEmpty ? candidates.first : null;
+  }
 
   factory ProjectCard.fromMap(Map<String, dynamic> data) {
     int timestamp = 0;
@@ -42,12 +69,15 @@ class ProjectCard {
       }
     }
 
+    final logo = data['logo'] as String?;
+
     return ProjectCard(
       id: data['id']?.toString() ?? '',
       name: data['name'] ?? 'Sin nombre',
       description: data['description'] ?? '',
       timestamp: timestamp,
-      logo: data['logo'] as String?,
+      logo: logo,
+      imageUrl: _pickFirstValidImage(data),
       category: data['classification']?.toString() ?? 'General',
     );
   }
@@ -408,11 +438,11 @@ class _ProjectState extends State<Project> {
                               ),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: (card.logo != null && card.logo!.isNotEmpty)
+                            child: (card.imageUrl != null && card.imageUrl!.isNotEmpty)
                                 ? ClipRRect(
                                     borderRadius: BorderRadius.circular(12),
                                     child: Image.network(
-                                      _fixGoogleDriveUrl(card.logo!),
+                                      _fixGoogleDriveUrl(card.imageUrl!),
                                       width: 42,
                                       height: 42,
                                       fit: BoxFit.cover,

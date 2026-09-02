@@ -83,9 +83,8 @@ class _SplashScreenState extends State<SplashScreen>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  width: 180,
-                  height: 180,
-                  padding: const EdgeInsets.all(12),
+                  width: 300,
+                  height: 300,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(32),
@@ -100,7 +99,7 @@ class _SplashScreenState extends State<SplashScreen>
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(24),
                     child: Image.asset(
-                      'assets/img/logo.jpeg',
+                      'assets/img/logo.png',
                       fit: BoxFit.cover,
                     ),
                   ),
