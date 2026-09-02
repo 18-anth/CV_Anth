@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import 'package:cv_anth/utils/Colors.dart';
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
@@ -48,7 +50,7 @@ class _AboutMeState extends State<AboutMe> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.5),
+                    color: Colors.black.withValues(alpha: 0.5),
                     blurRadius: 20,
                     offset: const Offset(0, 4),
                   ),
@@ -89,7 +91,7 @@ class _AboutMeState extends State<AboutMe> {
                             fontWeight: FontWeight.bold,
                             shadows: [
                               Shadow(
-                                color: Colors.black.withOpacity(0.5),
+                                color: Colors.black.withValues(alpha: 0.5),
                                 blurRadius: 4,
                                 offset: Offset(2, 2),
                               ),
@@ -209,7 +211,7 @@ class _AboutMeState extends State<AboutMe> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Color(0xFF9c27b0).withOpacity(0.08),
+              color: Color(0xFF9c27b0).withValues(alpha: 0.08),
               blurRadius: 25,
               offset: const Offset(0, 8),
             ),
@@ -283,7 +285,7 @@ class _AboutMeState extends State<AboutMe> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Color(0xFF9c27b0).withOpacity(0.08),
+              color: Color(0xFF9c27b0).withValues(alpha: 0.08),
               blurRadius: 25,
               offset: const Offset(0, 8),
             ),
@@ -352,10 +354,10 @@ class _AboutMeState extends State<AboutMe> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [color.withOpacity(0.1), color.withOpacity(0.05)],
+          colors: [color.withValues(alpha: 0.1), color.withValues(alpha: 0.05)],
         ),
         borderRadius: BorderRadius.circular(25),
-        border: Border.all(color: color.withOpacity(0.3), width: 1.5),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1.5),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -390,7 +392,7 @@ class _AboutMeState extends State<AboutMe> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Color(0xFF9c27b0).withOpacity(0.08),
+              color: Color(0xFF9c27b0).withValues(alpha: 0.08),
               blurRadius: 25,
               offset: const Offset(0, 8),
             ),
@@ -469,18 +471,18 @@ class _AboutMeState extends State<AboutMe> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF9c27b0).withOpacity(0.12),
-            Color(0xFF673ab7).withOpacity(0.08),
+            Color(0xFF9c27b0).withValues(alpha: 0.12),
+            Color(0xFF673ab7).withValues(alpha: 0.08),
           ],
         ),
         borderRadius: BorderRadius.circular(25),
         border: Border.all(
-          color: Color(0xFF9c27b0).withOpacity(0.3),
+          color: Color(0xFF9c27b0).withValues(alpha: 0.3),
           width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
-            color: Color(0xFF9c27b0).withOpacity(0.1),
+            color: Color(0xFF9c27b0).withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -513,7 +515,7 @@ class _AboutMeState extends State<AboutMe> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Color(0xFF9c27b0).withOpacity(0.08),
+              color: Color(0xFF9c27b0).withValues(alpha: 0.08),
               blurRadius: 25,
               offset: const Offset(0, 8),
             ),
@@ -607,11 +609,11 @@ class _AboutMeState extends State<AboutMe> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
-                  colors: [color, color.withOpacity(0.7)],
+                  colors: [color, color.withValues(alpha: 0.7)],
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: color.withOpacity(0.4),
+                    color: color.withValues(alpha: 0.4),
                     blurRadius: 12,
                     spreadRadius: 2,
                   ),

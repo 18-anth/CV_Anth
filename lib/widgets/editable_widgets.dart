@@ -6,10 +6,7 @@ import 'package:cv_anth/view/Auth/LoginScreen.dart';
 class EditRequiresBanner extends StatefulWidget {
   final Widget child;
 
-  const EditRequiresBanner({
-    Key? key,
-    required this.child,
-  }) : super(key: key);
+  const EditRequiresBanner({super.key, required this.child});
 
   @override
   State<EditRequiresBanner> createState() => _EditRequiresBannerState();
@@ -86,7 +83,10 @@ class _EditRequiresBannerState extends State<EditRequiresBanner> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue[600],
                       foregroundColor: Colors.white,
-                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                     ),
                   ),
                 ],
@@ -103,11 +103,7 @@ class EditButton extends StatefulWidget {
   final VoidCallback onEdit;
   final String? label;
 
-  const EditButton({
-    Key? key,
-    required this.onEdit,
-    this.label = 'Editar',
-  }) : super(key: key);
+  const EditButton({super.key, required this.onEdit, this.label = 'Editar'});
 
   @override
   State<EditButton> createState() => _EditButtonState();
@@ -137,9 +133,7 @@ class _EditButtonState extends State<EditButton> {
         onPressed: () => showLoginDialog(context),
         icon: Icon(Icons.login),
         label: Text('Iniciar Sesión para Editar'),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: Colors.grey,
-        ),
+        style: OutlinedButton.styleFrom(foregroundColor: Colors.grey),
       );
     }
 
@@ -157,10 +151,10 @@ class EditableContent extends StatefulWidget {
   final bool isAuthorized;
 
   const EditableContent({
-    Key? key,
+    super.key,
     required this.child,
     this.isAuthorized = true,
-  }) : super(key: key);
+  });
 
   @override
   State<EditableContent> createState() => _EditableContentState();
@@ -194,16 +188,12 @@ class _EditableContentState extends State<EditableContent> {
             child: GestureDetector(
               onTap: () => showLoginDialog(context),
               child: Container(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
-                        Icons.lock_outline,
-                        size: 48,
-                        color: Colors.white,
-                      ),
+                      Icon(Icons.lock_outline, size: 48, color: Colors.white),
                       SizedBox(height: 16),
                       Text(
                         'Inicia sesión para editar',

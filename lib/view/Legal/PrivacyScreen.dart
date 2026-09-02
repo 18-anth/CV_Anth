@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class PrivacyScreen extends StatefulWidget {
-  const PrivacyScreen({Key? key}) : super(key: key);
+  const PrivacyScreen({super.key});
 
   @override
   State<PrivacyScreen> createState() => _PrivacyScreenState();
@@ -293,12 +293,15 @@ class _PrivacyScreenState extends State<PrivacyScreen>
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.blackOption.withOpacity(0.05), Colors.transparent],
+          colors: [
+            AppColors.blackOption.withValues(alpha: 0.05),
+            Colors.transparent,
+          ],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.blackOption.withOpacity(0.1)),
+        border: Border.all(color: AppColors.blackOption.withValues(alpha: 0.1)),
       ),
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -309,7 +312,7 @@ class _PrivacyScreenState extends State<PrivacyScreen>
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.blackOption.withOpacity(0.1),
+                  color: AppColors.blackOption.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
@@ -370,12 +373,12 @@ class _PrivacyScreenState extends State<PrivacyScreen>
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: AppColors.blackOption.withOpacity(0.1),
+                  color: AppColors.blackOption.withValues(alpha: 0.1),
                   width: 1,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.blackOption.withOpacity(0.05),
+                    color: AppColors.blackOption.withValues(alpha: 0.05),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -390,7 +393,7 @@ class _PrivacyScreenState extends State<PrivacyScreen>
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: AppColors.blackOption.withOpacity(0.08),
+                          color: AppColors.blackOption.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Icon(
@@ -452,12 +455,12 @@ class _PrivacyScreenState extends State<PrivacyScreen>
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: AppColors.blackOption.withOpacity(0.1),
+                  color: AppColors.blackOption.withValues(alpha: 0.1),
                   width: 1,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.blackOption.withOpacity(0.05),
+                    color: AppColors.blackOption.withValues(alpha: 0.05),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -482,7 +485,9 @@ class _PrivacyScreenState extends State<PrivacyScreen>
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: AppColors.blackOption.withOpacity(0.08),
+                              color: AppColors.blackOption.withValues(
+                                alpha: 0.08,
+                              ),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Icon(
@@ -523,7 +528,7 @@ class _PrivacyScreenState extends State<PrivacyScreen>
                         children: [
                           Container(
                             height: 1,
-                            color: AppColors.blackOption.withOpacity(0.1),
+                            color: AppColors.blackOption.withValues(alpha: 0.1),
                             margin: const EdgeInsets.only(bottom: 16),
                           ),
                           ...List.generate(
@@ -599,12 +604,12 @@ class _PrivacyScreenState extends State<PrivacyScreen>
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: AppColors.blackOption.withOpacity(0.1),
+                  color: AppColors.blackOption.withValues(alpha: 0.1),
                   width: 1,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.blackOption.withOpacity(0.05),
+                    color: AppColors.blackOption.withValues(alpha: 0.05),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -619,7 +624,7 @@ class _PrivacyScreenState extends State<PrivacyScreen>
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: AppColors.blackOption.withOpacity(0.08),
+                          color: AppColors.blackOption.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(
@@ -653,10 +658,10 @@ class _PrivacyScreenState extends State<PrivacyScreen>
                           vertical: 12,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.blackOption.withOpacity(0.05),
+                          color: AppColors.blackOption.withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: AppColors.blackOption.withOpacity(0.1),
+                            color: AppColors.blackOption.withValues(alpha: 0.1),
                           ),
                         ),
                         child: Row(

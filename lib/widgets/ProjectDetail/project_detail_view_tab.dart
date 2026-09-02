@@ -37,7 +37,7 @@ class ProjectDetailViewTab extends StatelessWidget {
               ),
               borderRadius: BorderRadius.circular(8),
               color: isSelected
-                  ? const Color(0xFF050A30).withOpacity(0.1)
+                  ? const Color(0xFF050A30).withValues(alpha:0.1)
                   : Colors.transparent,
             ),
             child: Row(

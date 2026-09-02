@@ -40,12 +40,12 @@ class _IphoneFrame extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.black.withValues(alpha: 0.5),
             blurRadius: 30,
             spreadRadius: 4,
           ),
           BoxShadow(
-            color: Colors.white.withOpacity(0.08),
+            color: Colors.white.withValues(alpha: 0.08),
             blurRadius: 1,
             spreadRadius: 1,
           ),
@@ -88,7 +88,7 @@ class _IphoneFrame extends StatelessWidget {
               height: 5,
               margin: const EdgeInsets.only(top: 10, bottom: 4),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.4),
+                color: Colors.white.withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(3),
               ),
             ),
@@ -131,7 +131,7 @@ class _NotchPainter extends CustomPainter {
     canvas.drawCircle(
       camCenter + const Offset(-1.2, -1.2),
       1.0,
-      Paint()..color = Colors.white.withOpacity(0.3),
+      Paint()..color = Colors.white.withValues(alpha: 0.3),
     );
   }
 
@@ -156,7 +156,7 @@ class _AndroidFrame extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.black.withValues(alpha: 0.5),
             blurRadius: 30,
             spreadRadius: 4,
           ),
@@ -204,7 +204,7 @@ class _AndroidFrame extends StatelessWidget {
   }
 
   Widget _navIcon(IconData icon, {double size = 20}) {
-    return Icon(icon, color: Colors.white.withOpacity(0.4), size: size);
+    return Icon(icon, color: Colors.white.withValues(alpha: 0.4), size: size);
   }
 }
 
@@ -225,7 +225,7 @@ class _TabletFrame extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.black.withValues(alpha: 0.5),
             blurRadius: 30,
             spreadRadius: 4,
           ),

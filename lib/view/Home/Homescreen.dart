@@ -1,3 +1,5 @@
+// ignore_for_file: file_names
+
 import 'package:cv_anth/utils/Colors.dart';
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
@@ -52,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen>
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.5),
+                  color: Colors.black.withValues(alpha: 0.5),
                   blurRadius: 20,
                   spreadRadius: 4,
                 ),
@@ -123,8 +125,8 @@ class _HomeScreenState extends State<HomeScreen>
                                 borderRadius: BorderRadius.circular(32),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.blackOption.withOpacity(
-                                      0.3,
+                                    color: AppColors.blackOption.withValues(
+                                      alpha: 0.3,
                                     ),
                                     blurRadius: 20,
                                     spreadRadius: 5,

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 /// Placeholder para el modelo 3D del robot
-/// 
-/// TODO: Reemplaza esto con tu modelo 3D usando:
+///
+/// t ODO: Reemplaza esto con tu modelo 3D usando:
 /// - model_viewer_plus: para modelos GLTF/GLB
 /// - three_d: para renderizado 3D custom
 class RobotModel extends StatefulWidget {
@@ -54,18 +54,14 @@ class _RobotModelState extends State<RobotModel>
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.deepPurple.withOpacity(0.5),
+                  color: Colors.deepPurple.withValues(alpha: 0.5),
                   blurRadius: 15,
                   spreadRadius: 5,
                 ),
               ],
             ),
             child: const Center(
-              child: Icon(
-                Icons.android,
-                size: 80,
-                color: Colors.white,
-              ),
+              child: Icon(Icons.android, size: 80, color: Colors.white),
             ),
           ),
         );

@@ -13,13 +13,13 @@ class EditUserInfoBanner extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             const Color(0xFF0d0d0d),
-            const Color(0xFF0d0d0d).withOpacity(0.8),
+            const Color(0xFF0d0d0d).withValues(alpha: 0.8),
           ],
         ),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -30,7 +30,7 @@ class EditUserInfoBanner extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Icon(Icons.edit, color: Colors.white, size: 28),
@@ -52,7 +52,7 @@ class EditUserInfoBanner extends StatelessWidget {
                 Text(
                   'Editando certificación: $certificationName',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
+                    color: Colors.white.withValues(alpha: 0.9),
                     fontSize: 13,
                   ),
                   maxLines: 1,

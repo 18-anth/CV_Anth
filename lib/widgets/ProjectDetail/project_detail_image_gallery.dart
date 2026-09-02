@@ -59,7 +59,7 @@ class ProjectDetailImageGallery extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(icon, color: color, size: 28),
@@ -109,7 +109,11 @@ class ProjectDetailImageGallery extends StatelessWidget {
     );
   }
 
-  Widget _buildImageCard(BuildContext context, String imageUrl, int imageNumber) {
+  Widget _buildImageCard(
+    BuildContext context,
+    String imageUrl,
+    int imageNumber,
+  ) {
     return GestureDetector(
       onTap: () => _showImageDialog(context, imageUrl),
       child: Container(
@@ -117,7 +121,7 @@ class ProjectDetailImageGallery extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -166,7 +170,7 @@ class ProjectDetailImageGallery extends StatelessWidget {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.6),
+                    color: Colors.black.withValues(alpha: 0.6),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -192,7 +196,7 @@ class ProjectDetailImageGallery extends StatelessWidget {
                           end: Alignment.bottomCenter,
                           colors: [
                             Colors.transparent,
-                            Colors.black.withOpacity(0.3),
+                            Colors.black.withValues(alpha: 0.3),
                           ],
                         ),
                       ),
@@ -260,7 +264,7 @@ class ProjectDetailImageGallery extends StatelessWidget {
                 icon: const Icon(Icons.close, color: Colors.white, size: 32),
                 onPressed: () => Navigator.of(context).pop(),
                 style: IconButton.styleFrom(
-                  backgroundColor: Colors.black.withOpacity(0.5),
+                  backgroundColor: Colors.black.withValues(alpha: 0.5),
                 ),
               ),
             ),

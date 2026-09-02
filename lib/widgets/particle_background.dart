@@ -44,7 +44,7 @@ class ParticleBackgroundPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = particleColor.withOpacity(0.5)
+      ..color = particleColor.withValues(alpha: 0.5)
       ..style = PaintingStyle.fill;
 
     for (final particle in particles) {

@@ -302,10 +302,10 @@ class _ProjectDetailState extends State<ProjectDetail> {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF050A30).withOpacity(0.1),
+                  color: const Color(0xFF050A30).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: const Color(0xFF050A30).withOpacity(0.3),
+                    color: const Color(0xFF050A30).withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),

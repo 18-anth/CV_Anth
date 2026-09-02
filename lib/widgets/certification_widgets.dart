@@ -62,14 +62,14 @@ class CertificationLogoSection extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: AppColors.black.withOpacity(0.15),
+                color: AppColors.black.withValues(alpha: 0.15),
                 blurRadius: 12,
                 spreadRadius: 2,
                 offset: const Offset(0, 4),
               ),
             ],
             border: Border.all(
-              color: AppColors.grey.withOpacity(0.2),
+              color: AppColors.grey.withValues(alpha: 0.2),
               width: 2,
             ),
           ),
@@ -88,7 +88,7 @@ class CertificationLogoSection extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: AppColors.black.withOpacity(0.08),
+            color: AppColors.black.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
@@ -135,7 +135,7 @@ class CertificationHeader extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: AppColors.black.withOpacity(0.08),
+            color: AppColors.black.withValues(alpha: 0.08),
             blurRadius: 20,
             spreadRadius: 2,
             offset: const Offset(0, 4),
@@ -155,7 +155,7 @@ class CertificationHeader extends StatelessWidget {
               height: 1.3,
               shadows: [
                 Shadow(
-                  color: AppColors.grey.withOpacity(0.3),
+                  color: AppColors.grey.withValues(alpha: 0.3),
                   offset: const Offset(0, 2),
                   blurRadius: 4,
                 ),
@@ -188,24 +188,27 @@ class CertificationHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.black, AppColors.black.withOpacity(0.85)],
+          colors: [AppColors.black, AppColors.black.withValues(alpha: 0.85)],
         ),
         borderRadius: BorderRadius.circular(30),
         boxShadow: [
           BoxShadow(
-            color: AppColors.black.withOpacity(0.3),
+            color: AppColors.black.withValues(alpha: 0.3),
             blurRadius: 12,
             spreadRadius: 1,
             offset: const Offset(0, 4),
           ),
           BoxShadow(
-            color: AppColors.black.withOpacity(0.1),
+            color: AppColors.black.withValues(alpha: 0.1),
             blurRadius: 6,
             spreadRadius: -2,
             offset: const Offset(0, 2),
           ),
         ],
-        border: Border.all(color: AppColors.grey.withOpacity(0.2), width: 1),
+        border: Border.all(
+          color: AppColors.grey.withValues(alpha: 0.2),
+          width: 1,
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -218,7 +221,7 @@ class CertificationHeader extends StatelessWidget {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.light.withOpacity(0.5),
+                  color: AppColors.light.withValues(alpha: 0.5),
                   blurRadius: 4,
                   spreadRadius: 1,
                 ),
@@ -246,7 +249,7 @@ class CertificationHeader extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.black.withOpacity(0.3),
+            color: AppColors.black.withValues(alpha: 0.3),
             blurRadius: 16,
             spreadRadius: 2,
             offset: const Offset(0, 6),
@@ -314,7 +317,7 @@ class CertificationPdfViewer extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         boxShadow: [
           BoxShadow(
-            color: AppColors.grey.withOpacity(0.3),
+            color: AppColors.grey.withValues(alpha: 0.3),
             blurRadius: 12,
             spreadRadius: 2,
           ),
@@ -415,13 +418,16 @@ class ImageGallerySection extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [color.withOpacity(0.08), color.withOpacity(0.03)],
+          colors: [
+            color.withValues(alpha: 0.08),
+            color.withValues(alpha: 0.03),
+          ],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.15), width: 2),
+        border: Border.all(color: color.withValues(alpha: 0.15), width: 2),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             blurRadius: 12,
             spreadRadius: 2,
             offset: const Offset(0, 4),
@@ -437,7 +443,7 @@ class ImageGallerySection extends StatelessWidget {
               borderRadius: BorderRadius.circular(14),
               boxShadow: [
                 BoxShadow(
-                  color: color.withOpacity(0.4),
+                  color: color.withValues(alpha: 0.4),
                   blurRadius: 8,
                   spreadRadius: 1,
                 ),
@@ -466,7 +472,7 @@ class ImageGallerySection extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.15),
+                    color: color.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -525,19 +531,22 @@ class ImageCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: AppColors.black.withOpacity(0.2),
+              color: AppColors.black.withValues(alpha: 0.2),
               blurRadius: 16,
               spreadRadius: 2,
               offset: const Offset(0, 4),
             ),
             BoxShadow(
-              color: AppColors.black.withOpacity(0.1),
+              color: AppColors.black.withValues(alpha: 0.1),
               blurRadius: 8,
               spreadRadius: -2,
               offset: const Offset(0, 2),
             ),
           ],
-          border: Border.all(color: AppColors.grey.withOpacity(0.15), width: 2),
+          border: Border.all(
+            color: AppColors.grey.withValues(alpha: 0.15),
+            width: 2,
+          ),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
@@ -602,19 +611,22 @@ class ImageCard extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              AppColors.black.withOpacity(0.9),
-              AppColors.black.withOpacity(0.8),
+              AppColors.black.withValues(alpha: 0.9),
+              AppColors.black.withValues(alpha: 0.8),
             ],
           ),
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: AppColors.black.withOpacity(0.4),
+              color: AppColors.black.withValues(alpha: 0.4),
               blurRadius: 8,
               spreadRadius: 1,
             ),
           ],
-          border: Border.all(color: AppColors.light.withOpacity(0.2), width: 1),
+          border: Border.all(
+            color: AppColors.light.withValues(alpha: 0.2),
+            width: 1,
+          ),
         ),
         child: Text(
           '#$imageNumber',
@@ -636,26 +648,29 @@ class ImageCard extends StatelessWidget {
         child: InkWell(
           onTap: () => _showImageDialog(context),
           borderRadius: BorderRadius.circular(16),
-          splashColor: AppColors.black.withOpacity(0.3),
-          highlightColor: AppColors.black.withOpacity(0.2),
+          splashColor: AppColors.black.withValues(alpha: 0.3),
+          highlightColor: AppColors.black.withValues(alpha: 0.2),
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Colors.transparent, AppColors.black.withOpacity(0.4)],
+                colors: [
+                  Colors.transparent,
+                  AppColors.black.withValues(alpha: 0.4),
+                ],
               ),
             ),
             child: Center(
               child: Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: AppColors.black.withOpacity(0.7),
+                  color: AppColors.black.withValues(alpha: 0.7),
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.black.withOpacity(0.5),
+                      color: AppColors.black.withValues(alpha: 0.5),
                       blurRadius: 12,
                       spreadRadius: 2,
                     ),
@@ -709,7 +724,7 @@ class ImageDialog extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: AppColors.black.withOpacity(0.7),
+              color: AppColors.black.withValues(alpha: 0.7),
               blurRadius: 30,
               spreadRadius: 5,
             ),
@@ -769,7 +784,7 @@ class ImageDialog extends StatelessWidget {
       top: 40,
       right: 40,
       child: Material(
-        color: AppColors.black.withOpacity(0.8),
+        color: AppColors.black.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(50),
         child: InkWell(
           onTap: () => Navigator.of(context).pop(),

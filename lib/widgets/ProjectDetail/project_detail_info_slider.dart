@@ -93,10 +93,13 @@ class _ProjectDetailInfoSliderState extends State<ProjectDetailInfoSlider> {
       decoration: BoxDecoration(
         color: AppColors.light5,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.grey.withOpacity(0.3), width: 1),
+        border: Border.all(
+          color: AppColors.grey.withValues(alpha: 0.3),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.black.withOpacity(0.08),
+            color: AppColors.black.withValues(alpha: 0.08),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -236,10 +239,13 @@ class _ProjectDetailInfoSliderState extends State<ProjectDetailInfoSlider> {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.grey.withOpacity(0.4), width: 2),
+        border: Border.all(
+          color: AppColors.grey.withValues(alpha: 0.4),
+          width: 2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: AppColors.black.withOpacity(0.08),
+            color: AppColors.black.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -264,7 +270,7 @@ class _ProjectDetailInfoSliderState extends State<ProjectDetailInfoSlider> {
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: AppColors.black.withOpacity(0.2),
+                        color: AppColors.black.withValues(alpha: 0.2),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -315,16 +321,19 @@ class _ProjectDetailInfoSliderState extends State<ProjectDetailInfoSlider> {
         shape: BoxShape.circle,
         gradient: isEnabled
             ? LinearGradient(
-                colors: [AppColors.black, AppColors.black.withOpacity(0.8)],
+                colors: [
+                  AppColors.black,
+                  AppColors.black.withValues(alpha: 0.8),
+                ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               )
             : null,
-        color: isEnabled ? null : AppColors.grey.withOpacity(0.3),
+        color: isEnabled ? null : AppColors.grey.withValues(alpha: 0.3),
         boxShadow: isEnabled
             ? [
                 BoxShadow(
-                  color: AppColors.black.withOpacity(0.3),
+                  color: AppColors.black.withValues(alpha: 0.3),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -358,12 +367,12 @@ class _ProjectDetailInfoSliderState extends State<ProjectDetailInfoSlider> {
       width: isActive ? 32 : 8,
       height: 8,
       decoration: BoxDecoration(
-        color: isActive ? color : AppColors.grey.withOpacity(0.4),
+        color: isActive ? color : AppColors.grey.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(4),
         boxShadow: isActive
             ? [
                 BoxShadow(
-                  color: color.withOpacity(0.4),
+                  color: color.withValues(alpha: 0.4),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
                 ),

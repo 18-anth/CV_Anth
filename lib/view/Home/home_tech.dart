@@ -8,13 +8,11 @@ class TechItem {
   final String? iconUrl;
   final Color color;
 
-  TechItem({
-    required this.name, 
-    this.icon, 
-    this.iconUrl, 
-    required this.color
-  }) : assert(icon != null || iconUrl != null, 
-         'Either icon or iconUrl must be provided');
+  TechItem({required this.name, this.icon, this.iconUrl, required this.color})
+    : assert(
+        icon != null || iconUrl != null,
+        'Either icon or iconUrl must be provided',
+      );
 }
 
 class HomeTech extends StatefulWidget {
@@ -117,7 +115,7 @@ class _HomeTechState extends State<HomeTech> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 20,
               spreadRadius: 4,
             ),
@@ -149,7 +147,8 @@ class _HomeTechState extends State<HomeTech> {
   Widget _buildMobileCarousel() {
     final chunks = _chunkArray(techStack, 4);
     final screenWidth = MediaQuery.of(context).size.width;
-    final cardWidth = (screenWidth - 80) / 2; // 80 = padding total (20*2 + 12*2 + 16)
+    final cardWidth =
+        (screenWidth - 80) / 2; // 80 = padding total (20*2 + 12*2 + 16)
 
     return Column(
       children: [
@@ -203,7 +202,7 @@ class _HomeTechState extends State<HomeTech> {
                     boxShadow: index == _currentPage
                         ? [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black.withValues(alpha: 0.2),
                               blurRadius: 6,
                             ),
                           ]
@@ -374,7 +373,7 @@ class _TechCardWidgetState extends State<_TechCardWidget>
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
+                  color: Colors.black.withValues(alpha: 0.08),
                   blurRadius: 20,
                   spreadRadius: 0,
                 ),
@@ -390,7 +389,7 @@ class _TechCardWidgetState extends State<_TechCardWidget>
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: widget.tech.color.withOpacity(0.2),
+                    color: widget.tech.color.withValues(alpha: 0.2),
                     width: 2,
                   ),
                 ),
@@ -408,7 +407,7 @@ class _TechCardWidgetState extends State<_TechCardWidget>
                         padding: EdgeInsets.all(widget.isMobile ? 12 : 16),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: widget.tech.color.withOpacity(0.1),
+                          color: widget.tech.color.withValues(alpha: 0.1),
                         ),
                         child: widget.tech.iconUrl != null
                             ? Image.network(

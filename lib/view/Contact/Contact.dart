@@ -102,7 +102,7 @@ class _ContactPageState extends State<ContactPage>
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.5),
+                  color: Colors.black.withValues(alpha: 0.5),
                   blurRadius: 20,
                   offset: const Offset(0, 4),
                 ),
@@ -143,7 +143,7 @@ class _ContactPageState extends State<ContactPage>
                           fontWeight: FontWeight.bold,
                           shadows: [
                             Shadow(
-                              color: Colors.black.withOpacity(0.5),
+                              color: Colors.black.withValues(alpha: 0.5),
                               blurRadius: 4,
                               offset: Offset(2, 2),
                             ),
@@ -217,7 +217,7 @@ class _ContactPageState extends State<ContactPage>
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.07),
+                  color: Colors.black.withValues(alpha: 0.07),
                   blurRadius: 24,
                   offset: const Offset(0, 8),
                 ),
@@ -416,15 +416,15 @@ class _ContactPageState extends State<ContactPage>
                 ),
                 decoration: BoxDecoration(
                   border: Border.all(
-                    color: AppColors.blackOption.withOpacity(0.15),
+                    color: AppColors.blackOption.withValues(alpha: 0.15),
                   ),
                   borderRadius: BorderRadius.circular(20),
-                  color: AppColors.blackOption.withOpacity(0.05),
+                  color: AppColors.blackOption.withValues(alpha: 0.05),
                 ),
                 child: Text(
                   tech,
                   style: TextStyle(
-                    color: AppColors.blackOption.withOpacity(0.6),
+                    color: AppColors.blackOption.withValues(alpha: 0.6),
                     fontSize: 12,
                     fontFamily: 'monospace',
                   ),
@@ -440,7 +440,7 @@ class _ContactPageState extends State<ContactPage>
               gradient: LinearGradient(
                 colors: [
                   Colors.transparent,
-                  Colors.white.withOpacity(0.2),
+                  Colors.white.withValues(alpha: 0.2),
                   Colors.transparent,
                 ],
               ),
@@ -457,7 +457,7 @@ class _ContactPageState extends State<ContactPage>
                     TextSpan(
                       text: 'Anthony',
                       style: TextStyle(
-                        color: AppColors.blackOption.withOpacity(0.9),
+                        color: AppColors.blackOption.withValues(alpha: 0.9),
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
                       ),
@@ -476,7 +476,7 @@ class _ContactPageState extends State<ContactPage>
               Text(
                 '©2026 — Full Stack Developer',
                 style: TextStyle(
-                  color: AppColors.blackOption.withOpacity(0.35),
+                  color: AppColors.blackOption.withValues(alpha: 0.35),
                   fontSize: 12,
                 ),
               ),
@@ -537,20 +537,20 @@ class _SocialCardState extends State<_SocialCard> {
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: _hovered
-                    ? widget.data.color.withOpacity(0.4)
+                    ? widget.data.color.withValues(alpha: 0.4)
                     : Colors.grey[200]!,
               ),
               boxShadow: _hovered
                   ? [
                       BoxShadow(
-                        color: widget.data.color.withOpacity(0.15),
+                        color: widget.data.color.withValues(alpha: 0.15),
                         blurRadius: 16,
                         offset: const Offset(0, 4),
                       ),
                     ]
                   : [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -562,7 +562,7 @@ class _SocialCardState extends State<_SocialCard> {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: widget.data.color.withOpacity(0.1),
+                    color: widget.data.color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: widget.data.icon is IconData
@@ -654,7 +654,7 @@ class _AnimatedSendButtonState extends State<_AnimatedSendButton> {
           boxShadow: _hovered
               ? [
                   BoxShadow(
-                    color: const Color(0xFF9c27b0).withOpacity(0.4),
+                    color: const Color(0xFF9c27b0).withValues(alpha: 0.4),
                     blurRadius: 16,
                     offset: const Offset(0, 6),
                   ),

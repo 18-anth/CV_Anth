@@ -228,7 +228,7 @@ class _MainLayoutState extends State<MainLayout> {
                       child: Text(
                         authController.userEmail!,
                         style: TextStyle(
-                          color: AppColors.light.withOpacity(0.7),
+                          color: AppColors.light.withValues(alpha: 0.7),
                           fontSize: 11,
                         ),
                       ),
@@ -239,7 +239,7 @@ class _MainLayoutState extends State<MainLayout> {
                       child: Text(
                         'Login para más',
                         style: TextStyle(
-                          color: AppColors.light.withOpacity(0.7),
+                          color: AppColors.light.withValues(alpha: 0.7),
                           fontSize: 10,
                           fontStyle: FontStyle.italic,
                         ),
@@ -396,7 +396,9 @@ class _DrawerItem extends StatelessWidget {
       ),
       selected: isSelected,
       onTap: onTap,
-      tileColor: isSelected ? AppColors.blackOption.withOpacity(0.1) : null,
+      tileColor: isSelected
+          ? AppColors.blackOption.withValues(alpha: 0.1)
+          : null,
     );
   }
 }

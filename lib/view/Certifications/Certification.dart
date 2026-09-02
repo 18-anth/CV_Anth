@@ -138,7 +138,7 @@ class _CertificationState extends State<Certification> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.5),
+                    color: Colors.black.withValues(alpha: 0.5),
                     blurRadius: 20,
                     offset: const Offset(0, 4),
                   ),
@@ -179,7 +179,7 @@ class _CertificationState extends State<Certification> {
                             fontWeight: FontWeight.bold,
                             shadows: [
                               Shadow(
-                                color: Colors.black.withOpacity(0.5),
+                                color: Colors.black.withValues(alpha: 0.5),
                                 blurRadius: 4,
                                 offset: Offset(2, 2),
                               ),
@@ -204,7 +204,7 @@ class _CertificationState extends State<Certification> {
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.transparent,
-                    AppColors.light.withOpacity(0.02),
+                    AppColors.light.withValues(alpha: 0.02),
                   ],
                 ),
               ),
@@ -241,9 +241,9 @@ class _CertificationState extends State<Certification> {
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  AppColors.light.withOpacity(0),
-                                  AppColors.light.withOpacity(0.6),
-                                  AppColors.light.withOpacity(0),
+                                  AppColors.light.withValues(alpha: 0),
+                                  AppColors.light.withValues(alpha: 0.6),
+                                  AppColors.light.withValues(alpha: 0),
                                 ],
                               ),
                               borderRadius: BorderRadius.circular(1),
@@ -289,12 +289,16 @@ class _CertificationState extends State<Certification> {
                                       decoration: BoxDecoration(
                                         color: isSelected
                                             ? const Color(0xFF050A30)
-                                            : Colors.grey.withOpacity(0.1),
+                                            : Colors.grey.withValues(
+                                                alpha: 0.1,
+                                              ),
                                         borderRadius: BorderRadius.circular(20),
                                         border: Border.all(
                                           color: isSelected
                                               ? const Color(0xFF050A30)
-                                              : Colors.grey.withOpacity(0.3),
+                                              : Colors.grey.withValues(
+                                                  alpha: 0.3,
+                                                ),
                                           width: 1.5,
                                         ),
                                       ),
@@ -332,7 +336,7 @@ class _CertificationState extends State<Certification> {
                           Text(
                             'Cargando certificaciones...',
                             style: TextStyle(
-                              color: AppColors.light.withOpacity(0.6),
+                              color: AppColors.light.withValues(alpha: 0.6),
                               fontSize: 16,
                               letterSpacing: 1,
                             ),
@@ -360,7 +364,7 @@ class _CertificationState extends State<Certification> {
                             ? 'No hay certificaciones disponibles.'
                             : 'No hay certificaciones en esta categoría.',
                         style: TextStyle(
-                          color: AppColors.light.withOpacity(0.5),
+                          color: AppColors.light.withValues(alpha: 0.5),
                           fontSize: 16,
                           letterSpacing: 1,
                         ),
@@ -496,17 +500,19 @@ class _CertificationCardState extends State<_CertificationCard>
                 duration: const Duration(milliseconds: 250),
                 constraints: BoxConstraints(minHeight: cardHeight),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.82),
+                  color: Colors.black.withValues(alpha: 0.82),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: AppColors.light.withOpacity(
-                      _isHovered ? 0.15 : 0.06,
+                    color: AppColors.light.withValues(
+                      alpha: _isHovered ? 0.15 : 0.06,
                     ),
                     width: 1,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(_isHovered ? 0.5 : 0.3),
+                      color: Colors.black.withValues(
+                        alpha: _isHovered ? 0.5 : 0.3,
+                      ),
                       blurRadius: _isHovered ? 32 : 20,
                       offset: const Offset(0, 8),
                     ),
@@ -545,7 +551,7 @@ class _CertificationCardState extends State<_CertificationCard>
                                     end: Alignment.centerRight,
                                     colors: [
                                       Colors.transparent,
-                                      Colors.black.withOpacity(0.55),
+                                      Colors.black.withValues(alpha: 0.55),
                                     ],
                                   ),
                                 ),
@@ -619,8 +625,8 @@ class _CertificationCardState extends State<_CertificationCard>
                                     Text(
                                       widget.cert.series!.toUpperCase(),
                                       style: TextStyle(
-                                        color: AppColors.light.withOpacity(
-                                          0.45,
+                                        color: AppColors.light.withValues(
+                                          alpha: 0.45,
                                         ),
                                         fontSize: widget.isMobile ? 9 : 10,
                                         fontWeight: FontWeight.w700,
@@ -633,7 +639,9 @@ class _CertificationCardState extends State<_CertificationCard>
                                     maxLines: widget.isMobile ? 2 : 3,
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
-                                      color: AppColors.light.withOpacity(0.55),
+                                      color: AppColors.light.withValues(
+                                        alpha: 0.55,
+                                      ),
                                       fontSize: widget.isMobile ? 11 : 13,
                                       height: 1.5,
                                     ),
@@ -687,7 +695,7 @@ class _CertificationCardState extends State<_CertificationCard>
                                               'Ver detalles',
                                               style: TextStyle(
                                                 color: AppColors.light
-                                                    .withOpacity(0.6),
+                                                    .withValues(alpha: 0.6),
                                                 fontSize: widget.isMobile
                                                     ? 10
                                                     : 12,
@@ -698,8 +706,9 @@ class _CertificationCardState extends State<_CertificationCard>
                                             const SizedBox(width: 4),
                                             Icon(
                                               Icons.arrow_forward_rounded,
-                                              color: AppColors.light
-                                                  .withOpacity(0.5),
+                                              color: AppColors.light.withValues(
+                                                alpha: 0.5,
+                                              ),
                                               size: 14,
                                             ),
                                           ],
@@ -756,11 +765,11 @@ class _PlaceholderImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.primary.withOpacity(0.3),
+      color: AppColors.primary.withValues(alpha: 0.3),
       child: Icon(
         Icons.menu_book_rounded,
         size: isMobile ? 36 : 52,
-        color: AppColors.light.withOpacity(0.3),
+        color: AppColors.light.withValues(alpha: 0.3),
       ),
     );
   }
