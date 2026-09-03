@@ -1,0 +1,37 @@
+{
+    "name": "cv_anth",
+    "short_name": "cv_anth",
+    "start_url": ".",
+    "display": "standalone",
+    "theme_color": "#f4f4f4",
+    "background_color": "#f4f4f4",
+    "description": "Portafolio Web de Anthony Cordova, un desarrollador web con experiencia en React, Node.js y MongoDB. Explora mis proyectos, habilidades y experiencia laboral en este sitio interactivo.  ",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
