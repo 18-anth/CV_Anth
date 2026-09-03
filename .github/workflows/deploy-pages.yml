@@ -1,0 +1,58 @@
+name: Deploy Flutter web to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Enable GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build web
+        env:
+          # The key is injected only while building. It is never committed to
+          # the repository.
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY || vars.FIREBASE_API_KEY }}
+        run: |
+          if [ -z "$FIREBASE_API_KEY" ]; then
+            echo "::error title=FIREBASE_API_KEY faltante::Agrega FIREBASE_API_KEY dentro del entorno github-pages antes de publicar."
+            exit 1
+          fi
+          flutter build web --release --base-href "/La-Finca/" --dart-define=FIREBASE_API_KEY="$FIREBASE_API_KEY"
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: build/web
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
