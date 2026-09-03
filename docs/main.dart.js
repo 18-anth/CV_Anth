@@ -49180,7 +49180,7 @@ E(a){var s,r,q=null,p=this.d
 p===$&&A.b()
 s=A.L(32)
 r=A.a([new A.aF(2,B.t,B.r.U(0.12),B.l,18)],t.V)
-return new A.u2(A.e4(q,B.O,A.br(A.eZ(p,new A.aJS(this),A.ac(A.a([A.U(q,A.ea(A.L(24),A.aQv("assets/img/logo.png",q,B.ck,q,q),B.a9),B.f,q,q,new A.Y(B.e,q,q,s,r,q,B.m),q,300,q,q,q,q,300),B.bc,A.T("CV { Anth }",q,q,q,A.az(q,q,B.r,q,q,q,q,q,q,q,q,28,q,q,B.dl,q,q,!0,q,1.2,q,q,q,q,q,q),q,q,q),B.aU,A.T("Cargando portfolio...",q,q,q,A.az(q,q,B.P,q,q,q,q,q,q,q,q,14,q,q,q,q,q,!0,q,1.4,q,q,q,q,q,q),q,q,q)],t.p),B.n,B.a2,B.i)),q,q),q,q,!1,q),B.Vd,B.ta,q,"",q,!1,q)}}
+return new A.u2(A.e4(q,B.O,A.br(A.eZ(p,new A.aJS(this),A.ac(A.a([A.U(q,A.ea(A.L(24),A.aQv("https://raw.githubusercontent.com/18-anth/CV_Anth/proyecto/assets/img/logo.png",q,B.ck,q,q),B.a9),B.f,q,q,new A.Y(B.e,q,q,s,r,q,B.m),q,300,q,q,q,q,300),B.bc,A.T("Anthony C\xf3rdova",q,q,q,A.az(q,q,B.r,q,q,q,q,q,q,q,q,28,q,q,B.dl,q,q,!0,q,1.2,q,q,q,q,q,q),q,q,q),B.aU,A.T("Cargando portfolio...",q,q,q,A.az(q,q,B.P,q,q,q,q,q,q,q,q,14,q,q,q,q,q,!0,q,1.4,q,q,q,q,q,q),q,q,q)],t.p),B.n,B.a2,B.i)),q,q),q,q,!1,q),B.Vd,B.ta,q,"",q,!1,q)}}
 A.aJS.prototype={
 $2(a,b){var s=this.a.d
 s===$&&A.b()
@@ -49209,7 +49209,7 @@ E(a){var s,r,q=null
 if(this.d)return B.a0B
 s=$.ft.aM()
 r=A.vl(q,A.aUi(B.aE,q,q,B.O),!0)
-return new A.Cv(new A.Bk(s,q,A.bhS(),t.pW),q,new A.u2(q,q,q,$.b4l(),"CV { Anth }",r,!1,q),q,t.Xx)}}
+return new A.Cv(new A.Bk(s,q,A.bhS(),t.pW),q,new A.u2(q,q,q,$.b4l(),"Anthony C",r,!1,q),q,t.Xx)}}
 A.aGq.prototype={
 $0(){this.a.d=!1},
 $S:0}

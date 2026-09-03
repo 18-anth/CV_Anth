@@ -108,7 +108,7 @@ final GoRouter appRouter = GoRouter(
     // 🏠 Shell route para las rutas principales con navegación
     ShellRoute(
       builder: (context, state, child) {
-        return MainLayout(child: child, currentRoute: state.matchedLocation);
+        return MainLayout(currentRoute: state.matchedLocation, child: child);
       },
       routes: [
         // Home Route

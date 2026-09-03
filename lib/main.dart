@@ -99,14 +99,14 @@ class _SplashScreenState extends State<SplashScreen>
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(24),
                     child: Image.asset(
-                      'assets/img/logo.png',
+                      'https://raw.githubusercontent.com/18-anth/CV_Anth/proyecto/assets/img/logo.png',
                       fit: BoxFit.cover,
                     ),
                   ),
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  'CV { Anth }',
+                  'Anthony Córdova',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w800,
@@ -179,7 +179,7 @@ class _MyAppState extends State<MyApp> {
       value: authController,
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,
-        title: 'CV { Anth }',
+        title: 'Anthony C',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(seedColor: AppColors.light),
           useMaterial3: true,
