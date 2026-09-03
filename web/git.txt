@@ -3,5 +3,5 @@ git init
 git add README.md
 git commit -m "first commit"
 git branch -M proyecto
-git remote add origin https://github.com/18-anth/CV_Anth_.git
+git remote add origin https://18-anth.github.io/CV_Anth.git
 git push -u origin proyecto

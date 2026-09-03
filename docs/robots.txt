@@ -4,8 +4,8 @@ Disallow:
 
 # robots.txt para Azaktilsa WebPlatform
 # Fecha de última actualización: 2025-08-25
-# Sitio en producción: https://18-anth.github.io/CV_Anth_/
-# Sitemap oficial: https://18-anth.github.io/CV_Anth_/sitemap.xml
+# Sitio en producción: https://18-anth.github.io/CV_Anth/
+# Sitemap oficial: https://18-anth.github.io/CV_Anth/sitemap.xml
 
 User-agent: *
 # Permitir todo el contenido público
@@ -25,4 +25,4 @@ Disallow: /CNAME
 Disallow: /*?*
 
 # Sitemap principal
-Sitemap: https://18-anth.github.io/CV_Anth_/sitemap.xml
+Sitemap: https://18-anth.github.io/CV_Anth/sitemap.xml
