@@ -37,16 +37,8 @@ jobs:
         run: flutter pub get
 
       - name: Build web
-        env:
-          # The key is injected only while building. It is never committed to
-          # the repository.
-          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY || vars.FIREBASE_API_KEY }}
         run: |
-          if [ -z "$FIREBASE_API_KEY" ]; then
-            echo "::error title=FIREBASE_API_KEY faltante::Agrega FIREBASE_API_KEY dentro del entorno github-pages antes de publicar."
-            exit 1
-          fi
-          flutter build web --release --base-href "/CV_Anth/" --dart-define=FIREBASE_API_KEY="$FIREBASE_API_KEY"
+          flutter build web --release --base-href "/CV_Anth/"
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
