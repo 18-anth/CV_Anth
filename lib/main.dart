@@ -37,101 +37,6 @@ void main() async {
   runApp(const MyApp());
 }
 
-class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
-
-  @override
-  State<SplashScreen> createState() => _SplashScreenState();
-}
-
-class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        backgroundColor: AppColors.light,
-        body: Center(
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              final scale = 1.0 + (_controller.value * 0.08);
-              return Transform.scale(
-                scale: scale,
-                child: child,
-              );
-            },
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 300,
-                  height: 300,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(32),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.black.withValues(alpha: 0.12),
-                        blurRadius: 18,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(24),
-                    child: Image.asset(
-                      'assets/img/logo.png',
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Anthony Córdova',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.2,
-                    color: AppColors.black,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Cargando portfolio...',
-                  style: TextStyle(
-                    fontSize: 14,
-                    letterSpacing: 1.4,
-                    color: AppColors.darkgrey,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
@@ -140,12 +45,9 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  bool _showSplash = true;
-
   @override
   void initState() {
     super.initState();
-    _startSplash();
     authController.addListener(_onAuthStateChanged);
   }
 
@@ -153,14 +55,6 @@ class _MyAppState extends State<MyApp> {
   void dispose() {
     authController.removeListener(_onAuthStateChanged);
     super.dispose();
-  }
-
-  Future<void> _startSplash() async {
-    await Future.delayed(const Duration(milliseconds: 1800));
-    if (!mounted) return;
-    setState(() {
-      _showSplash = false;
-    });
   }
 
   void _onAuthStateChanged() {
@@ -171,10 +65,6 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    if (_showSplash) {
-      return const SplashScreen();
-    }
-
     return ChangeNotifierProvider.value(
       value: authController,
       child: MaterialApp.router(

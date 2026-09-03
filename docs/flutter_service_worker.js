@@ -3,16 +3,16 @@ const MANIFEST = 'flutter-app-manifest';
 const TEMP = 'flutter-temp-cache';
 const CACHE_NAME = 'flutter-app-cache';
 
-const RESOURCES = {"flutter_bootstrap.js": "60204fc6360a947ba62d78557bf84bba",
+const RESOURCES = {"flutter_bootstrap.js": "730672bac89c6cf4e1c4acb0fbaf19a8",
 "version.json": "efb61b870f4c9d7ae51a51a1e2116262",
 "Icon.png": "834bb489acdf2cfb3466a57c19e60b23",
 "googleb91878f2b0f4b57b.html": "9421914e5bd9cf0ee977af645c73396a",
 "favicon.ico": "711491c09aa3b22cc9ed74828afb9b23",
-"index.html": "4ec3d5cec70443c0f7785b289d69497e",
-"/": "4ec3d5cec70443c0f7785b289d69497e",
+"index.html": "ba0d0defd8c4cf9122db302b47fa5893",
+"/": "ba0d0defd8c4cf9122db302b47fa5893",
 "LICENSE": "89c4e4684a3ba70776694e49ff45e92d",
 "firebase-messaging-sw.js": "8c95541031b703d032623c4e4a9cb6e3",
-"main.dart.js": "83564ef7e00008d9992d7005dc8d0eba",
+"main.dart.js": "c0b59ff671223296fb5928757866787b",
 "flutter.js": "83d881c1dbb6d6bcd6b42e274605b69c",
 "cors.json": "da5f9df83f37d98d0daf7d17b91d74f2",
 "git.txt": "8d4da730c1c66601c14a066acfd43e88",

@@ -53,9 +53,43 @@
     content="Portafolio Web de Anthony Córdova, un desarrollador web con experiencia en React, Node.js y MongoDB. Explora mis proyectos, habilidades y experiencia laboral en este sitio interactivo." />
   <meta property="og:url" content="https://18-anth.github.io/CV_Anth/#/privacy/" />
   <meta property="og:type" content="website" />
+  <style>
+    :root {
+      color-scheme: light;
+    }
+
+    #startup-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background-color: #f4f7f5;
+      background-image: linear-gradient(rgba(24, 34, 30, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(24, 34, 30, 0.035) 1px, transparent 1px);
+      background-size: 32px 32px;
+      transition: opacity 260ms ease, visibility 260ms ease;
+    }
+
+    #startup-loader.is-hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    #startup-canvas {
+      display: block;
+      width: min(76vw, 360px);
+      height: min(76vw, 360px);
+    }
+  </style>
 </head>
 
 <body>
+  <div id="startup-loader" aria-label="Cargando portfolio" role="status">
+    <canvas id="startup-canvas" aria-hidden="true"></canvas>
+  </div>
   <div id="seo-content" style="display: none">
     <h1>Anthony Córdova | Desarrollador Web y Ingeniero en Sistemas</h1>
     <p>
@@ -87,6 +121,156 @@
   </div>
   <script src="flutter_bootstrap.js" async></script>
   <script>
+    (() => {
+      const canvas = document.getElementById("startup-canvas");
+      const loader = document.getElementById("startup-loader");
+      const context = canvas.getContext("2d");
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const colors = {
+        ink: "#18221e",
+        sage: "#526c5b",
+        mint: "#a8c2b0"
+      };
+      const particles = [];
+      const targetPoints = [];
+      const startTime = performance.now();
+      let width = 0;
+      let height = 0;
+      let dpr = 1;
+      let flutterReady = false;
+      let formationDone = reducedMotion;
+      let removed = false;
+
+      const random = (minimum, maximum) => minimum + Math.random() * (maximum - minimum);
+      const clamp = (value, minimum, maximum) => Math.max(minimum, Math.min(maximum, value));
+      const ease = (value) => value * value * (3 - 2 * value);
+
+      function resize() {
+        const bounds = canvas.getBoundingClientRect();
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        width = bounds.width;
+        height = bounds.height;
+        canvas.width = Math.round(width * dpr);
+        canvas.height = Math.round(height * dpr);
+        context.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      function addSegment(start, end, count) {
+        for (let index = 0; index < count; index += 1) {
+          const amount = count === 1 ? 0.5 : index / (count - 1);
+          targetPoints.push({
+            x: start.x + (end.x - start.x) * amount,
+            y: start.y + (end.y - start.y) * amount
+          });
+        }
+      }
+
+      function createTargetShape() {
+        // Tres segmentos forman una A geométrica: dos diagonales y el travesaño.
+        addSegment({ x: 0.18, y: 0.82 }, { x: 0.5, y: 0.14 }, 20);
+        addSegment({ x: 0.5, y: 0.14 }, { x: 0.82, y: 0.82 }, 20);
+        addSegment({ x: 0.3, y: 0.57 }, { x: 0.7, y: 0.57 }, 14);
+      }
+
+      function createParticles() {
+        targetPoints.forEach((target, index) => {
+          const angle = random(0, Math.PI * 2);
+          const radius = random(0.24, 0.5);
+          particles.push({
+            x: 0.5 + Math.cos(angle) * radius,
+            y: 0.5 + Math.sin(angle) * radius,
+            target,
+            delay: random(0, 0.24),
+            speed: random(0.86, 1.16),
+            size: random(1.3, 2.5),
+            phase: random(0, Math.PI * 2),
+            index
+          });
+        });
+      }
+
+      function pointFor(particle, progress, pulse) {
+        const localProgress = clamp((progress - particle.delay) * particle.speed / 0.76, 0, 1);
+        const movement = ease(localProgress);
+        const chaos = (1 - movement) * 0.025;
+        const driftX = Math.sin(particle.phase + progress * 9) * chaos;
+        const driftY = Math.cos(particle.phase + progress * 8) * chaos;
+        const scale = 1 + pulse * 0.055;
+        return {
+          x: (0.5 + (particle.x + (particle.target.x - particle.x) * movement - 0.5) * scale + driftX) * width,
+          y: (0.5 + (particle.y + (particle.target.y - particle.y) * movement - 0.5) * scale + driftY) * height
+        };
+      }
+
+      function draw(time) {
+        if (removed) return;
+        const elapsed = time - startTime;
+        const progress = reducedMotion ? 1 : clamp(elapsed / 1240, 0, 1);
+        const pulse = reducedMotion ? 0 : elapsed < 1460 ? 0 : Math.sin((elapsed - 1460) / 150 * Math.PI);
+        const formationOpacity = ease(clamp(progress * 1.15, 0, 1));
+        context.clearRect(0, 0, width, height);
+
+        const points = particles.map((particle) => pointFor(particle, progress, pulse));
+        const connectionDistance = Math.min(width, height) * 0.19;
+        for (let first = 0; first < points.length; first += 1) {
+          for (let second = first + 1; second < points.length; second += 1) {
+            const deltaX = points[first].x - points[second].x;
+            const deltaY = points[first].y - points[second].y;
+            const distance = Math.hypot(deltaX, deltaY);
+            if (distance > connectionDistance) continue;
+            const proximity = 1 - distance / connectionDistance;
+            const alpha = proximity * formationOpacity * 0.42;
+            context.strokeStyle = `rgba(82, 108, 91, ${alpha})`;
+            context.lineWidth = pulse ? 1.15 : 0.8;
+            context.beginPath();
+            context.moveTo(points[first].x, points[first].y);
+            context.lineTo(points[second].x, points[second].y);
+            context.stroke();
+          }
+        }
+
+        const ringRadius = Math.min(width, height) * (0.34 + pulse * 0.025);
+        context.strokeStyle = `rgba(130, 150, 138, ${0.18 * formationOpacity})`;
+        context.lineWidth = 1;
+        context.beginPath();
+        context.arc(width / 2, height / 2, ringRadius, 0, Math.PI * 2);
+        context.stroke();
+
+        particles.forEach((particle, index) => {
+          const point = points[index];
+          const localProgress = clamp((progress - particle.delay) * particle.speed / 0.76, 0, 1);
+          const alpha = 0.38 + ease(localProgress) * 0.62;
+          context.fillStyle = index % 5 === 0 ? colors.mint : colors.sage;
+          context.globalAlpha = alpha;
+          context.beginPath();
+          context.arc(point.x, point.y, particle.size + pulse * 1.3, 0, Math.PI * 2);
+          context.fill();
+        });
+        context.globalAlpha = 1;
+
+        if (!reducedMotion && elapsed > 1400) formationDone = true;
+        if (flutterReady && formationDone) finish();
+        window.requestAnimationFrame(draw);
+      }
+
+      function finish() {
+        if (removed) return;
+        removed = true;
+        loader.classList.add("is-hidden");
+        window.setTimeout(() => loader.remove(), 280);
+      }
+
+      createTargetShape();
+      createParticles();
+      resize();
+      window.addEventListener("resize", resize, { passive: true });
+      window.addEventListener("flutter-first-frame", () => {
+        flutterReady = true;
+        if (formationDone) finish();
+      }, { once: true });
+      window.requestAnimationFrame(draw);
+    })();
+
     // Registrar Service Worker para notificaciones en segundo plano
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", function () {

@@ -19,7 +19,6 @@ class _RobotModelState extends State<RobotModel> {
   @override
   void initState() {
     super.initState();
-    debugPrint('🚀 [RobotModel] initState — plataforma web: $kIsWeb');
     if (!kIsWeb) {
       _controller.onModelLoaded.addListener(() {
         debugPrint(
@@ -41,7 +40,7 @@ class _RobotModelState extends State<RobotModel> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 400,
+      height: 500,
       width: double.infinity,
       child: kIsWeb
           ? ModelViewer(
