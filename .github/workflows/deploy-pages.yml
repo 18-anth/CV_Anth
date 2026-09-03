@@ -1,8 +1,9 @@
-name: Deploy Flutter web to GitHub Pages
+name: Deploy Flutter Web to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -11,48 +12,97 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: github-pages
   cancel-in-progress: true
 
 jobs:
   build-and-deploy:
+    runs-on: ubuntu-latest
+
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
+
     steps:
+      # ─────────────────────────────────────────────
+      # 1. Descargar el código
+      # ─────────────────────────────────────────────
       - name: Checkout
         uses: actions/checkout@v4
 
+      # ─────────────────────────────────────────────
+      # 2. Configurar Flutter
+      # ─────────────────────────────────────────────
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
 
-      - name: Enable GitHub Pages
+      # ─────────────────────────────────────────────
+      # 3. Configurar GitHub Pages
+      # ─────────────────────────────────────────────
+      - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
+      # ─────────────────────────────────────────────
+      # 4. Instalar dependencias
+      # ─────────────────────────────────────────────
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Build web
+      # ─────────────────────────────────────────────
+      # 5. Verificar Flutter
+      # ─────────────────────────────────────────────
+      - name: Flutter doctor
+        run: flutter doctor -v
+
+      # ─────────────────────────────────────────────
+      # 6. Construir Flutter Web
+      # ─────────────────────────────────────────────
+      - name: Build Flutter Web
         env:
-          # The key is injected only while building. It is never committed to
-          # the repository.
-          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY || vars.FIREBASE_API_KEY }}
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
         run: |
           if [ -z "$FIREBASE_API_KEY" ]; then
-            echo "::error title=FIREBASE_API_KEY faltante::Agrega FIREBASE_API_KEY dentro del entorno github-pages antes de publicar."
+            echo "::error title=FIREBASE_API_KEY faltante::Debes configurar FIREBASE_API_KEY en GitHub Secrets."
             exit 1
           fi
-          flutter build web --release --base-href "/La-Finca/" --dart-define=FIREBASE_API_KEY="$FIREBASE_API_KEY"
 
+          flutter build web \
+            --release \
+            --base-href "/La-Finca/" \
+            --dart-define="FIREBASE_API_KEY=$FIREBASE_API_KEY"
+
+      # ─────────────────────────────────────────────
+      # 7. Verificar que Flutter generó build/web
+      # ─────────────────────────────────────────────
+      - name: Verify build
+        run: |
+          if [ ! -d "build/web" ]; then
+            echo "::error::La carpeta build/web no fue generada."
+            exit 1
+          fi
+
+          if [ ! -f "build/web/index.html" ]; then
+            echo "::error::No existe build/web/index.html."
+            exit 1
+          fi
+
+          echo "Build generado correctamente:"
+          ls -lah build/web
+
+      # ─────────────────────────────────────────────
+      # 8. Subir artifact a GitHub Pages
+      # ─────────────────────────────────────────────
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: build/web
 
+      # ─────────────────────────────────────────────
+      # 9. Publicar
+      # ─────────────────────────────────────────────
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

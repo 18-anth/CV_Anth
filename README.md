@@ -346,6 +346,14 @@ flutter run -d ios
 flutter run -d macos
 ```
 
+**Despliege workflow:**
+
+```bash
+
+flutter build web --release && mv build/web docs
+
+```
+
 ---
 
 ## 🗺️ Rutas y Navegación
