@@ -2,7 +2,7 @@ name: Deploy Flutter web to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [proyecto]
   workflow_dispatch:
 
 permissions:
@@ -46,7 +46,7 @@ jobs:
             echo "::error title=FIREBASE_API_KEY faltante::Agrega FIREBASE_API_KEY dentro del entorno github-pages antes de publicar."
             exit 1
           fi
-          flutter build web --release --base-href "/La-Finca/" --dart-define=FIREBASE_API_KEY="$FIREBASE_API_KEY"
+          flutter build web --release --base-href "/CV_Anth/" --dart-define=FIREBASE_API_KEY="$FIREBASE_API_KEY"
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
